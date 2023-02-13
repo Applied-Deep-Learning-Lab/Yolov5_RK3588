@@ -1,3 +1,6 @@
+#everywhere
+__pycache__
+
 #converter
 HostPC/converter/convert/onnx_model/*.onnx
 HostPC/converter/convert/rknn_model/*.rknn
@@ -13,10 +16,15 @@ RK3588/rknpu2/model/*
 #rknpu2_python3
 RK3588/rknpu2_python3/verbose.txt
 RK3588/rknpu2_python3/inference_pre_process_process.py
+RK3588/rknpu2_python3/inference.py
 RK3588/rknpu2_python3/models/*.rknn
 RK3588/rknpu2_python3/*jpg
 !RK3588/rknpu2_python3/models/yolov5s-640-640.rknn
 !RK3588/rknpu2_python3/models/yolov5s-640-640.rknn
 !RK3588/rknpu2_python3/models/yolov5m_leaky_352x352.rknn
 !RK3588/rknpu2_python3/models/yolov5m_leaky.rknn
-RK3588/rknpu2_python3/modules/__pycache__
+
+# ByteTracker
+RK3588/rknpu2_python3/byte_tracker/install/cython_bbox/build
+RK3588/rknpu2_python3/byte_tracker/install/cython_bbox/cython_bbox.egg-info
+RK3588/rknpu2_python3/byte_tracker/install/cython_bbox/dist
