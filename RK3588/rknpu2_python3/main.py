@@ -1,7 +1,7 @@
 from modules import config
 from modules.camera import Cam
 from modules.rknn_yolov5 import Yolov5
-from modules.post_process import post_process
+from modules.tracking import post_process
 from multiprocessing import Process, Queue, Lock
 from rknnlite.api import RKNNLite
 
@@ -19,7 +19,8 @@ class OrangePi():
 
         self._rec = Process(target=self._cam.record, daemon=True)
         self._inf = [Process(target=self._yolov5[i].inference, daemon=True) for i in range(config.INF_PROC)]
-        self._post = [Process(target=post_process, args=(i, self._lock, self._q_outs, self._q_post), daemon=True) for i in range(config.POST_PROC)]
+        # self._post = [Process(target=post_process, args=(i, self._lock, self._q_outs, self._q_post), daemon=True) for i in range(config.POST_PROC)]
+        self._post = [Process(target=post_process, args=(self._lock, self._q_outs, self._q_post), daemon=True) for i in range(config.POST_PROC)]
 
     def start(self):
         self._rec.start()

@@ -116,9 +116,9 @@
     #Download package for extract *.7z archive
     sudo apt install p7zip-full
 
-    7z x ROC-RK3588S-PC_Ubuntu20.04-Gnome-r2202_v1.0.4b_221118.7z
-    cd ROC-RK3588S-PC_Ubuntu20.04-Gnome-r2202_v1.0.4b_221118
-    sudo upgrade_tool uf ROC-RK3588S-PC_Ubuntu20.04-Gnome-r2202_v1.0.4b_221118.img
+    7z x ROC-RK3588S-PC_Ubuntu20.04-Gnome-r2202_v*.7z
+    cd ROC-RK3588S-PC_Ubuntu20.04-Gnome-r2202_v*
+    sudo upgrade_tool uf ROC-RK3588S-PC_Ubuntu20.04-Gnome-r2202_v*.img
 
     #Output:
     Program Data in /usr/local/bin

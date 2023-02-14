@@ -10,7 +10,7 @@ class STrack(BaseTrack):
 
     def __init__(self, tlwh, score, sclass=None):
         # wait activate
-        self._tlwh = np.asarray(tlwh, dtype=np.float)
+        self._tlwh = np.asarray(tlwh, dtype=np.float32)
         self.kalman_filter = None
         self.mean, self.covariance = None, None
         self.is_activated = False
@@ -168,7 +168,7 @@ class BYTETracker(object):
         elif output_results.shape[1] == 6: 
             scores = output_results[:, 5]
             bboxes = output_results[:, :4]  # x1y1x2y2
-            sclasses = output_results[:, 4].astype(np.int)
+            sclasses = output_results[:, 4].astype(np.int32)
         else:
             output_results = output_results.cpu().numpy()
             scores = output_results[:, 4] * output_results[:, 5]

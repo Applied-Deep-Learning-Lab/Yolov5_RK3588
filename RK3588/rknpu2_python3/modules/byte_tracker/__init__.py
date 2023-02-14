@@ -1,1 +1,1 @@
-from byte_tracker.byte_tracker import *
+from .byte_tracker import *
