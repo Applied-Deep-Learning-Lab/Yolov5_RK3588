@@ -155,6 +155,12 @@
       ```
       conda create -n <env-name> python=3.9
       ```
+      
+      And then activate conda env
+
+      ```
+      conda activate <env-name>
+      ```
 
       Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
 
@@ -167,7 +173,7 @@
       
       ```
       #cd <repo-dir>/RK3588/rknpu2_python3/
-      python3 inference.py
+      python3 main.py
       ```
 
 </details>
