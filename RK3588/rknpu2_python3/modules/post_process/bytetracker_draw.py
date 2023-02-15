@@ -1,6 +1,5 @@
 from modules.byte_tracker import BYTETracker, BTArgs
 from modules import config
-from modules import rkkn_post_process as rknn_pp
 import numpy as np
 import cv2
 
@@ -18,8 +17,7 @@ def format_dets(boxes, classes, scores):
         bottom = int(bottom*(config.CAM_HEIGHT/config.NET_SIZE))
         dets[count]=[top, left, right, bottom, cl, score]
         count+=1
-    
-    dets = dets[np.where(np.isin(dets[..., 4], [62]))]
+    dets = dets[np.where(np.isin(dets[..., 4], config.TRACKING_CLASSES))]
     return dets
 
 
@@ -30,7 +28,7 @@ def tracking(bytetracker, dets, frame_shape):
         return np.asarray(output)
 
 
-def draw_bytetracker(frame, dets):
+def draw_info(frame, dets):
     for det in dets:
         cv2.rectangle(img=frame,
             pt1=(int(det[0]), int(det[1])),
@@ -49,23 +47,18 @@ def draw_bytetracker(frame, dets):
         )
 
 
-def post_process(lock, q_outs, q_post):
+def bytetracker_draw(lock, q_in, q_out):
     bytetrack_args = BTArgs()
-    bytetracker = BYTETracker(bytetrack_args, frame_rate=60)
+    bytetracker = BYTETracker(bytetrack_args, frame_rate=config.BYTETRACKER_FPS)
     while True:
-        outputs, frame, frame_id = q_outs.get()
-        data = list()
-        for out in outputs:
-            out = out.reshape([3, -1]+list(out.shape[-2:]))
-            data.append(np.transpose(out, (2, 3, 0, 1)))
-        boxes, classes, scores = rknn_pp.yolov5_post_process(data)
+        frame, frame_id, raw_frame, dets = q_in.get()
+        boxes, classes, scores = dets
         if boxes is not None:
             dets=format_dets(boxes, classes, scores)
             dets=tracking(bytetracker, dets, frame.shape[:2])
             if dets is not None:
-                draw_bytetracker(frame,dets)
-            rknn_pp.draw(frame, boxes, scores, classes)
-        if q_post.full():
+                draw_info(frame,dets)
+        if q_out.full():
             continue
         with lock:
-            q_post.put((frame, frame_id))
+            q_out.put((frame, frame_id))

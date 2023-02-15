@@ -1,14 +1,14 @@
 from modules import config
 import numpy as np
-from modules import rkkn_post_process as rknn_pp
+import modules.post_process.rknn_post_process as rknn_pp
 import time
 
-def post_process(proc, lock, q_outs, q_post):
+def post_process(proc, lock, q_in, q_out):
     while True:
         if config.PRINT_DIF:
-            outputs, frame, frame_id, start = q_outs.get()
+            outputs, frame, frame_id, start = q_in.get()
         else:
-            outputs, frame, frame_id = q_outs.get()
+            outputs, frame, frame_id = q_in.get()
         data = list()
         for out in outputs:
             out = out.reshape([3, -1]+list(out.shape[-2:]))
@@ -20,10 +20,10 @@ def post_process(proc, lock, q_outs, q_post):
             print('po%d id(%d) - %f'%(proc, frame_id, time.time() - start))
         if config.PRINT_TIME:
             print('po%d id(%d) - %f'%(proc, frame_id, time.time()))
-        if q_post.full():
+        if q_out.full():
             continue
         with lock:
             if config.PRINT_DIF:
-                q_post.put((frame, frame_id, start))
+                q_out.put((frame, frame_id, start))
             else:
-                q_post.put((frame, frame_id))
+                q_out.put((frame, frame_id))

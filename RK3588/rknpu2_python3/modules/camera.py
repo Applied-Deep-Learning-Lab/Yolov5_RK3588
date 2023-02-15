@@ -1,12 +1,12 @@
 import cv2
 import time
 from modules import config
-from modules.pre_process import pre_process
+from modules.pre_process.pre_process import pre_process
 
 class Cam():
-    def __init__(self, source, lock, q_pre, q_post):
-        self._q_pre = q_pre
-        self._q_post = q_post
+    def __init__(self, source, lock, q_in, q_out):
+        self._q_out = q_out
+        self._q_in = q_in
         self._lock = lock
         self._cap = cv2.VideoCapture(source)
         self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
@@ -29,7 +29,7 @@ class Cam():
                     start = time.time()
                 ret, frame = self._cap.read()
                 raw_frame = frame
-                if self._q_pre.full():
+                if self._q_out.full():
                     continue
                 if config.PRINT_DIF:
                     print('r id(%d) - %f'%(self._frame_id, time.time() - start))
@@ -42,9 +42,9 @@ class Cam():
                     print('pr id(%d) - %f'%(self._frame_id, time.time()))
                 with self._lock:
                     if config.PRINT_DIF:
-                        self._q_pre.put((frame, raw_frame, self._frame_id, start))
+                        self._q_out.put((frame, raw_frame, self._frame_id, start))
                     else:
-                        self._q_pre.put((frame, raw_frame, self._frame_id))
+                        self._q_out.put((frame, raw_frame, self._frame_id))
                     self._frame_id+=1
         finally:
             self._cap.release()
@@ -52,9 +52,9 @@ class Cam():
     def show(self):
         self._count+=1
         if config.PRINT_DIF:
-            frame, frame_id, start = self._q_post.get()
+            frame, frame_id, start = self._q_in.get()
         else:
-            frame, frame_id = self._q_post.get()
+            frame, frame_id = self._q_in.get()
         # FPS COUNTER
         if not self._count % 30:
             self._fps = 30/(time.time() - self._begin)
@@ -74,7 +74,7 @@ class Cam():
 
     async def get_frame(self):
         self._count+=1
-        frame, frame_id = self._q_post.get()
+        frame, frame_id = self._q_in.get()
         if not self._count % 30:
             self._fps = 30/(time.time() - self._begin)
             if self._fps > self._max_fps:
