@@ -1,4 +1,3 @@
-from modules import config
 import numpy as np
 import modules.post_process.rknn_post_process as rknn_pp
 

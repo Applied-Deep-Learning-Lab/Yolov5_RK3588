@@ -25,6 +25,6 @@ RK3588/rknpu2_python3/*jpg
 !RK3588/rknpu2_python3/models/yolov5m_leaky.rknn
 
 # ByteTracker
-RK3588/rknpu2_python3/byte_tracker/install/cython_bbox/build
-RK3588/rknpu2_python3/byte_tracker/install/cython_bbox/cython_bbox.egg-info
-RK3588/rknpu2_python3/byte_tracker/install/cython_bbox/dist
+RK3588/rknpu2_python3/install/cython_bbox/build
+RK3588/rknpu2_python3/install/cython_bbox/cython_bbox.egg-info
+RK3588/rknpu2_python3/install/cython_bbox/dist

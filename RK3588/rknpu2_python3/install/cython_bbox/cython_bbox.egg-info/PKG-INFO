@@ -1,9 +1,0 @@
-Metadata-Version: 2.1
-Name: cython-bbox
-Version: 0.1.3
-Summary: Standalone cython_bbox
-Home-page: https://github.com/samson-wang/cython_bbox.git
-Author: Samson Wang
-Author-email: samson.c.wang@gmail.com
-Keywords: cython_bbox
-License-File: LICENSE
