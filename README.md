@@ -46,7 +46,7 @@
     At first you need download docker image:
 
     ```
-    docker pull docker pull deathk9t/yolov5_rk3588:latest
+    docker pull deathk9t/yolov5_rk3588:latest
     ```
 
     Then you can run container with:
