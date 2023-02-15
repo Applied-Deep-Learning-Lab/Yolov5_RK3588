@@ -36,9 +36,7 @@
     <h2>
       <p>
         2. Install docker images <i>(Optional)</i>
-        <a href="https://en.t-firefly.com/product/industry/rocrk3588spc">
-          <img src="https://opennebula.io/wp-content/uploads/2020/05/DockerHub.png" height=38 alt="Docker Hub" />
-        </a>
+        <img src="https://opennebula.io/wp-content/uploads/2020/05/DockerHub.png" height=38 alt="Docker Hub" />
       </p>
     </h2>
   </summary>
