@@ -36,9 +36,7 @@
     <h2>
       <p>
         2. Install docker images <i>(Optional)</i>
-        <a href="https://en.t-firefly.com/product/industry/rocrk3588spc">
-          <img src="https://opennebula.io/wp-content/uploads/2020/05/DockerHub.png" height=38 alt="Docker Hub" />
-        </a>
+        <img src="https://opennebula.io/wp-content/uploads/2020/05/DockerHub.png" height=38 alt="Docker Hub" />
       </p>
     </h2>
   </summary>
@@ -48,7 +46,7 @@
     At first you need download docker image:
 
     ```
-    docker pull docker pull deathk9t/yolov5_rk3588:latest
+    docker pull deathk9t/yolov5_rk3588:latest
     ```
 
     Then you can run container with:
@@ -83,91 +81,141 @@
     </h2>
   </summary>
 
-  * ### Host PC
+  * ### C/C++
 
-    Install Python3 and pip3
-
-    ```
-    sudo apt-get install python3 python3-dev python3-pip
-    ```
-
-    Install dependent libraries
+    Building
 
     ```
-    sudo apt-get install libxslt1-dev zlib1g zlib1g-dev libglib2.0-0 libsm6 libgl1-mesa-glx libprotobuf-dev gcc git
+    #before build write count of classes in postprocess.h
+    #cd <repo-dir>/RK3588/rknpu2/
+    ./build.sh
     ```
 
-    Install Python dependency, such as requirements_cp38-1.4.0.txt
+    Running
 
     ```
-    #cd <repo_dir>/HostPC/converter/install/
-    pip install -r requirements_cp38-1.4.0.txt
-    #if doesn't installing then install numpy before that
-    #pip install numpy
+    #cd <repo-dir>/RK3588/rknpu2/run/
+    ./rknn_yolov5_demo <path-to-model> <path-to-jpg> <path-to-dataset-txt>
+    ```
+
+  * ### Python3
+
+    Install miniconda
+
+    ```
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh
+    bash Miniconda3-latest-Linux-aarch64.sh
+    ```
+
+    Create conda env with python3.9
+
+    ```
+    conda create -n <env-name> python=3.9
     ```
     
-    Install RKNN-Toolkit2，such as rknn_toolkit2-1.4.0_22dcfef4-cp38-cp38-linux_x86_64.whl
+    And then activate conda env
 
     ```
-    pip install rknn_toolkit2-1.4.0_22dcfef4-cp38-cp38-linux_x86_64.whl
+    conda activate <env-name>
     ```
 
-    For convert your *.onnx* model to *.rknn* run **onnx2rknn.py** like:
+    Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
 
     ```
-    #cd <repo-dir>/HostPC/converter/convert/
-    python3 onnx2rknn.py \
-            --input <path-to-your-onnx-model> \
-            --output <path-where-save-rknn-model> \
-            --dataset <path-to-txt-file-with-calibration-images-names>
+    #cd <repo-dir>/RK3588/rknpu2_python3/install/
+    pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
     ```
 
-  * ### RK3588
+    Run inference
+    
+    ```
+    #cd <repo-dir>/RK3588/rknpu2_python3/
+    python3 main.py
+    ```
 
-    * #### C/C++
+</details>
 
-      Building
+<details open>
+  <summary>
+    <h2>
+      <p>
+        4. Run inference with ByteTracker
+        <img src="HostPC/images/Yolov5m.png" width=38 height=38 alt="Yolov5m" />
+      </p>
+    </h2>
+  </summary>
+
+  In created conda enviroment also install requirements
+
+  ```
+  #cd <repo-dir>/RK3588/rknpu2_python3/install/
+  pip install -r requirements.txt
+  ```
+
+  Then build and install cython_bbox
+
+  ```
+  #cd <repo-dir>/RK3588/rknpu2_python3/install/cython_bbox
+  python3 setup.py build
+  python3 setup.py install
+  ```
+
+  Run inference with ByteTrack
+
+  ```
+  #cd <repo-dir>/RK3588/rknpu2_python3/
+  python3 main_bytetracker.py
+  ```
+
+</details>
+
+<details open>
+  <summary>
+    <h2>
+      <p>
+        5. Convert onnx model to rknn 
+        <img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fds2converter.com%2Fwp-content%2Fuploads%2F2015%2F07%2Fconvert-icon.png&f=1&nofb=1&ipt=d6dbe833ced7274d7335d067ba819d63567e853dc093822f5cda0d18df3bfbdf&ipo=images" width=38 height=38 alt="Converter" />
+      </p>
+    </h2>
+  </summary>
+
+  * ### Host PC
+
+      Install Python3 and pip3
 
       ```
-      #before build write count of classes in postprocess.h
-      #cd <repo-dir>/RK3588/rknpu2/
-      ./build.sh
+      sudo apt-get install python3 python3-dev python3-pip
       ```
 
-      Running
+      Install dependent libraries
 
       ```
-      #cd <repo-dir>/RK3588/rknpu2/run/
-      ./rknn_yolov5_demo <path-to-model> <path-to-jpg> <path-to-dataset-txt>
+      sudo apt-get install libxslt1-dev zlib1g zlib1g-dev libglib2.0-0 libsm6 libgl1-mesa-glx libprotobuf-dev gcc git
       ```
 
-    * #### Python3
-
-      Install miniconda
+      Install Python dependency, such as requirements_cp38-1.4.0.txt
 
       ```
-      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh
-      bash Miniconda3-latest-Linux-aarch64.sh
+      #cd <repo_dir>/HostPC/converter/install/
+      pip install -r requirements_cp38-1.4.0.txt
+      #if doesn't installing then install numpy before that
+      #pip install numpy
       ```
-
-      Create conda env with python3.9
-
-      ```
-      conda create -n <env-name> python=3.9
-      ```
-
-      Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
-
-      ```
-      #cd <repo-dir>/RK3588/rknpu2_python3/install/
-      pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
-      ```
-
-      Run inference
       
+      Install RKNN-Toolkit2，such as rknn_toolkit2-1.4.0_22dcfef4-cp38-cp38-linux_x86_64.whl
+
       ```
-      #cd <repo-dir>/RK3588/rknpu2_python3/
-      python3 inference.py
+      pip install rknn_toolkit2-1.4.0_22dcfef4-cp38-cp38-linux_x86_64.whl
+      ```
+
+      For convert your *.onnx* model to *.rknn* run **onnx2rknn.py** like:
+
+      ```
+      #cd <repo-dir>/HostPC/converter/convert/
+      python3 onnx2rknn.py \
+              --input <path-to-your-onnx-model> \
+              --output <path-where-save-rknn-model> \
+              --dataset <path-to-txt-file-with-calibration-images-names>
       ```
 
 </details>
