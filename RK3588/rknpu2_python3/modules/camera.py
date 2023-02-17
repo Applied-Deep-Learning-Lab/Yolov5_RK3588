@@ -9,7 +9,7 @@ class Cam():
         self._q_in = q_in
         self._lock = lock
         self._cap = cv2.VideoCapture(source)
-        self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
+        self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*config.PIXEL_FORMAT))
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAM_WIDTH)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.CAM_HEIGHT)
         self._cap.set(cv2.CAP_PROP_FPS, config.CAM_FPS)
@@ -28,7 +28,7 @@ class Cam():
                 if config.PRINT_DIF:
                     start = time.time()
                 ret, frame = self._cap.read()
-                raw_frame = frame
+                raw_frame = frame.copy
                 if self._q_out.full():
                     continue
                 if config.PRINT_DIF:

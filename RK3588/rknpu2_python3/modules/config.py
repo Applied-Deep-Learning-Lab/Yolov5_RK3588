@@ -1,8 +1,13 @@
 ########## Camera const ##########
+PIXEL_FORMAT="MJPG"
 CAM_WIDTH = 640
 CAM_HEIGHT = 480
 CAM_FPS = 120
 SOURCE = 0
+###################################
+
+######### Database params #########
+DATA_AMOUNT = 100
 ###################################
 
 ######## ByteTracker const ########

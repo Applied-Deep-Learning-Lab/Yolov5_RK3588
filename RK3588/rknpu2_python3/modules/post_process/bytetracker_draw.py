@@ -1,4 +1,6 @@
 from modules.byte_tracker import BYTETracker, BTArgs
+import multiprocessing as mp
+import modules.storage_for_db as strg
 from modules import config
 import numpy as np
 import cv2
@@ -47,7 +49,7 @@ def draw_info(frame, dets):
         )
 
 
-def bytetracker_draw(lock, q_in, q_out):
+def bytetracker_draw(lock: mp.Lock, q_in: mp.Queue, q_out: mp.Queue, img_storages: list[strg.ImageStorage] = None, data_storages: list[strg.DetectionsStorage] = None):
     bytetrack_args = BTArgs()
     bytetracker = BYTETracker(bytetrack_args, frame_rate=config.BYTETRACKER_FPS)
     while True:
@@ -60,5 +62,19 @@ def bytetracker_draw(lock, q_in, q_out):
                 draw_info(frame,dets)
         if q_out.full():
             continue
+        if img_storages is not None:
+            for storage in img_storages:
+                # Check is the 'storage._index_counter' incrementing
+                if storage._name is strg.StoragePurpose.RAW_FRAME:
+                    if storage._index_counter == config.DATA_AMOUNT: storage._index_counter = 0
+                    storage.set_data(raw_frame, storage._index_counter)
+                elif storage._name is strg.StoragePurpose.INFERENCED_FRAME:
+                    if storage._index_counter == config.DATA_AMOUNT: storage._index_counter = 0
+                    storage.set_data(frame, storage._index_counter)
+        if data_storages is not None:
+            for storage in data_storages:
+                if storage._name is strg.StoragePurpose.DETECTIONS:
+                    if storage._index_counter == config.DATA_AMOUNT: storage._index_counter = 0
+                    storage.set_data(dets, storage._index_counter)
         with lock:
             q_out.put((frame, frame_id))

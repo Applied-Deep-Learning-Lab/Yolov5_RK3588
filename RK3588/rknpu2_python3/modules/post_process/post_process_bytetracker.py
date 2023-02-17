@@ -11,7 +11,7 @@ def post_process(lock, q_in, q_out):
             data.append(np.transpose(out, (2, 3, 0, 1)))
         boxes, classes, scores = rknn_pp.yolov5_post_process(data)
         dets = (boxes, classes, scores)
-        raw_frame = frame.copy()
+        raw_frame = frame.copy
         if boxes is not None:
             rknn_pp.draw(frame, boxes, scores, classes)
         if q_out.full():
