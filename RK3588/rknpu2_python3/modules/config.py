@@ -12,7 +12,7 @@ DATA_AMOUNT = 100
 
 ######## ByteTracker const ########
 BYTETRACKER_FPS = 60
-TRACKING_CLASSES=[42]
+TRACKING_CLASSES=[62]
 #  0 - person           # 20 - elephant          # 40 - wine glass      # 60 - dining table
 #  1 - bicycle          # 21 - bear              # 41 - cup             # 61 - toilet      
 #  2 - car              # 22 - zebra             # 42 - fork            # 62 - tv          

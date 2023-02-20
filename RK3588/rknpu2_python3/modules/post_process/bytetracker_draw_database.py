@@ -1,14 +1,16 @@
 from modules.byte_tracker import BYTETracker, BTArgs
+import modules.storage_for_db as strg
 from modules import config
 import numpy as np
 import cv2
+import multiprocessing as mp
+import time
 
 
-def format_dets(boxes, classes, scores):
+def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
     # Creating np.array for detections
     dets=np.zeros([len(boxes), 6], dtype=np.float64)
     count=0
-    # Formating boxes, classes, scores in dets (np.array) for input to bytetracker
     for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
         top = int(top*(config.CAM_WIDTH/config.NET_SIZE))
@@ -21,14 +23,14 @@ def format_dets(boxes, classes, scores):
     return dets
 
 
-def tracking(bytetracker, dets, frame_shape):
+def tracking(bytetracker: BYTETracker, dets: np.ndarray, frame_shape: tuple):
     output = bytetracker.update(dets, frame_shape, frame_shape)
     output = [np.append(out.tlbr, [out.track_id, out.sclass]) for out in output]
     if len(output):
         return np.asarray(output)
 
 
-def draw_info(frame, dets):
+def draw_info(frame: np.ndarray, dets: np.ndarray):
     for det in dets:
         cv2.rectangle(img=frame,
             pt1=(int(det[0]) + 10, int(det[1]) + 10),
@@ -47,9 +49,10 @@ def draw_info(frame, dets):
         )
 
 
-def bytetracker_draw(lock, q_in, q_out):
+def bytetracker_draw(lock: mp.Lock, q_in: mp.Queue, q_out: mp.Queue, storages: strg.Storage):
     bytetrack_args = BTArgs()
     bytetracker = BYTETracker(bytetrack_args, frame_rate=config.BYTETRACKER_FPS)
+    begin = time.time()
     while True:
         frame, frame_id, raw_frame, dets = q_in.get()
         boxes, classes, scores = dets
@@ -58,6 +61,16 @@ def bytetracker_draw(lock, q_in, q_out):
             dets=tracking(bytetracker, dets, frame.shape[:2])
             if dets is not None:
                 draw_info(frame,dets)
+                if(time.time() - begin >= 5):
+                    for storage in storages:
+                        if storage.storage_name == strg.StoragePurpose.RAW_FRAME:
+                            storage.set_data(raw_frame)
+                        if storage.storage_name == strg.StoragePurpose.INFERENCED_FRAME:
+                            storage.set_data(frame)
+                        elif storage.storage_name == strg.StoragePurpose.DETECTIONS:
+                            storage.set_data(dets)
+                            print(storage.get_data(0))
+                        begin = time.time()
         if q_out.full():
             continue
         with lock:

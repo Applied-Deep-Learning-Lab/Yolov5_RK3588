@@ -28,7 +28,7 @@ class Cam():
                 if config.PRINT_DIF:
                     start = time.time()
                 ret, frame = self._cap.read()
-                raw_frame = frame.copy
+                raw_frame = frame.copy()
                 if self._q_out.full():
                     continue
                 if config.PRINT_DIF:

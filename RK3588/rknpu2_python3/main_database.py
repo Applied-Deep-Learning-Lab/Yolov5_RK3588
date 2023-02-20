@@ -2,9 +2,8 @@ from modules import config
 from modules.camera import Cam
 from modules.rknn_yolov5 import Yolov5
 from modules.post_process.post_process_bytetracker import post_process
-from modules.post_process.bytetracker_draw import bytetracker_draw
-import modules.storage_for_db as storage
-import numpy as np
+from modules.post_process.bytetracker_draw_database import bytetracker_draw
+import modules.storage_for_db as strg
 from multiprocessing import Process, Queue, Lock
 from rknnlite.api import RKNNLite
 
@@ -16,15 +15,14 @@ class OrangePi():
         self._q_post = Queue(maxsize=config.BUF_SIZE)
         self._q_show = Queue(maxsize=config.BUF_SIZE)
 
-        self._raw_img_strg = storage.ImageStorage(
-            storage_name = storage.StoragePurpose.RAW_FRAME
+        self._raw_img_strg = strg.ImageStorage(
+            storage_name = strg.StoragePurpose.RAW_FRAME
         )
-        self._inf_img_strg = storage.ImageStorage(
-            storage_name = storage.StoragePurpose.INFERENCED_FRAME
+        self._inf_img_strg = strg.ImageStorage(
+            storage_name = strg.StoragePurpose.INFERENCED_FRAME
         )
-        self._detections_strg = storage.DetectionsStorage()
-        self._images_storages = [self._raw_img_strg, self._inf_img_strg]
-        self._data_storages = [self._detections_strg]
+        # self._detections_strg = strg.DetectionsStorage()
+        self._storages = [self._raw_img_strg, self._inf_img_strg]#, self._detections_strg]
 
         self._lock = Lock()
         self._cores = [RKNNLite.NPU_CORE_0, RKNNLite.NPU_CORE_1, RKNNLite.NPU_CORE_2]
@@ -71,8 +69,7 @@ class OrangePi():
                 'lock' : self._lock,
                 'q_in' : self._q_post,
                 'q_out' : self._q_show,
-                'img_storages' : self._images_storages,
-                'data_storages':self._data_storages
+                'storages' : self._storages
             },
             daemon=True
         )
@@ -89,9 +86,20 @@ class OrangePi():
     def get_frame(self):
         return self._cam.get_frame()
 
+    def get_data(self, index, storage_name):
+        if storage_name == strg.StoragePurpose.RAW_FRAME:
+            return self._raw_img_strg.get_data(index)
+        if storage_name == strg.StoragePurpose.INFERENCED_FRAME:
+            return self._inf_img_strg.get_data(index)
+        if storage_name == strg.StoragePurpose.DETECTIONS:
+            return self._detections_strg.get_data(index)
+
 
 def main():
-    pass
+    orange = OrangePi()
+    orange.start()
+    while True:
+        orange.show()
 
 
 if __name__ == "__main__":
