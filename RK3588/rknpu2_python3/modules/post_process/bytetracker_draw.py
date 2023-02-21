@@ -5,10 +5,8 @@ import cv2
 
 
 def format_dets(boxes, classes, scores):
-    # Creating np.array for detections
-    dets=np.zeros([len(boxes), 6], dtype=np.float64)
+    dets=np.zeros([len(boxes), 6], dtype=np.float32)
     count=0
-    # Formating boxes, classes, scores in dets (np.array) for input to bytetracker
     for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
         top = int(top*(config.CAM_WIDTH/config.NET_SIZE))

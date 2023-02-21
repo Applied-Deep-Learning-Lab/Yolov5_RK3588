@@ -8,6 +8,7 @@ SOURCE = 0
 
 ######### Database params #########
 DATA_AMOUNT = 100
+NUM_DETS = 100
 ###################################
 
 ######## ByteTracker const ########

@@ -1,5 +1,5 @@
 from modules.byte_tracker import BYTETracker, BTArgs
-import modules.storage_for_db as strg
+import RK3588.rknpu2_python3.modules.storages as strg
 from modules import config
 import numpy as np
 import cv2
@@ -8,8 +8,7 @@ import time
 
 
 def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
-    # Creating np.array for detections
-    dets=np.zeros([len(boxes), 6], dtype=np.float64)
+    dets=np.zeros([len(boxes), 6], dtype=np.float32)
     count=0
     for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
@@ -69,7 +68,6 @@ def bytetracker_draw(lock: mp.Lock, q_in: mp.Queue, q_out: mp.Queue, storages: s
                             storage.set_data(frame)
                         elif storage.storage_name == strg.StoragePurpose.DETECTIONS:
                             storage.set_data(dets)
-                            print(storage.get_data(0))
                         begin = time.time()
         if q_out.full():
             continue

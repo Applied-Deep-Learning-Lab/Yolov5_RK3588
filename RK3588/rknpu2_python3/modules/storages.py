@@ -21,7 +21,7 @@ class Storage():
         self.storage_name = storage_name
         self._buffer = _create_buffer(
             size = math.prod(
-                (math.prod(data_size), data_amount)
+                (math.prod(data_size), data_amount, np.dtype(data_type).itemsize)
             ),
             name = str(self.storage_name)
         )
@@ -31,7 +31,7 @@ class Storage():
     def set_data(self, data: np.ndarray):
         if self._index_counter == config.DATA_AMOUNT:
             self._index_counter = 0
-        self._storage[self._index_counter][:] = data
+        self._storage[self._index_counter][:len(data),:] = data
         self._index_counter += 1
 
     def get_data(self, index: int):
@@ -52,7 +52,7 @@ class DetectionsStorage(Storage):
     def __init__(self):
         super().__init__(
             storage_name = StoragePurpose.DETECTIONS,
-            data_size = (6,),
+            data_size = (config.NUM_DETS, 6),
             data_amount = config.DATA_AMOUNT,
-            data_type = np.float64
+            data_type = np.float32
         )

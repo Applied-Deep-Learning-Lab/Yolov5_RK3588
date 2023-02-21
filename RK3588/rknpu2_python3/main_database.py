@@ -2,8 +2,8 @@ from modules import config
 from modules.camera import Cam
 from modules.rknn_yolov5 import Yolov5
 from modules.post_process.post_process_bytetracker import post_process
-from modules.post_process.bytetracker_draw_database import bytetracker_draw
-import modules.storage_for_db as strg
+from RK3588.rknpu2_python3.modules.post_process.bytetracker_draw_storages import bytetracker_draw
+import RK3588.rknpu2_python3.modules.storages as strg
 from multiprocessing import Process, Queue, Lock
 from rknnlite.api import RKNNLite
 
@@ -21,8 +21,8 @@ class OrangePi():
         self._inf_img_strg = strg.ImageStorage(
             storage_name = strg.StoragePurpose.INFERENCED_FRAME
         )
-        # self._detections_strg = strg.DetectionsStorage()
-        self._storages = [self._raw_img_strg, self._inf_img_strg]#, self._detections_strg]
+        self._detections_strg = strg.DetectionsStorage()
+        self._storages = [self._raw_img_strg, self._inf_img_strg, self._detections_strg]
 
         self._lock = Lock()
         self._cores = [RKNNLite.NPU_CORE_0, RKNNLite.NPU_CORE_1, RKNNLite.NPU_CORE_2]
