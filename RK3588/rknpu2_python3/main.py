@@ -1,6 +1,6 @@
 from modules import config
-from modules.camera import Cam
-from modules.rknn_yolov5 import Yolov5
+from modules.camera.camera import Cam
+from modules.inference.rknn_yolov5 import Yolov5
 from modules.post_process.post_process_common import post_process
 from multiprocessing import Process, Queue, Lock
 from rknnlite.api import RKNNLite

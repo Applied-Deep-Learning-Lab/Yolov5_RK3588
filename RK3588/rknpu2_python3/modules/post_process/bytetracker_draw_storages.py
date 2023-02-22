@@ -1,5 +1,5 @@
 from modules.byte_tracker import BYTETracker, BTArgs
-import RK3588.rknpu2_python3.modules.storages as strg
+import modules.storages as strg
 from modules import config
 import numpy as np
 import cv2
@@ -53,6 +53,8 @@ def bytetracker_draw(lock: mp.Lock, q_in: mp.Queue, q_out: mp.Queue, storages: s
     bytetracker = BYTETracker(bytetrack_args, frame_rate=config.BYTETRACKER_FPS)
     begin = time.time()
     while True:
+        if q_in.empty():
+            continue
         frame, frame_id, raw_frame, dets = q_in.get()
         boxes, classes, scores = dets
         if boxes is not None:

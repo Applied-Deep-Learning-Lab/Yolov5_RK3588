@@ -49,6 +49,8 @@ def bytetracker_draw(lock, q_in, q_out):
     bytetrack_args = BTArgs()
     bytetracker = BYTETracker(bytetrack_args, frame_rate=config.BYTETRACKER_FPS)
     while True:
+        if q_in.empty():
+            continue
         frame, frame_id, raw_frame, dets = q_in.get()
         boxes, classes, scores = dets
         if boxes is not None:

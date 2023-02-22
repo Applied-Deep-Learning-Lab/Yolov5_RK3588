@@ -1,7 +1,6 @@
 import cv2
 import time
 from modules import config
-from modules.pre_process.pre_process import pre_process
 
 class Cam():
     def __init__(self, source, lock, q_in, q_out):
@@ -19,6 +18,11 @@ class Cam():
         self._count = 0
         self._begin = 0
 
+    def _pre_process(self, frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        frame = cv2.resize(frame, (config.NET_SIZE, config.NET_SIZE))
+        return frame
+
     def record(self):
         if(not self._cap.isOpened()):
             print("Bad source")
@@ -35,7 +39,7 @@ class Cam():
                     print('r id(%d) - %f'%(self._frame_id, time.time() - start))
                 if config.PRINT_TIME:
                     print('r id(%d) - %f'%(self._frame_id, time.time()))
-                frame = pre_process(frame)
+                frame = self._pre_process(frame)
                 if config.PRINT_DIF:
                     print('pr id(%d) - %f'%(self._frame_id, time.time() - start))
                 if config.PRINT_TIME:

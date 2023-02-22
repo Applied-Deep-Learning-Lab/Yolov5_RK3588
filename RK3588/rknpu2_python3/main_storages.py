@@ -1,9 +1,9 @@
 from modules import config
-from modules.camera import Cam
-from modules.rknn_yolov5 import Yolov5
+from modules.camera.camera import Cam
+from modules.inference.rknn_yolov5 import Yolov5
 from modules.post_process.post_process_bytetracker import post_process
-from RK3588.rknpu2_python3.modules.post_process.bytetracker_draw_storages import bytetracker_draw
-import RK3588.rknpu2_python3.modules.storages as strg
+from modules.post_process.bytetracker_draw_storages import bytetracker_draw
+import modules.storages as strg
 from multiprocessing import Process, Queue, Lock
 from rknnlite.api import RKNNLite
 

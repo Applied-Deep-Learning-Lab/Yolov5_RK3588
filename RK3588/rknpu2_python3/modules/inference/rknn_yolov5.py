@@ -12,11 +12,14 @@ class Yolov5():
         self._total_inf_time = 0
         self._inf_time = 0
         self._frames = 0
+        self._load_model(config.RKNN_MODEL)
+
+    def _load_model(self, model):
         print("proc: ", self._proc)
         self._rknnlite = RKNNLite(verbose=config.VERBOSE, verbose_file=config.VERBOSE_FILE)
 
         print("%d. Export rknn model"%(self._proc))
-        ret = self._rknnlite.load_rknn(config.RKNN_MODEL)
+        ret = self._rknnlite.load_rknn(model)
         if ret != 0:
             print('%d. Export rknn model failed!'%(self._proc))
             exit(ret)

@@ -1,6 +1,6 @@
 from modules import config
-from modules.camera import Cam
-from modules.rknn_yolov5 import Yolov5
+from modules.camera.camera import Cam
+from modules.inference.rknn_yolov5 import Yolov5
 from modules.post_process.post_process_bytetracker import post_process
 from modules.post_process.bytetracker_draw import bytetracker_draw
 from multiprocessing import Process, Queue, Lock
