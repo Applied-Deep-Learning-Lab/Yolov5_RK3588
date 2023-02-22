@@ -45,7 +45,7 @@ def draw_info(frame, dets):
         )
 
 
-def bytetracker_draw(lock, q_in, q_out):
+def bytetracker_draw(q_in, q_out):
     bytetrack_args = BTArgs()
     bytetracker = BYTETracker(bytetrack_args, frame_rate=config.BYTETRACKER_FPS)
     while True:
@@ -60,5 +60,4 @@ def bytetracker_draw(lock, q_in, q_out):
                 draw_info(frame,dets)
         if q_out.full():
             continue
-        with lock:
-            q_out.put((frame, frame_id))
+        q_out.put((frame, frame_id))

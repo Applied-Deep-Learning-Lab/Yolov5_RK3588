@@ -2,7 +2,7 @@ import numpy as np
 import modules.post_process.rknn_post_process as rknn_pp
 
 
-def post_process(lock, q_in, q_out):
+def post_process(q_in, q_out):
     while True:
         outputs, frame, frame_id = q_in.get()
         data = list()
@@ -16,5 +16,4 @@ def post_process(lock, q_in, q_out):
             rknn_pp.draw(frame, boxes, scores, classes)
         if q_out.full():
             continue
-        with lock:
-            q_out.put((frame, frame_id, raw_frame, dets))
+        q_out.put((frame, frame_id, raw_frame, dets))

@@ -3,8 +3,7 @@ import time
 from modules import config
 
 class Yolov5():
-    def __init__(self, proc, lock, q_in, q_out, core=RKNNLite.NPU_CORE_AUTO):
-        self._lock = lock
+    def __init__(self, proc, q_in, q_out, core=RKNNLite.NPU_CORE_AUTO):
         self._q_in = q_in
         self._q_out = q_out
         self._core = core
@@ -45,8 +44,7 @@ class Yolov5():
                 print('i%d id(%d) - %f'%(self._proc, frame_id, time.time()))
             if self._q_out.full():
                 continue
-            with self._lock:
-                if config.PRINT_DIF:
-                    self._q_out.put((outputs, raw_frame, frame_id, start))
-                else:
-                    self._q_out.put((outputs, raw_frame, frame_id))
+            if config.PRINT_DIF:
+                self._q_out.put((outputs, raw_frame, frame_id, start))
+            else:
+                self._q_out.put((outputs, raw_frame, frame_id))

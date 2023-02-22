@@ -3,10 +3,9 @@ import time
 from modules import config
 
 class Cam():
-    def __init__(self, source, lock, q_in, q_out):
+    def __init__(self, source, q_in, q_out):
         self._q_out = q_out
         self._q_in = q_in
-        self._lock = lock
         self._cap = cv2.VideoCapture(source)
         self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*config.PIXEL_FORMAT))
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAM_WIDTH)
@@ -44,12 +43,11 @@ class Cam():
                     print('pr id(%d) - %f'%(self._frame_id, time.time() - start))
                 if config.PRINT_TIME:
                     print('pr id(%d) - %f'%(self._frame_id, time.time()))
-                with self._lock:
-                    if config.PRINT_DIF:
-                        self._q_out.put((frame, raw_frame, self._frame_id, start))
-                    else:
-                        self._q_out.put((frame, raw_frame, self._frame_id))
-                    self._frame_id+=1
+                if config.PRINT_DIF:
+                    self._q_out.put((frame, raw_frame, self._frame_id, start))
+                else:
+                    self._q_out.put((frame, raw_frame, self._frame_id))
+                self._frame_id+=1
         finally:
             self._cap.release()
 

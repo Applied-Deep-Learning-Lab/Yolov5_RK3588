@@ -1,6 +1,6 @@
 from modules import config
-from modules.camera.camera import Cam
-from modules.inference.rknn_yolov5 import Yolov5
+from modules.camera.variable_camera import VariableCamera
+from modules.inference.rknn_yolov5_variable import VariableYolov5
 from modules.post_process.post_process_bytetracker import post_process
 from modules.post_process.bytetracker_draw_storages import bytetracker_draw
 import modules.storages as strg
@@ -14,6 +14,8 @@ class OrangePi():
         self._q_outs = Queue(maxsize=config.BUF_SIZE)
         self._q_post = Queue(maxsize=config.BUF_SIZE)
         self._q_show = Queue(maxsize=config.BUF_SIZE)
+        self._q_settings = Queue(maxsize=1)
+        self._q_model = Queue(maxsize=1)
 
         self._raw_img_strg = strg.ImageStorage(
             storage_name = strg.StoragePurpose.RAW_FRAME
@@ -26,16 +28,18 @@ class OrangePi():
 
         self._cores = [RKNNLite.NPU_CORE_0, RKNNLite.NPU_CORE_1, RKNNLite.NPU_CORE_2]
 
-        self._cam = Cam(
+        self._cam = VariableCamera(
             source = config.SOURCE,
             q_in = self._q_show,
-            q_out = self._q_pre
+            q_out = self._q_pre,
+            q_settings = self._q_settings
         )
         self._yolov5 = [
-            Yolov5(
+            VariableYolov5(
                 proc = i,
                 q_in = self._q_pre,
                 q_out = self._q_outs,
+                q_model = self._q_model,
                 core = self._cores[i%3]
             ) for i in range(config.INF_PROC)
         ]
@@ -66,7 +70,7 @@ class OrangePi():
                 'q_out': self._q_show,
                 'storages': self._storages
             },
-            daemon=True
+            daemon = True
         )
 
     def start(self):
@@ -89,13 +93,8 @@ class OrangePi():
         if storage_name == strg.StoragePurpose.DETECTIONS:
             return self._detections_strg.get_data(index)
 
+    def load_model(self, model: str):
+        self._q_model.put(model)
 
-def main():
-    orange = OrangePi()
-    orange.start()
-    while True:
-        orange.show()
-
-
-if __name__ == "__main__":
-    main()
+    def load_settings(self, settings: dict):
+        self._q_settings.put(settings)

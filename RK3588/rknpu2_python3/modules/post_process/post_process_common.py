@@ -3,7 +3,7 @@ import numpy as np
 import modules.post_process.rknn_post_process as rknn_pp
 import time
 
-def post_process(proc, lock, q_in, q_out):
+def post_process(proc, q_in, q_out):
     while True:
         if config.PRINT_DIF:
             outputs, frame, frame_id, start = q_in.get()
@@ -22,8 +22,7 @@ def post_process(proc, lock, q_in, q_out):
             print('po%d id(%d) - %f'%(proc, frame_id, time.time()))
         if q_out.full():
             continue
-        with lock:
-            if config.PRINT_DIF:
-                q_out.put((frame, frame_id, start))
-            else:
-                q_out.put((frame, frame_id))
+        if config.PRINT_DIF:
+            q_out.put((frame, frame_id, start))
+        else:
+            q_out.put((frame, frame_id))

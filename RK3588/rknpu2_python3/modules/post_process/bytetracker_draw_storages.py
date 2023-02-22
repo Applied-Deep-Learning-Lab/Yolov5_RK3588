@@ -48,7 +48,7 @@ def draw_info(frame: np.ndarray, dets: np.ndarray):
         )
 
 
-def bytetracker_draw(lock: mp.Lock, q_in: mp.Queue, q_out: mp.Queue, storages: strg.Storage):
+def bytetracker_draw(q_in: mp.Queue, q_out: mp.Queue, storages: strg.Storage):
     bytetrack_args = BTArgs()
     bytetracker = BYTETracker(bytetrack_args, frame_rate=config.BYTETRACKER_FPS)
     begin = time.time()
@@ -73,5 +73,4 @@ def bytetracker_draw(lock: mp.Lock, q_in: mp.Queue, q_out: mp.Queue, storages: s
                         begin = time.time()
         if q_out.full():
             continue
-        with lock:
-            q_out.put((frame, frame_id))
+        q_out.put((frame, frame_id))

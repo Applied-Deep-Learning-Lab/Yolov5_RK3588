@@ -1,12 +1,12 @@
 from modules import config
 import time
 from modules.camera.camera import Cam
+import multiprocessing as mp
 
 class VariableCamera(Cam):
-    def __init__(self, source, lock, q_in, q_out, q_settings):
+    def __init__(self, source, q_in: mp.Queue, q_out: mp.Queue, q_settings: mp.Queue):
         super().__init_(
             source = source,
-            lock = lock,
             q_in = q_in,
             q_out = q_out
         )
@@ -36,11 +36,10 @@ class VariableCamera(Cam):
                     print('pr id(%d) - %f'%(self._frame_id, time.time() - start))
                 if config.PRINT_TIME:
                     print('pr id(%d) - %f'%(self._frame_id, time.time()))
-                with self._lock:
-                    if config.PRINT_DIF:
-                        self._q_out.put((frame, raw_frame, self._frame_id, start))
-                    else:
-                        self._q_out.put((frame, raw_frame, self._frame_id))
-                    self._frame_id+=1
+                if config.PRINT_DIF:
+                    self._q_out.put((frame, raw_frame, self._frame_id, start))
+                else:
+                    self._q_out.put((frame, raw_frame, self._frame_id))
+                self._frame_id+=1
         finally:
             self._cap.release()
