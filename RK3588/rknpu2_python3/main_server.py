@@ -94,7 +94,23 @@ class OrangePi():
             return self._detections_strg.get_data(index)
 
     def load_model(self, model: str):
-        self._q_model.put(model)
+        if isinstance(model, bytes):
+            with open(config.NEW_MODEL, 'wb') as f:
+                f.write(model)
+            model = config.NEW_MODEL
+        for proc in range(config.INF_PROC):
+            self._q_model.put(model)
 
     def load_settings(self, settings: dict):
         self._q_settings.put(settings)
+
+
+def main():
+    orange = OrangePi()
+    orange.start()
+    while True:
+        orange.show()
+
+
+if __name__ == "__main__":
+    main()
