@@ -52,6 +52,8 @@ class Cam():
             self._cap.release()
 
     def show(self):
+        if self._q_in.empty():
+            return
         self._count+=1
         if config.PRINT_DIF:
             frame, frame_id, start = self._q_in.get()
@@ -67,6 +69,12 @@ class Cam():
         frame = cv2.putText(frame, f"id: {frame_id}", (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
         frame = cv2.putText(frame, "fps: %.2f"%(self._fps), (5, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
         frame = cv2.putText(frame, f"max_fps: {self._max_fps}", (5, 90), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
+
+        # Debug
+        if config.PRINT_IDS:
+            with open(config.FRAMES_IDS_FILE, 'a') as f:
+                f.write(str(frame_id)+'\n')
+
         cv2.imshow('frame', frame)
         if config.PRINT_DIF:
             print('s id(%d) - %f'%(frame_id, time.time() - start))

@@ -33,6 +33,8 @@ class Yolov5():
 
     def inference(self):
         while True:
+            if self._q_in.empty():
+                continue
             if config.PRINT_DIF:
                 frame, raw_frame, frame_id, start = self._q_in.get()
             else:

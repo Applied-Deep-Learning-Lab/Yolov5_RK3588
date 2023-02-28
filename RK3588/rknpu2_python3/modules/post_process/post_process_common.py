@@ -5,6 +5,8 @@ import time
 
 def post_process(proc, q_in, q_out):
     while True:
+        if q_in.empty():
+            continue
         if config.PRINT_DIF:
             outputs, frame, frame_id, start = q_in.get()
         else:

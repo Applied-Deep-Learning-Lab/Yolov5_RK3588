@@ -17,6 +17,7 @@ RK3588/rknpu2/model/*
 
 # rknpu2_python3
 RK3588/rknpu2_python3/verbose.txt
+RK3588/rknpu2_python3/frames_ids.txt
 RK3588/rknpu2_python3/*jpg
 
 # ByteTracker

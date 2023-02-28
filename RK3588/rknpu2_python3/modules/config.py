@@ -1,5 +1,10 @@
+######### DEBUG FOR FRAME #########
+PRINT_IDS = True
+FRAMES_IDS_FILE = "frames_ids.txt"
+###################################
+
 ########## Camera const ##########
-PIXEL_FORMAT="MJPG"
+PIXEL_FORMAT = "MJPG"
 CAM_WIDTH = 640
 CAM_HEIGHT = 480
 CAM_FPS = 120
@@ -13,7 +18,7 @@ NUM_DETS = 100
 
 ######## ByteTracker const ########
 BYTETRACKER_FPS = 60
-TRACKING_CLASSES=[62]
+TRACKING_CLASSES = [62]
 #  0 - person           # 20 - elephant          # 40 - wine glass      # 60 - dining table
 #  1 - bicycle          # 21 - bear              # 41 - cup             # 61 - toilet      
 #  2 - car              # 22 - zebra             # 42 - fork            # 62 - tv          
