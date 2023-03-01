@@ -1,7 +1,7 @@
 from modules import config
 import numpy as np
 from enum import IntEnum
-from multiprocessing import shared_memory
+from multiprocessing import shared_memory, Value
 import math
 
 
@@ -26,16 +26,17 @@ class Storage():
             name = str(self.storage_name)
         )
         self._storage = np.ndarray((data_amount,) + data_size, dtype=data_type, buffer=self._buffer.buf)
-        self._index_counter = 0
+        self._index_counter = Value('i', 0)
 
     def set_data(self, data: np.ndarray):
-        if self._index_counter == config.DATA_AMOUNT:
-            self._index_counter = 0
-        self._storage[self._index_counter][:len(data),:] = data
-        self._index_counter += 1
+        self._storage[self._index_counter.value % config.DATA_AMOUNT][:len(data),:] = data
+        self._index_counter.value += 1
 
     def get_data(self, index: int):
         return self._storage[index][:]
+    
+    def get_last_index(self):
+        return(self._index_counter.value - 1)
 
 
 class ImageStorage(Storage):

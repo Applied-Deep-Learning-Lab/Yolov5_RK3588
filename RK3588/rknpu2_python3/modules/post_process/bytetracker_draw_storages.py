@@ -62,15 +62,15 @@ def bytetracker_draw(q_in: mp.Queue, q_out: mp.Queue, storages: strg.Storage):
             dets=tracking(bytetracker, dets, frame.shape[:2])
             if dets is not None:
                 draw_info(frame,dets)
-                if(time.time() - begin >= 5):
-                    for storage in storages:
-                        if storage.storage_name == strg.StoragePurpose.RAW_FRAME:
-                            storage.set_data(raw_frame)
-                        if storage.storage_name == strg.StoragePurpose.INFERENCED_FRAME:
-                            storage.set_data(frame)
-                        elif storage.storage_name == strg.StoragePurpose.DETECTIONS:
-                            storage.set_data(dets)
-                        begin = time.time()
+                # if(time.time() - begin >= 5):
+                for storage in storages:
+                    if storage.storage_name == strg.StoragePurpose.RAW_FRAME:
+                        storage.set_data(raw_frame)
+                    elif storage.storage_name == strg.StoragePurpose.INFERENCED_FRAME:
+                        storage.set_data(frame)
+                    elif storage.storage_name == strg.StoragePurpose.DETECTIONS:
+                        storage.set_data(dets)
+                        # begin = time.time()
         if q_out.full():
             continue
         q_out.put((frame, frame_id))

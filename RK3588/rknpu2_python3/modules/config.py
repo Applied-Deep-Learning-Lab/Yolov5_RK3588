@@ -14,6 +14,7 @@ SOURCE = 0
 ######### Database params #########
 DATA_AMOUNT = 100
 NUM_DETS = 100
+AMOUNT_OF_SEND_DATA = 10
 ###################################
 
 ######## ByteTracker const ########

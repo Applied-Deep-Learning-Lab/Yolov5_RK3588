@@ -3,13 +3,13 @@ import json
 import logging
 import os
 import uuid
-
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription
+from multidict import MultiDict
 from media import MediaBlackhole, MediaRelay, InferenceTrack
-
 from main_server import OrangePi
 import settings.settings as sttgs
+
 
 ROOT = os.path.dirname(__file__)
 
@@ -81,6 +81,18 @@ async def send_model(request):
     model = os.path.join(ROOT, "yolov5m_leaky_352x352.rknn")
     headers = {'Content-Disposition': 'attachment; filename="yolov5m_leaky_352x352.rknn"'}
     return web.FileResponse(path=model, headers=headers)
+
+
+async def send_inference(request):
+    """
+    Return path of inference.zip 
+    containing number of inferenced images
+    grabbed by settings in labelme format
+    """
+    path = await inf.request_inference()
+    if path is not None:
+        return web.FileResponse(path=path, headers=MultiDict({'Content-Disposition': 'Attachment'}))
+    return web.Response(content_type="text", text="ERR")
 
 
 async def offer(request):
@@ -171,14 +183,15 @@ def main():
     app.router.add_get("/client.js", javascript)
     app.router.add_post("/offer", offer)
 
-    app.router.add_post("/settings", update_settings)
     app.router.add_get("/settings", settings_main)
     app.router.add_get("/settings/", settings_main)
     app.router.add_get("/settings/client.js", settings_javascript)
     app.router.add_get("/settings/styles.css", settings_style)
+    app.router.add_post("/settings", update_settings)
 
     app.router.add_post("/model", update_model)
     # app.router.add_post("/model", send_model)
+    app.router.add_get("/request_inference", send_inference)
     web.run_app(
         app, access_log=None, host='0.0.0.0', port=8080, ssl_context=ssl_context
     )

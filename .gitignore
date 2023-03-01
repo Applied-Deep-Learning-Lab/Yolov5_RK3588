@@ -1,5 +1,6 @@
 # everywhere
 __pycache__
+*.zip
 
 # models
 *.rknn

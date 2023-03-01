@@ -4,6 +4,8 @@ import modules.post_process.rknn_post_process as rknn_pp
 
 def post_process(q_in, q_out):
     while True:
+        if q_in.empty():
+            continue
         outputs, frame, frame_id = q_in.get()
         data = list()
         for out in outputs:

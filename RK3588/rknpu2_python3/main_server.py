@@ -1,11 +1,12 @@
+from multiprocessing import Process, Queue
+from rknnlite.api import RKNNLite
 from modules import config
 from modules.camera.variable_camera import VariableCamera
 from modules.inference.rknn_yolov5_variable import VariableYolov5
 from modules.post_process.post_process_bytetracker import post_process
 from modules.post_process.bytetracker_draw_storages import bytetracker_draw
 import modules.storages as strg
-from multiprocessing import Process, Queue
-from rknnlite.api import RKNNLite
+from modules.utils.request_inference import request_inference
 
 
 class OrangePi():
@@ -103,6 +104,9 @@ class OrangePi():
 
     def load_settings(self, settings: dict):
         self._q_settings.put(settings)
+
+    def request_inference(self):
+        return request_inference(self._detections_strg, self._raw_img_strg)
 
 
 def main():
