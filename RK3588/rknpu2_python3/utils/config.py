@@ -52,7 +52,6 @@ ASYNC_MODE = True
 
 # Path to model
 RKNN_MODEL = 'models/yolov5m_leaky_352x352.rknn'
-NEW_MODEL = '/home/orangepi/workspace/Yolov5_RK3588/RK3588/rknpu2_python3/models/new_model.rknn'
 
 # Thresh coefs
 OBJ_THRESH = 0.25

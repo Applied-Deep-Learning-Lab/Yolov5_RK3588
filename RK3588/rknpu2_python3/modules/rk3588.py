@@ -6,14 +6,12 @@ from multiprocessing import Process, Queue
 from rknnlite.api import RKNNLite
 
 
-class OrangePi():
-    def __init__(self, storages = None):
+class Rk3588():
+    def __init__(self):
         # Creating queues for sending data between processes
         self._q_pre = Queue(maxsize=config.BUF_SIZE)
         self._q_outs = Queue(maxsize=config.BUF_SIZE)
         self._q_post = Queue(maxsize=config.BUF_SIZE)
-        # Creating storages for raw, inferenced frames and detections
-        self._storages = storages
         # Creating camera object for recording frames process
         self._cam = Cam(
             source = config.SOURCE,
@@ -49,8 +47,7 @@ class OrangePi():
                 target = post_process,
                 kwargs = {
                     "q_in" : self._q_outs,
-                    "q_out" : self._q_post,
-                    "storages" : self._storages
+                    "q_out" : self._q_post
                 },
                 daemon=True
             ) for i in range(config.POST_PROC)
@@ -64,3 +61,9 @@ class OrangePi():
 
     def show(self):
         self._cam.show()
+
+    def get_data(self):
+        if self._q_post.empty():
+            return None
+        raw_frame, inferenced_frame, detections, frame_id = self._q_post.get()
+        return(raw_frame, inferenced_frame, detections, frame_id)

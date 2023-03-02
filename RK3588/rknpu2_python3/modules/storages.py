@@ -37,6 +37,10 @@ class Storage():
     
     def get_last_index(self):
         return(self._index_counter.value - 1)
+    
+    def clear_buffer(self):
+        self._buffer.close()
+        self._buffer.unlink()
 
 
 class ImageStorage(Storage):

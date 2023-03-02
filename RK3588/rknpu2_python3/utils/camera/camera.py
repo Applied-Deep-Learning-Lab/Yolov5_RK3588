@@ -46,7 +46,7 @@ class Cam():
         if self._q_in.empty():
             return
         self._count+=1
-        frame, frame_id = self._q_in.get()
+        raw_frame, frame, dets, frame_id = self._q_in.get()
         # FPS COUNTER
         if not self._count % 30:
             self._fps = 30/(time.time() - self._begin)
