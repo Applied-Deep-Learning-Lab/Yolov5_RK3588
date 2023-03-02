@@ -1,9 +1,9 @@
 from rknnlite.api import RKNNLite
-import time
-from modules import config
+from utils import config
+from multiprocessing import Queue
 
 class Yolov5():
-    def __init__(self, proc, q_in, q_out, core=RKNNLite.NPU_CORE_AUTO):
+    def __init__(self, proc: int, q_in: Queue, q_out: Queue, core: int = RKNNLite.NPU_CORE_AUTO):
         self._q_in = q_in
         self._q_out = q_out
         self._core = core
@@ -13,7 +13,7 @@ class Yolov5():
         self._frames = 0
         self._load_model(config.RKNN_MODEL)
 
-    def _load_model(self, model):
+    def _load_model(self, model: str):
         print("proc: ", self._proc)
         self._rknnlite = RKNNLite(verbose=config.VERBOSE, verbose_file=config.VERBOSE_FILE)
 
@@ -35,18 +35,8 @@ class Yolov5():
         while True:
             if self._q_in.empty():
                 continue
-            if config.PRINT_DIF:
-                frame, raw_frame, frame_id, start = self._q_in.get()
-            else:
-                frame, raw_frame, frame_id = self._q_in.get()
+            frame, raw_frame, frame_id = self._q_in.get()
             outputs = self._rknnlite.inference(inputs=[frame])
-            if config.PRINT_DIF:
-                print('i%d id(%d) - %f'%(self._proc, frame_id, time.time() - start))
-            if config.PRINT_TIME:
-                print('i%d id(%d) - %f'%(self._proc, frame_id, time.time()))
             if self._q_out.full():
                 continue
-            if config.PRINT_DIF:
-                self._q_out.put((outputs, raw_frame, frame_id, start))
-            else:
-                self._q_out.put((outputs, raw_frame, frame_id))
+            self._q_out.put((outputs, raw_frame, frame_id))

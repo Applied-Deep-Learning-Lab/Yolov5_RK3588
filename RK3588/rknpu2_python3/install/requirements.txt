@@ -1,7 +1,0 @@
-# For ByteTracker
-numpy
-scipy
-lap
-Cython
-# For project
-opencv-python

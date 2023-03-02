@@ -1,4 +1,4 @@
-from modules import config
+from utils import config
 import numpy as np
 from enum import IntEnum
 from multiprocessing import shared_memory, Value

@@ -17,17 +17,4 @@ RK3588/rknpu2/model/*
 !RK3588/rknpu2/model/bus.jpg
 
 # rknpu2_python3
-RK3588/rknpu2_python3/verbose.txt
-RK3588/rknpu2_python3/frames_ids.txt
 RK3588/rknpu2_python3/*jpg
-
-# ByteTracker
-RK3588/rknpu2_python3/install/cython_bbox/build
-RK3588/rknpu2_python3/install/cython_bbox/cython_bbox.egg-info
-RK3588/rknpu2_python3/install/cython_bbox/dist
-
-# Server
-# RK3588/rknpu2_python3/server.py
-# RK3588/rknpu2_python3/media
-# RK3588/rknpu2_python3/index
-# RK3588/rknpu2_python3/settings

@@ -1,4 +1,4 @@
-from modules import config
+from utils import config
 import numpy as np
 import cv2
 

@@ -1,11 +1,10 @@
-from modules import config
-from modules.camera.camera import Cam
-import multiprocessing as mp
-import time
+from utils import config
+from utils.camera import Cam
+from multiprocessing import Queue
 import cv2
 
 class VariableCamera(Cam):
-    def __init__(self, source, q_in: mp.Queue, q_out: mp.Queue, q_settings: mp.Queue):
+    def __init__(self, source: int, q_in: Queue, q_out: Queue, q_settings: Queue):
         super().__init__(
             source = source,
             q_in = q_in,
@@ -28,25 +27,12 @@ class VariableCamera(Cam):
                             continue
                         self._cap.set(int(setting), settings[setting])
                     print("Settings updated!")
-                if config.PRINT_DIF:
-                    start = time.time()
                 ret, frame = self._cap.read()
                 raw_frame = frame.copy()
                 if self._q_out.full():
                     continue
-                if config.PRINT_DIF:
-                    print('r id(%d) - %f'%(self._frame_id, time.time() - start))
-                if config.PRINT_TIME:
-                    print('r id(%d) - %f'%(self._frame_id, time.time()))
                 frame = self._pre_process(frame)
-                if config.PRINT_DIF:
-                    print('pr id(%d) - %f'%(self._frame_id, time.time() - start))
-                if config.PRINT_TIME:
-                    print('pr id(%d) - %f'%(self._frame_id, time.time()))
-                if config.PRINT_DIF:
-                    self._q_out.put((frame, raw_frame, self._frame_id, start))
-                else:
-                    self._q_out.put((frame, raw_frame, self._frame_id))
+                self._q_out.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
         finally:
             self._cap.release()
