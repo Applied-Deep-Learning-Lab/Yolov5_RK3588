@@ -81,57 +81,38 @@
     </h2>
   </summary>
 
-  * ### C/C++
+  Install miniconda
 
-    Building
+  ```
+  wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh
+  bash Miniconda3-latest-Linux-aarch64.sh
+  ```
 
-    ```
-    #before build write count of classes in postprocess.h
-    #cd <repo-dir>/RK3588/rknpu2/
-    ./build.sh
-    ```
+  Create conda env with python3.9
 
-    Running
+  ```
+  conda create -n <env-name> python=3.9
+  ```
+  
+  And then activate conda env
 
-    ```
-    #cd <repo-dir>/RK3588/rknpu2/run/
-    ./rknn_yolov5_demo <path-to-model> <path-to-jpg> <path-to-dataset-txt>
-    ```
+  ```
+  conda activate <env-name>
+  ```
 
-  * ### Python3
+  Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
 
-    Install miniconda
+  ```
+  #cd <repo-dir>/RK3588/install/
+  pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
+  ```
 
-    ```
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh
-    bash Miniconda3-latest-Linux-aarch64.sh
-    ```
-
-    Create conda env with python3.9
-
-    ```
-    conda create -n <env-name> python=3.9
-    ```
-    
-    And then activate conda env
-
-    ```
-    conda activate <env-name>
-    ```
-
-    Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
-
-    ```
-    #cd <repo-dir>/RK3588/rknpu2_python3/install/
-    pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
-    ```
-
-    Run inference
-    
-    ```
-    #cd <repo-dir>/RK3588/rknpu2_python3/
-    python3 main.py
-    ```
+  Run inference
+  
+  ```
+  #cd <repo-dir>/RK3588/
+  python3 main.py
+  ```
 
 </details>
 
