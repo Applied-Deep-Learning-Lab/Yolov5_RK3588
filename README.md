@@ -139,41 +139,7 @@
   <summary>
     <h2>
       <p>
-        4. Run inference with ByteTracker
-        <img src="HostPC/images/Yolov5m.png" width=38 height=38 alt="Yolov5m" />
-      </p>
-    </h2>
-  </summary>
-
-  In created conda enviroment also install requirements
-
-  ```
-  #cd <repo-dir>/RK3588/rknpu2_python3/install/
-  pip install -r requirements.txt
-  ```
-
-  Then build and install cython_bbox
-
-  ```
-  #cd <repo-dir>/RK3588/rknpu2_python3/install/cython_bbox
-  python3 setup.py build
-  python3 setup.py install
-  ```
-
-  Run inference with ByteTrack
-
-  ```
-  #cd <repo-dir>/RK3588/rknpu2_python3/
-  python3 main_bytetracker.py
-  ```
-
-</details>
-
-<details open>
-  <summary>
-    <h2>
-      <p>
-        5. Convert onnx model to rknn 
+        4. Convert onnx model to rknn 
         <img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fds2converter.com%2Fwp-content%2Fuploads%2F2015%2F07%2Fconvert-icon.png&f=1&nofb=1&ipt=d6dbe833ced7274d7335d067ba819d63567e853dc093822f5cda0d18df3bfbdf&ipo=images" width=38 height=38 alt="Converter" />
       </p>
     </h2>
