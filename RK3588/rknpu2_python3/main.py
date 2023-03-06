@@ -1,46 +1,20 @@
-from threading import Thread, Lock
+from multiprocessing import Process
+from threading import Thread
 from modules import storages as strgs
 from modules.rk3588 import Rk3588
-from modules.byte_tracker import BYTETracker, BTArgs
-from modules.byte_tracker import tracking, draw_info, show
+import cv2
 
 
-def fill_storages():
-    global rk3588, raw_frames_storage, inferenced_frames_storage, detections_storage, lock
+def fill(rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, inf_img_strg: strgs.ImageStorage, dets_strg: strgs.DetectionsStorage):
     while True:
         output = rk3588.get_data()
         if output is not None:
-            with lock:
-                raw_frame, frame, dets, frame_id = output
-                raw_frames_storage.set_data(raw_frame)
-                inferenced_frames_storage.set_data(frame)
-                detections_storage.set_data(dets)
-
-
-def bytetracker_draw():
-    global inferenced_frames_storage, lock
-    bytetrack_args = BTArgs()
-    bytetracker = BYTETracker(bytetrack_args, frame_rate = 60)
-    while True:
-        dets = detections_storage.get_last_data()
-        with lock:
-            frame = inferenced_frames_storage.get_last_data()
-        dets = tracking(
-            bytetracker = bytetracker,
-            dets = dets,
-            frame_shape = frame.shape[:2]
-        )
-        if dets is not None:
-            draw_info(
-                frame = frame,
-                dets = dets
-            )
-        show(frame)
+            raw_img_strg.set_data(output[0])
+            inf_img_strg.set_data(output[1])
+            dets_strg.set_data(output[2])
 
 
 def main():
-    global rk3588, raw_frames_storage, inferenced_frames_storage, detections_storage, lock
-
     raw_frames_storage = strgs.ImageStorage(
         strgs.StoragePurpose.RAW_FRAME
     )
@@ -48,26 +22,23 @@ def main():
         strgs.StoragePurpose.INFERENCED_FRAME
     )
     detections_storage = strgs.DetectionsStorage()
-
     rk3588 = Rk3588()
-    lock = Lock()
-
-    strgs_thread = Thread(
-        target = fill_storages,
+    fill_thread = Thread(
+        target = fill,
+        kwargs = {
+            "rk3588" : rk3588,
+            "raw_img_strg" : raw_frames_storage,
+            "inf_img_strg" : inferenced_frames_storage,
+            "dets_strg" : detections_storage
+        },
         daemon = True
     )
-    bytetracker_thread = Thread(
-        target = bytetracker_draw,
-        daemon = True
-    )
-
     rk3588.start()
-    strgs_thread.start()
-    bytetracker_thread.start()
-
+    fill_thread.start()
     while True:
-        # rk3588.show()
-        pass
+        print(detections_storage.get_last_data()[0])
+        cv2.imshow("frame", inferenced_frames_storage.get_last_data())
+        cv2.waitKey(1)
 
 
 if __name__ == "__main__":
