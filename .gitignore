@@ -1,14 +1,12 @@
 # everywhere
 __pycache__
 *.zip
+*jpg
+*.txt
 
 # models
 *.rknn
 *.onnx
-!RK3588/model/yolov5s-640-640.rknn
-!RK3588/models/yolov5s-640-640.rknn
-!RK3588/models/yolov5m_leaky.rknn
-
-# RK3588
-RK3588/*jpg
-RK3588/*.txt
+!models/yolov5m_leaky_352x352.rknn
+!models/yolov5s-640-640.rknn
+!models/yolov5m_leaky.rknn

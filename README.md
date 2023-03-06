@@ -22,7 +22,7 @@
 
     Or use ours **README's** for them *(select the one below)*.
 
-    |[OrangePi](OrangePi/README_ORANGEPI.md)|[Firefly](Firefly/README_FIREFLY.md)|
+    |[OrangePi](resources/OrangePi/README_ORANGEPI.md)|[Firefly](resources/Firefly/README_FIREFLY.md)|
     |                 :---:                 |                :---:               |
 
   * ### Docker *(Optional)*
@@ -103,14 +103,13 @@
   Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
 
   ```
-  #cd <repo-dir>/RK3588/install/
+  #cd <repo-dir>/install/
   pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
   ```
 
   Run inference
   
   ```
-  #cd <repo-dir>/RK3588/
   python3 main.py
   ```
 
@@ -143,7 +142,7 @@
       Install Python dependency, such as requirements_cp38-1.4.0.txt
 
       ```
-      #cd <repo_dir>/HostPC/converter/install/
+      #cd <repo_dir>/resources/HostPC/converter/install/
       pip install -r requirements_cp38-1.4.0.txt
       #if doesn't installing then install numpy before that
       #pip install numpy
@@ -158,7 +157,7 @@
       For convert your *.onnx* model to *.rknn* run **onnx2rknn.py** like:
 
       ```
-      #cd <repo-dir>/HostPC/converter/convert/
+      #cd <repo-dir>/resources/HostPC/converter/convert/
       python3 onnx2rknn.py \
               --input <path-to-your-onnx-model> \
               --output <path-where-save-rknn-model> \
