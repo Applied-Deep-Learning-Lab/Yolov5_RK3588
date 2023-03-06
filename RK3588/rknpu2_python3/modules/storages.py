@@ -29,12 +29,18 @@ class Storage():
         self._index_counter = Value('i', 0)
 
     def set_data(self, data: np.ndarray):
-        self._storage[self._index_counter.value % config.DATA_AMOUNT][:len(data),:] = data
+        if data is not None:
+            self._storage[self._index_counter.value % config.DATA_AMOUNT][:len(data),:] = data
+        else:
+            self._storage[self._index_counter.value % config.DATA_AMOUNT][:] = data
         self._index_counter.value += 1
 
-    def get_data(self, index: int):
+    def get_data_by_index(self, index: int):
         return self._storage[index][:]
     
+    def get_last_data(self):
+        return self._storage[(self._index_counter.value - 1) % config.DATA_AMOUNT][:]
+
     def get_last_index(self):
         return(self._index_counter.value - 1)
     
