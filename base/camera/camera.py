@@ -1,6 +1,6 @@
 import cv2
 import time
-from base import config
+import config
 from multiprocessing import Queue
 import numpy as np
 

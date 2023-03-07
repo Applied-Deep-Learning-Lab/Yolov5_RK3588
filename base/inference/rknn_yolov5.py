@@ -1,5 +1,5 @@
 from rknnlite.api import RKNNLite
-from base import config
+import config
 from multiprocessing import Queue
 
 class Yolov5():

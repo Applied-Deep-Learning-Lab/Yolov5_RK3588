@@ -1,4 +1,4 @@
-from base import config
+import config
 from base.camera import Cam
 from base.inference import Yolov5
 from base.post_process import post_process

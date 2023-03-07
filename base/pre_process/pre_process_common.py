@@ -1,4 +1,4 @@
-from base import config
+import config
 import cv2
 import numpy as np
 

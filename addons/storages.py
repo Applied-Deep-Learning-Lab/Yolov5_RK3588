@@ -1,4 +1,4 @@
-from base import config
+import config
 import numpy as np
 from enum import IntEnum
 from multiprocessing import shared_memory, Value
@@ -38,15 +38,15 @@ class Storage():
     def get_data_by_index(self, index: int):
         return self._storage[index][:]
     
-    def get_last_data(self):
+    async def get_last_data(self):
         return self._storage[(self._index_counter.value - 1) % config.DATA_AMOUNT][:]
+
+    def get_last_index(self):
+        return(self._index_counter.value - 1)
 
     def clear_buffer(self):
         self._buffer.close()
         self._buffer.unlink()
-
-    def get_last_index(self):
-        return(self._index_counter.value - 1)
 
 
 class ImageStorage(Storage):

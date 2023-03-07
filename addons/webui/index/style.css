@@ -1,0 +1,68 @@
+body, button, #model_file{
+  padding: 4px 8px;
+  background-color: #000000;
+  color: #FFFFFF;
+  border: solid 1px;
+  border-color: #000000;
+}
+
+body{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 10px;
+}
+
+label{
+  text-align: center;
+}
+th, td {
+  width: 25%;
+  font-weight: normal;
+  text-align: left;
+}
+.header {
+  font-weight: bold;
+}
+th.header {
+    padding: 10px;
+    column-span: 4;
+    text-align: center;
+}
+
+.control_buttons:hover, label:hover{
+  background-color: #555555;
+  color: #AAAAAA;
+  border: solid 1px;
+  border-color: #FFFFFF;
+}
+pre {
+  overflow-x: hidden;
+  overflow-y: auto;
+
+}
+
+video {
+  width: 100%;
+}
+
+.option {
+  margin-bottom: 8px;
+}
+
+
+#model_upload{
+  grid-template-columns: 1fr 1fr;
+  display: grid;
+}
+
+#media{
+  grid-template-rows: 1fr 1fr 1fr;
+  display: grid inline-block;
+}
+
+#inference, #upload, #download_model, #start{
+  text-align: center;
+  width: 100%;
+}
+
+

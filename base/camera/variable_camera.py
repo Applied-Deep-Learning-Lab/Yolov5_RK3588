@@ -1,4 +1,4 @@
-from base import config
+import config
 from base.camera import Cam
 from multiprocessing import Queue
 import cv2

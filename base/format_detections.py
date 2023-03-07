@@ -1,4 +1,4 @@
-from base import config
+import config
 import numpy as np
 
 def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
