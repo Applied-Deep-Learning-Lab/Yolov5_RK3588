@@ -38,7 +38,10 @@ class Storage():
     def get_data_by_index(self, index: int):
         return self._storage[index][:]
     
-    async def get_last_data(self):
+    def get_last_data(self):
+        return self._storage[(self._index_counter.value - 1) % config.DATA_AMOUNT][:]
+    
+    async def get_last_data_async(self):
         return self._storage[(self._index_counter.value - 1) % config.DATA_AMOUNT][:]
 
     def get_last_index(self):

@@ -51,7 +51,7 @@ class InferenceTrack(MediaStreamTrack):
             Returns:
                 new_frame(av.VideoFrame): formatted frame retrieved from inference object 
         """
-        frame = await self._inf_img_strg.get_last_data()
+        frame = await self._inf_img_strg.get_last_data_async()
         new_frame = VideoFrame.from_ndarray(frame, format="bgr24")
         new_frame.pts = int(self.stats.getFrameCount()) * 500
         new_frame.time_base = Fraction(1, 30000)

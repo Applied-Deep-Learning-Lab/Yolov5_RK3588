@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 import base64
 import io
+import os
 from PIL import Image
 
 
@@ -96,12 +97,14 @@ def to_labelme(content, classes, frame_size, image_path=None):
 
 
 async def request_inference(dets_strg: strgs.DetectionsStorage, raw_img_strg: strgs.ImageStorage):
-    zip_path = "inference.zip"
+    file_path = os.path.dirname(__file__)
+    zip_path = file_path + "/inference.zip"
     last_index = dets_strg.get_last_index()
     with ZipFile(zip_path, 'w') as zip_file:
         for i in range(config.AMOUNT_OF_SEND_DATA):
             raw_img = raw_img_strg.get_data_by_index((last_index - i) % config.DATA_AMOUNT)
             dets = dets_strg.get_data_by_index((last_index - i) % config.DATA_AMOUNT)
+            dets = dets[np.where(dets[..., 5] > 0)]
             if not np.any(dets):
                 if i == 0:
                     print("No frames")

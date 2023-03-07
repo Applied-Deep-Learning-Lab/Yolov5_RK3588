@@ -38,9 +38,12 @@ def main():
         inferenced_frames_storage.clear_buffer()
         detections_storage.clear_buffer()
         return
+    # rk3588.start()
+    # fill_thread.start()
     # while True:
     #     try:
-    #         pass
+    #         print(detections_storage.get_data_by_index(0))
+    #         show_frames(inferenced_frames_storage.get_last_data())
     #     except:
     #         raw_frames_storage.clear_buffer()
     #         inferenced_frames_storage.clear_buffer()
