@@ -1,10 +1,10 @@
 from base import Rk3588
-# from base import show_frames
+from base import show_frames
 import addons.storages as strgs
 from addons.byte_tracker import BYTETracker, BTArgs
 from addons.byte_tracker import tracking, draw_info
-from addons.webui import webUI
 from threading import Thread
+import argparse
 
 
 def fill_storages(rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, inf_img_strg: strgs.ImageStorage, dets_strg: strgs.DetectionsStorage):
@@ -42,7 +42,28 @@ def fill_storages_bytetracker(rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, 
             dets_strg.set_data(detections)
 
 
-def main():
+def parse_opt():
+    parser = argparse.ArgumentParser()
+    # add required arguments
+    # required = parser.add_argument_group('required arguments')
+
+    # some reqired args
+
+    # add optional arguments
+    parser.add_argument(
+        "--webui",
+        action = "store_true",
+        help = "Turn on/off webui"
+    )
+    parser.add_argument(
+        "--bytetracker", "-bt",
+        action = "store_true",
+        help = "Turn on/off BYTEtracker"
+    )
+    return parser.parse_args()
+
+
+def main(webui: bool, bytetracker: bool):
     raw_frames_storage = strgs.ImageStorage(
         strgs.StoragePurpose.RAW_FRAME
     )
@@ -51,41 +72,56 @@ def main():
     )
     detections_storage = strgs.DetectionsStorage()
     rk3588 = Rk3588()
-    fill_thread = Thread(
-        target = fill_storages_bytetracker,
-        kwargs = {
-            "rk3588" : rk3588,
-            "raw_img_strg" : raw_frames_storage,
-            "inf_img_strg" : inferenced_frames_storage,
-            "dets_strg" : detections_storage
-        },
-        daemon = True
-    )
-    ui = webUI(
-        raw_img_strg = raw_frames_storage,
-        inf_img_strg = inferenced_frames_storage,
-        dets_strg = detections_storage
-    )
-    try:
-        rk3588.start()
-        fill_thread.start()
-        ui.start()
-    finally:
-        raw_frames_storage.clear_buffer()
-        inferenced_frames_storage.clear_buffer()
-        detections_storage.clear_buffer()
-        return
-    # rk3588.start()
-    # fill_thread.start()
-    # while True:
-    #     try:
-    #         show_frames(inferenced_frames_storage.get_last_data())
-    #     except:
-    #         raw_frames_storage.clear_buffer()
-    #         inferenced_frames_storage.clear_buffer()
-    #         detections_storage.clear_buffer()
-    #         break
+    if bytetracker:
+        fill_thread = Thread(
+            target = fill_storages_bytetracker,
+            kwargs = {
+                "rk3588" : rk3588,
+                "raw_img_strg" : raw_frames_storage,
+                "inf_img_strg" : inferenced_frames_storage,
+                "dets_strg" : detections_storage
+            },
+            daemon = True
+        )
+    else:
+        fill_thread = Thread(
+            target = fill_storages,
+            kwargs = {
+                "rk3588" : rk3588,
+                "raw_img_strg" : raw_frames_storage,
+                "inf_img_strg" : inferenced_frames_storage,
+                "dets_strg" : detections_storage
+            },
+            daemon = True
+        )
+    rk3588.start()
+    fill_thread.start()
+    if webui:
+        # module av conflict with cv2.imshow and freeze
+        from addons.webui import webUI
+        ui = webUI(
+            raw_img_strg = raw_frames_storage,
+            inf_img_strg = inferenced_frames_storage,
+            dets_strg = detections_storage
+        )
+        try:
+            ui.start()
+        finally:
+            raw_frames_storage.clear_buffer()
+            inferenced_frames_storage.clear_buffer()
+            detections_storage.clear_buffer()
+            return
+    else:
+        while True:
+            try:
+                show_frames(inferenced_frames_storage.get_last_data())
+            except:
+                raw_frames_storage.clear_buffer()
+                inferenced_frames_storage.clear_buffer()
+                detections_storage.clear_buffer()
+                break
 
 
 if __name__ == "__main__":
-    main()
+    opt = parse_opt()
+    main(**vars(opt))

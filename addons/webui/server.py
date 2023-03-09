@@ -1,6 +1,6 @@
 from .media import MediaBlackhole, MediaRelay, InferenceTrack
 from .utils import request_inference
-from addons import storages as strgs
+import addons.storages as strgs
 import asyncio
 import json
 import logging
