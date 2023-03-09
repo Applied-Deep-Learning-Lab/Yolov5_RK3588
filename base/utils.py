@@ -1,5 +1,7 @@
 import config
 import numpy as np
+import cv2
+
 
 def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
     dets=np.zeros([len(boxes), 6], dtype=np.float32)
@@ -14,3 +16,8 @@ def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
         count+=1
     # dets = dets[np.where(np.isin(dets[..., 4], config.TRACKING_CLASSES))]
     return dets
+
+
+def show_frames(frame):
+    cv2.imshow("frame", frame)
+    cv2.waitKey(1)

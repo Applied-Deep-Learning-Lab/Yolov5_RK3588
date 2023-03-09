@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from modules.byte_tracker import BYTETracker
+from addons.byte_tracker import BYTETracker
 
 
 def draw_info(frame: np.ndarray, dets: np.ndarray):
@@ -23,14 +23,9 @@ def draw_info(frame: np.ndarray, dets: np.ndarray):
 
 
 def tracking(bytetracker: BYTETracker, dets: np.ndarray, frame_shape: tuple):
-    ouput = bytetracker.update(dets, frame_shape, frame_shape)
-    ouput = [np.append(out.tlbr, [out.track_id, out.sclass]) for out in ouput]
-    if len(ouput):
-        return np.asarray(ouput)
+    output = bytetracker.update(dets, frame_shape, frame_shape)
+    output = [np.append(out.tlbr, [out.track_id, out.sclass]) for out in output]
+    if len(output):
+        return np.asarray(output)
     else:
         return None
-    
-
-def show(frame: np.ndarray):
-    cv2.imshow('frame', frame)
-    cv2.waitKey(1)

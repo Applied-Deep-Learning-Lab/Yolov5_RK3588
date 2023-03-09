@@ -1,5 +1,5 @@
 import base.post_process as rknn_pp
-from base.format_detections import format_dets
+from base.utils import format_dets
 import numpy as np
 from multiprocessing import Queue
 
