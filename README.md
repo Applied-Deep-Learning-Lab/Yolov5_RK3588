@@ -25,13 +25,39 @@
     |[OrangePi](resources/OrangePi/README_ORANGEPI.md)|[Firefly](resources/Firefly/README_FIREFLY.md)|
     |                 :---:                 |                :---:               |
 
+  * ### FFMPEG
+
+    Install ffmpeg package for WebUI:
+
+    ```
+    sudo apt-get install -y ffmpeg
+    ```
+
+    And dependencies for WebUI:
+    
+    ```
+    # General dependencies
+    sudo apt-get install -y python-dev pkg-config
+
+    # Library components
+    sudo apt-get install -y \
+      libavformat-dev libavcodec-dev libavdevice-dev \
+      libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
+    ```
+
+    And add next line to your ``.bashrc``:
+
+    ```
+    export LD_PRELOAD=$LD_PRELOAD:/usr/lib/aarch64-linux-gnu/libffi.so.7
+    ```
+
   * ### Docker *(Optional)*
 
     For installing docker on RK3588 device you can use [official docker docs](https://docs.docker.com/desktop/install/linux-install/) or check our [README_DOCKER.md](README_DOCKER.md)
 
 </details>  
 
-<details open>
+<details>
   <summary>
     <h2>
       <p>
@@ -75,8 +101,8 @@
   <summary>
     <h2>
       <p>
-        3. Installing, Configurating and Running Yolov5
-        <img src="https://storage.googleapis.com/wandb-production.appspot.com/wandb-public-images/3hql0qh3b7.png" width=38 height=38 alt="Yolov5" />
+        3. Installing and configurating
+        <img src="https://cdn1.iconfinder.com/data/icons/user-interface-cute-vol-2/52/configuration__settings__options__config-512.png" width=38 height=38 alt="Yolov5" />
       </p>
     </h2>
   </summary>
@@ -107,10 +133,19 @@
   pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
   ```
 
-  Run inference
-  
+  In created conda enviroment also install requirements
+
   ```
-  python3 main.py
+  #cd <repo-dir>/install/
+  pip install -r requirements.txt
+  ```
+
+  Then build and install cython_bbox
+
+  ```
+  #cd <repo-dir>/install/cython_bbox/
+  python3 setup.py build
+  python3 setup.py install
   ```
 
 </details>
@@ -119,7 +154,25 @@
   <summary>
     <h2>
       <p>
-        4. Convert onnx model to rknn 
+        4. Running Yolov5
+        <img src="https://storage.googleapis.com/wandb-production.appspot.com/wandb-public-images/3hql0qh3b7.png" width=38 height=38 alt="Yolov5" />
+      </p>
+    </h2>
+  </summary>
+
+  ``main.py`` runs inference. Also you can add arguments ``--webui``, ``--bytetracker`` for turn on **WebUI** that runs on the local host and **BYTEtracker** that assigns indexes to objects.
+  
+  ```
+  python3 main.py #--webui --bytetracker
+  ```
+
+</details>
+
+<details>
+  <summary>
+    <h2>
+      <p>
+        5. Convert onnx model to rknn 
         <img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fds2converter.com%2Fwp-content%2Fuploads%2F2015%2F07%2Fconvert-icon.png&f=1&nofb=1&ipt=d6dbe833ced7274d7335d067ba819d63567e853dc093822f5cda0d18df3bfbdf&ipo=images" width=38 height=38 alt="Converter" />
       </p>
     </h2>

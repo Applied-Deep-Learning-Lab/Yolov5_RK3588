@@ -5,6 +5,7 @@ from addons.byte_tracker import BYTETracker, BTArgs
 from addons.byte_tracker import tracking, draw_info
 from threading import Thread
 import argparse
+from addons.webui import webUI
 
 
 def fill_storages(rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, inf_img_strg: strgs.ImageStorage, dets_strg: strgs.DetectionsStorage):
@@ -97,8 +98,6 @@ def main(webui: bool, bytetracker: bool):
     rk3588.start()
     fill_thread.start()
     if webui:
-        # module av conflict with cv2.imshow and freeze
-        from addons.webui import webUI
         ui = webUI(
             raw_img_strg = raw_frames_storage,
             inf_img_strg = inferenced_frames_storage,
