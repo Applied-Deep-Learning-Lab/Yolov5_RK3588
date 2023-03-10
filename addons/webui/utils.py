@@ -1,5 +1,6 @@
 import addons.storages as strgs
-import config
+from config import config_from_json
+from pathlib import Path
 import numpy as np
 from zipfile import ZipFile
 from datetime import datetime
@@ -8,6 +9,10 @@ import base64
 import io
 import os
 from PIL import Image
+
+
+CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+cfg = config_from_json(CONFIG_FILE, read_from_file = True)
 
 
 def boxes_to_shapes(bboxes, classes):
@@ -101,15 +106,15 @@ async def request_inference(dets_strg: strgs.DetectionsStorage, raw_img_strg: st
     zip_path = file_path + "/inference.zip"
     last_index = dets_strg.get_last_index()
     with ZipFile(zip_path, 'w') as zip_file:
-        for i in range(config.AMOUNT_OF_SEND_DATA):
-            raw_img = raw_img_strg.get_data_by_index((last_index - i) % config.DATA_AMOUNT)
-            dets = dets_strg.get_data_by_index((last_index - i) % config.DATA_AMOUNT)
+        for i in range(cfg["webui"]["send_data_amount"]):
+            raw_img = raw_img_strg.get_data_by_index((last_index - i) % cfg["storages"]["stored_data_amount"])
+            dets = dets_strg.get_data_by_index((last_index - i) % cfg["storages"]["stored_data_amount"])
             dets = dets[np.where(dets[..., 5] > 0)]
             if not np.any(dets):
                 if i == 0:
                     print("No frames")
                 else:
-                    print("Amount less then %d"%(config.AMOUNT_OF_SEND_DATA))
+                    print("Amount less then %d"%(cfg["webui"]["send_data_amount"]))
                 break
             name = datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')
             zip_file.writestr(
@@ -120,8 +125,8 @@ async def request_inference(dets_strg: strgs.DetectionsStorage, raw_img_strg: st
                 f'{name}.json',
                 to_labelme(
                     content=(raw_img, dets),
-                    classes=config.TRACKING_CLASSES,
-                    frame_size=(config.CAM_WIDTH, config.CAM_HEIGHT),
+                    classes=cfg["bytetrack"]["tracking_classes"],
+                    frame_size=(cfg["camera"]["width"], cfg["camera"]["height"]),
                     image_path=name
                 )
             )

@@ -1,6 +1,12 @@
-import config
+from config import config_from_json
+from pathlib import Path
 import numpy as np
 import cv2
+
+
+CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+cfg = config_from_json(CONFIG_FILE, read_from_file = True)
+
 
 def sigmoid(x):
     return x# 1 / (1 + np.exp(-x))
@@ -34,7 +40,7 @@ def process(input, mask, anchors):
     row = row.reshape(grid_h, grid_w, 1, 1).repeat(3, axis=-2)
     grid = np.concatenate((col, row), axis=-1)
     box_xy += grid
-    box_xy *= int(config.NET_SIZE/grid_h)
+    box_xy *= int(cfg["inference"]["net_size"]/grid_h)
 
     box_wh = pow(sigmoid(input[..., 2:4])*2, 2)
     box_wh = box_wh * anchors
@@ -61,14 +67,14 @@ def filter_boxes(boxes, box_confidences, box_class_probs):
     box_confidences = box_confidences.reshape(-1)
     box_class_probs = box_class_probs.reshape(-1, box_class_probs.shape[-1])
 
-    _box_pos = np.where(box_confidences >= config.OBJ_THRESH)
+    _box_pos = np.where(box_confidences >= cfg["inference"]["obj_thresh"])
     boxes = boxes[_box_pos]
     box_confidences = box_confidences[_box_pos]
     box_class_probs = box_class_probs[_box_pos]
 
     class_max_score = np.max(box_class_probs, axis=-1)
     classes = np.argmax(box_class_probs, axis=-1)
-    _class_pos = np.where(class_max_score >= config.OBJ_THRESH)
+    _class_pos = np.where(class_max_score >= cfg["inference"]["obj_thresh"])
 
     boxes = boxes[_class_pos]
     classes = classes[_class_pos]
@@ -110,7 +116,7 @@ def nms_boxes(boxes, scores):
         inter = w1 * h1
 
         ovr = inter / (areas[i] + areas[order[1:]] - inter)
-        inds = np.where(ovr <= config.NMS_THRESH)[0]
+        inds = np.where(ovr <= cfg["inference"]["nms_thresh"])[0]
         order = order[inds + 1]
     keep = np.array(keep)
     return keep
@@ -169,15 +175,13 @@ def draw(image, boxes, scores, classes):
     """
     for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
-        # print('class: {}, score: {}'.format(CLASSES[cl], score))
-        # print('box coordinate left,top,right,down: [{}, {}, {}, {}]'.format(top, left, right, bottom))
-        top = int(top*(config.CAM_WIDTH/config.NET_SIZE))
-        left = int(left*(config.CAM_HEIGHT/config.NET_SIZE))
-        right = int(right*(config.CAM_WIDTH/config.NET_SIZE))
-        bottom = int(bottom*(config.CAM_HEIGHT/config.NET_SIZE))
+        top = int(top*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
+        left = int(left*(ccfg["camera"]["height"]/cfg["inference"]["net_size"]))
+        right = int(right*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
+        bottom = int(bottom*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
 
         cv2.rectangle(image, (top, left), (right, bottom), (255, 0, 0), 2)
-        cv2.putText(image, '{0} {1:.2f}'.format(config.CLASSES[cl], score),
+        cv2.putText(image, '{0} {1:.2f}'.format(cfg["inference"]["classes"][cl], score),
                     (top, left - 6),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.6, (0, 0, 255), 2)

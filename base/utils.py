@@ -1,6 +1,11 @@
-import config
+from config import config_from_json
+from pathlib import Path
 import numpy as np
 import cv2
+
+
+CONFIG_FILE = str(Path(__file__).parent.parent.absolute()) + "/config.json"
+cfg = config_from_json(CONFIG_FILE, read_from_file = True)
 
 
 def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
@@ -8,13 +13,13 @@ def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
     count=0
     for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
-        top = int(top*(config.CAM_WIDTH/config.NET_SIZE))
-        left = int(left*(config.CAM_HEIGHT/config.NET_SIZE))
-        right = int(right*(config.CAM_WIDTH/config.NET_SIZE))
-        bottom = int(bottom*(config.CAM_HEIGHT/config.NET_SIZE))
+        top = int(top*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
+        left = int(left*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
+        right = int(right*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
+        bottom = int(bottom*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
         dets[count]=[top, left, right, bottom, cl, score]
         count+=1
-    # dets = dets[np.where(np.isin(dets[..., 4], config.TRACKING_CLASSES))]
+    # dets = dets[np.where(np.isin(dets[..., 4], cfg["bytetrack"]["tracking_classes"]))]
     return dets
 
 

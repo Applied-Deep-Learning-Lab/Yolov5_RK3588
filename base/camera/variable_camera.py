@@ -1,7 +1,13 @@
-import config
+from config import config_from_json
+from pathlib import Path
 from base.camera import Cam
 from multiprocessing import Queue
 import cv2
+
+
+CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+cfg = config_from_json(CONFIG_FILE, read_from_file = True)
+
 
 class VariableCamera(Cam):
     def __init__(self, source: int, q_in: Queue, q_out: Queue, q_settings: Queue):
@@ -23,7 +29,7 @@ class VariableCamera(Cam):
                         if setting == 'source':
                             self._cap.release()
                             self._cap = cv2.VideoCapture(settings[setting])
-                            self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*config.PIXEL_FORMAT))
+                            self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*cfg["camera"]["pixel_format"]))
                             continue
                         self._cap.set(int(setting), settings[setting])
                     print("Settings updated!")

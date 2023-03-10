@@ -1,6 +1,12 @@
 from rknnlite.api import RKNNLite
-import config
+from config import config_from_json
+from pathlib import Path
 from multiprocessing import Queue
+
+
+CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+cfg = config_from_json(CONFIG_FILE, read_from_file = True)
+
 
 class Yolov5():
     def __init__(self, proc: int, q_in: Queue, q_out: Queue, core: int = RKNNLite.NPU_CORE_AUTO):
@@ -11,11 +17,11 @@ class Yolov5():
         self._total_inf_time = 0
         self._inf_time = 0
         self._frames = 0
-        self._load_model(config.RKNN_MODEL)
+        self._load_model(cfg["inference"]["path_to_model"])
 
     def _load_model(self, model: str):
         print("proc: ", self._proc)
-        self._rknnlite = RKNNLite(verbose=config.VERBOSE, verbose_file=config.VERBOSE_FILE)
+        self._rknnlite = RKNNLite(verbose=cfg["debug"]["verbose"], verbose_file=cfg["debug"]["verbose_file"])
 
         print("%d. Export rknn model"%(self._proc))
         ret = self._rknnlite.load_rknn(model)
@@ -25,7 +31,7 @@ class Yolov5():
         print('%d. done'%(self._proc))
 
         print('%d. Init runtime environment'%(self._proc))
-        ret = self._rknnlite.init_runtime(async_mode=config.ASYNC_MODE, core_mask = self._core)
+        ret = self._rknnlite.init_runtime(async_mode=cfg["inference"]["async_mode"], core_mask = self._core)
         if ret != 0:
             print('%d. Init runtime environment failed!'%(self._proc))
             exit(ret)

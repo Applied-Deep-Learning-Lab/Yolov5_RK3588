@@ -1,8 +1,13 @@
-import config
+from config import config_from_json
+from pathlib import Path
 import numpy as np
 from enum import IntEnum
 from multiprocessing import shared_memory, Value
 import math
+
+
+CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+cfg = config_from_json(CONFIG_FILE, read_from_file = True)
 
 
 class StoragePurpose(IntEnum):
@@ -30,19 +35,19 @@ class Storage():
 
     def set_data(self, data: np.ndarray):
         if data is not None:
-            self._storage[self._index_counter.value % config.DATA_AMOUNT][:len(data),:] = data
+            self._storage[self._index_counter.value % cfg["storages"]["stored_data_amount"]][:len(data),:] = data
         else:
-            self._storage[self._index_counter.value % config.DATA_AMOUNT][:] = data
+            self._storage[self._index_counter.value % cfg["storages"]["stored_data_amount"]][:] = data
         self._index_counter.value += 1
 
     def get_data_by_index(self, index: int):
         return self._storage[index][:]
     
     def get_last_data(self):
-        return self._storage[(self._index_counter.value - 1) % config.DATA_AMOUNT][:]
+        return self._storage[(self._index_counter.value - 1) % cfg["storages"]["stored_data_amount"]][:]
     
     async def get_last_data_async(self):
-        return self._storage[(self._index_counter.value - 1) % config.DATA_AMOUNT][:]
+        return self._storage[(self._index_counter.value - 1) % cfg["storages"]["stored_data_amount"]][:]
 
     def get_last_index(self):
         return(self._index_counter.value - 1)
@@ -56,8 +61,8 @@ class ImageStorage(Storage):
     def __init__(self, storage_name: StoragePurpose):
         super().__init__(
             storage_name = storage_name,
-            data_size = (config.CAM_HEIGHT, config.CAM_WIDTH, 3),
-            data_amount = config.DATA_AMOUNT,
+            data_size = (cfg["camera"]["height"], cfg["camera"]["width"], 3),
+            data_amount = cfg["storages"]["stored_data_amount"],
             data_type = np.uint8
         )
 
@@ -66,7 +71,7 @@ class DetectionsStorage(Storage):
     def __init__(self):
         super().__init__(
             storage_name = StoragePurpose.DETECTIONS,
-            data_size = (config.NUM_DETS, 6),
-            data_amount = config.DATA_AMOUNT,
+            data_size = (cfg["storages"]["dets_amount"], 6),
+            data_amount = cfg["storages"]["stored_data_amount"],
             data_type = np.float32
         )

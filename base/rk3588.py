@@ -1,4 +1,5 @@
-import config
+from config import config_from_json
+from pathlib import Path
 from base.camera import Cam
 from base.inference import Yolov5
 from base.post_process import post_process
@@ -6,15 +7,19 @@ from multiprocessing import Process, Queue
 from rknnlite.api import RKNNLite
 
 
+CONFIG_FILE = str(Path(__file__).parent.parent.absolute()) + "/config.json"
+cfg = config_from_json(CONFIG_FILE, read_from_file = True)
+
+
 class Rk3588():
     def __init__(self):
         # Creating queues for sending data between processes
-        self._q_pre = Queue(maxsize=config.BUF_SIZE)
-        self._q_outs = Queue(maxsize=config.BUF_SIZE)
-        self._q_post = Queue(maxsize=config.BUF_SIZE)
+        self._q_pre = Queue(maxsize=cfg["inference"]["buf_size"])
+        self._q_outs = Queue(maxsize=cfg["inference"]["buf_size"])
+        self._q_post = Queue(maxsize=cfg["inference"]["buf_size"])
         # Creating camera object for recording frames process
         self._cam = Cam(
-            source = config.SOURCE,
+            source = cfg["camera"]["source"],
             q_in = self._q_post,
             q_out = self._q_pre
         )
@@ -27,7 +32,7 @@ class Rk3588():
                 q_in = self._q_pre,
                 q_out = self._q_outs,
                 core = self._cores[i%3]
-            ) for i in range(config.INF_PROC)
+            ) for i in range(cfg["inference"]["inf_proc"])
         ]
         # Creating process for recording frames
         self._rec = Process(
@@ -50,7 +55,7 @@ class Rk3588():
                     "q_out" : self._q_post
                 },
                 daemon=True
-            ) for i in range(config.POST_PROC)
+            ) for i in range(cfg["inference"]["post_proc"])
         ]
         
     def start(self):
