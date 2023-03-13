@@ -99,6 +99,7 @@ def main(webui: bool, bytetracker: bool):
     fill_thread.start()
     if webui:
         ui = webUI(
+            rk3588 = rk3588,
             raw_img_strg = raw_frames_storage,
             inf_img_strg = inferenced_frames_storage,
             dets_strg = detections_storage
@@ -110,15 +111,14 @@ def main(webui: bool, bytetracker: bool):
             inferenced_frames_storage.clear_buffer()
             detections_storage.clear_buffer()
             return
-    else:
-        while True:
-            try:
-                show_frames(inferenced_frames_storage.get_last_data())
-            except:
-                raw_frames_storage.clear_buffer()
-                inferenced_frames_storage.clear_buffer()
-                detections_storage.clear_buffer()
-                break
+    while True:
+        try:
+            show_frames(inferenced_frames_storage.get_last_data())
+        except:
+            raw_frames_storage.clear_buffer()
+            inferenced_frames_storage.clear_buffer()
+            detections_storage.clear_buffer()
+            break
 
 
 if __name__ == "__main__":

@@ -359,7 +359,7 @@ function downloadModel() {
       .then(response=>response.blob())
       .then(data=>{
        const d = new Date();
-       name = new String('yolov5m_leaky_352x352.rknn');
+       name = new String('model.rknn');
        download(data, name, 'multipart/mixed'); } )
 }
 

@@ -176,7 +176,7 @@ def draw(image, boxes, scores, classes):
     for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
         top = int(top*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
-        left = int(left*(ccfg["camera"]["height"]/cfg["inference"]["net_size"]))
+        left = int(left*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
         right = int(right*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
         bottom = int(bottom*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
 
