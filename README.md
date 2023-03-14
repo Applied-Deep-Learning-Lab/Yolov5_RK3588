@@ -166,6 +166,19 @@
   python3 main.py #--webui --bytetracker
   ```
 
+  You also can set autostart for running this. For do it run ``set_autostart.sh`` (*before it write absolute path to your model in ``config.json``*):
+
+  ```
+  #cd <repo-dir>/install/autostart/
+  source set_autostart.sh
+  ```
+
+  It runs inference with webui. You can remove ``--webui`` from ``set_autostart.sh`` or add other arguments in next line:
+
+  ```
+  sed -i "s|ExecStart=.*|ExecStart=$CONDA_ENV_PATH/bin/python3 $OBJ_DET_PROG --webui|" $AUTOSTART_SERVICE
+  ```
+
 </details>
 
 <details>
