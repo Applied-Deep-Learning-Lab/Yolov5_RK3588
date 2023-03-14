@@ -372,9 +372,9 @@ function download(response, fileName, contentType) {
 }
 
 function updateModel() {
-  document.getElementById("upload").disabled = true;
+  document.getElementById("model_upload").disabled = true;
   setTimeout(function() {
-      document.getElementById("upload").disabled = false;
+      document.getElementById("model_upload").disabled = false;
   }, 15000);
   const formData = new FormData()
 
@@ -387,7 +387,28 @@ function updateModel() {
   })
 }
 
-function updateFileName(){
+function updateModelFileName(){
     var file = document.getElementById("model_file").files[0];
     document.getElementById("file_chooser_label").innerHTML = file.name
+}
+
+function updateSettings() {
+    document.getElementById("settings_upload").disabled = true;
+    setTimeout(function() {
+        document.getElementById("settings_upload").disabled = false;
+    }, 15000);
+    const formData = new FormData()
+  
+    formData.append('file', document.getElementById("settings_file").files[0])
+    fetch("/settings", {
+      method: 'POST',
+      body: formData,
+    }).then((response) => {
+      dataChannelLog.textContent += "response: " + response + "\n";
+    })
+  }
+
+function updateSettingsFileName(){
+    var file = document.getElementById("settings_file").files[0];
+    document.getElementById("settings_chooser_label").innerHTML = file.name
 }

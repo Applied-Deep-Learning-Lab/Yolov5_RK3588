@@ -1,6 +1,7 @@
+from config import config_from_json
+from pathlib import Path
 from .media import MediaBlackhole, MediaRelay, InferenceTrack
 from .utils import request_inference
-from base import Rk3588
 import addons.storages as strgs
 import asyncio
 import json
@@ -12,12 +13,16 @@ from aiortc import RTCPeerConnection, RTCSessionDescription
 from multidict import MultiDict
 
 
+# Getting config
+CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+cfg = config_from_json(CONFIG_FILE, read_from_file = True)
+
+
 class webUI():
-    def __init__(self, rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, inf_img_strg: strgs.ImageStorage, dets_strg: strgs.DetectionsStorage):
+    def __init__(self, raw_img_strg: strgs.ImageStorage, inf_img_strg: strgs.ImageStorage, dets_strg: strgs.DetectionsStorage):
         self._raw_img_strg = raw_img_strg
         self._inf_img_strg = inf_img_strg
         self._dets_strg = dets_strg
-        self._rk3588 = rk3588
         self._ROOT = os.path.dirname(__file__)
         self._logger = logging.getLogger("pc")
         self._pcs = set()
@@ -38,37 +43,30 @@ class webUI():
         content = open(os.path.join(self._ROOT, "index/style.css"), "r").read()
         return web.Response(content_type="text/css", text=content)
 
-    async def _settings_main(self, request):
-        """Response with settings page HTML file on request"""
-        if request.content_type == 'application/json':
-            json_file = open(os.path.join(self._ROOT, "settings/settings.json"), 'r').read()
-            return web.json_response(data=json_file)
-        else:
-            content = open(os.path.join(self._ROOT, "settings/index.html"), "r").read().replace('|Hostname|', os.uname()[1])
-            return web.Response(content_type="text/html", text=content)
-
-    async def _settings_javascript(self, request):
-        """Response with settings page JavaScript client on request"""
-        content = open(os.path.join(self._ROOT, "settings/client.js"), "r").read()
-        return web.Response(content_type="application/javascript", text=content)
-
-    async def _settings_style(self, request):
-        """Response with settings page CSS file on request"""
-        content = open(os.path.join(self._ROOT, "settings/style.css"), "r").read()
-        return web.Response(content_type="text/css", text=content)
-
-    # async def _update_settings(self, request):
-    #     """Load and update settings to inference"""
-    #     settings = await request.json()
-    #     settings = sttgs.load_settings(settings=settings)
-    #     inf.load_settings(settings['camera'])
-    #     return web.Response(content_type="text", text="OK")
-
     async def _update_model(self, request):
         """Retrieve model from request and loads it to inference"""
+
+        def _load_model(model):
+            with open(cfg["inference"]["path_to_new_model"], "wb") as f:
+                f.write(model)
+            print("Model loaded")
+
         model_form = await request.post()
         content = model_form["file"].file.read()
-        self._rk3588.load_model(content[:])
+        _load_model(content[:])
+        return web.Response(content_type="text", text="OK")
+
+    async def _update_settings(self, request):
+        """Retrieve settings from request and loads it to inference"""
+
+        def _load_settings(settings):
+            with open(CONFIG_FILE, "wb") as f:
+                f.write(settings)
+            print("Settings loaded")
+
+        settings_form = await request.post()
+        content = settings_form["file"].file.read()
+        _load_settings(content[:])
         return web.Response(content_type="text", text="OK")
 
     # async def _send_model(self, request):
@@ -177,11 +175,7 @@ class webUI():
         app.router.add_get("/client.js", self._javascript)
         app.router.add_post("/offer", self._offer)
         # Camera/inference settings (set/update)
-        app.router.add_get("/settings", self._settings_main)
-        app.router.add_get("/settings/", self._settings_main)
-        app.router.add_get("/settings/client.js", self._settings_javascript)
-        app.router.add_get("/settings/styles.css", self._settings_style)
-        # app.router.add_post("/settings", self._update_settings)
+        app.router.add_post("/settings", self._update_settings)
         # Model updating
         app.router.add_post("/model", self._update_model)
         # Getting images and json for lableme

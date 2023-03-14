@@ -1,12 +1,12 @@
 from config import config_from_json
 from pathlib import Path
 from base.camera import Cam
-from base.inference import VariableYolov5
+from base.inference import Yolov5
 from base.post_process import post_process
 from multiprocessing import Process, Queue
 from rknnlite.api import RKNNLite
 
-
+# Getting config
 CONFIG_FILE = str(Path(__file__).parent.parent.absolute()) + "/config.json"
 cfg = config_from_json(CONFIG_FILE, read_from_file = True)
 
@@ -17,8 +17,6 @@ class Rk3588():
         self._q_pre = Queue(maxsize=cfg["inference"]["buf_size"])
         self._q_outs = Queue(maxsize=cfg["inference"]["buf_size"])
         self._q_post = Queue(maxsize=cfg["inference"]["buf_size"])
-        # Creating queue for updating model
-        self._q_model = Queue(maxsize=cfg["inference"]["inf_proc"])
         # Creating camera object for recording frames process
         self._cam = Cam(
             source = cfg["camera"]["source"],
@@ -29,11 +27,10 @@ class Rk3588():
         self._cores = [RKNNLite.NPU_CORE_0, RKNNLite.NPU_CORE_1, RKNNLite.NPU_CORE_2]
         # Creating yolov5 objects for inferencing frames processes
         self._yolov5 = [
-            VariableYolov5(
+            Yolov5(
                 proc = i,
                 q_in = self._q_pre,
                 q_out = self._q_outs,
-                q_model = self._q_model,
                 core = self._cores[i%3]
             ) for i in range(cfg["inference"]["inf_proc"])
         ]
@@ -75,11 +72,3 @@ class Rk3588():
             return None
         raw_frame, inferenced_frame, detections, frame_id = self._q_post.get()
         return(raw_frame, inferenced_frame, detections, frame_id)
-    
-    def load_model(self, model: str):
-        if isinstance(model, bytes):
-            with open(cfg["inference"]["path_to_new_model"], "wb") as f:
-                f.write(model)
-            model = cfg["inference"]["path_to_new_model"]
-        for proc in range(cfg["inference"]["inf_proc"]):
-            self._q_model.put(model)

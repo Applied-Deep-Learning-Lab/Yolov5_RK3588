@@ -6,23 +6,22 @@ body, button, #model_file{
   border-color: #000000;
 }
 
+label, button{
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+
 body{
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-gap: 10px;
 }
 
-label{
-  text-align: center;
-}
-th, td {
-  width: 25%;
-  font-weight: normal;
-  text-align: left;
-}
 .header {
   font-weight: bold;
 }
+
 th.header {
     padding: 10px;
     column-span: 4;
@@ -38,7 +37,10 @@ th.header {
 pre {
   overflow-x: hidden;
   overflow-y: auto;
+}
 
+#btn_settings_upload, #btn_model_upload{
+  text-align: center;
 }
 
 video {
@@ -49,8 +51,7 @@ video {
   margin-bottom: 8px;
 }
 
-
-#model_upload{
+#model_upload, #settings_upload{
   grid-template-columns: 1fr 1fr;
   display: grid;
 }
@@ -59,10 +60,3 @@ video {
   grid-template-rows: 1fr 1fr 1fr;
   display: grid inline-block;
 }
-
-#inference, #upload, #download_model, #start{
-  text-align: center;
-  width: 100%;
-}
-
-

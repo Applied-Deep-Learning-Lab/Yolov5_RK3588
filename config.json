@@ -1,6 +1,6 @@
 {
     "debug" : {
-        "print_ids" : true,
+        "print_ids" : false,
         "frames_ids_file" : "frames_ids.txt",
         "verbose" : false,
         "verbose_file" : "verbose.txt"
@@ -20,8 +20,8 @@
         "inf_proc" : 3,
         "post_proc" : 3,
         "async_mode" : true,
-        "path_to_model" : "models/yolov5m_leaky_352x352.rknn",
-        "path_to_new_model" : "models/new_model.rknn",
+        "path_to_default_model" : "/home/orangepi/workspace/Yolov5_RK3588/models/yolov5m_leaky_352x352.rknn",
+        "path_to_new_model" : "/home/orangepi/workspace/Yolov5_RK3588/models/new_model.rknn",
         "classes" : [
             "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
             "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",

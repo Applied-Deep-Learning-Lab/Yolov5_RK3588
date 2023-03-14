@@ -17,7 +17,8 @@ class Yolov5():
         self._total_inf_time = 0
         self._inf_time = 0
         self._frames = 0
-        self._load_model(cfg["inference"]["path_to_model"])
+        if self._load_model(cfg["inference"]["path_to_new_model"]) != 0:
+            self._ret = self._load_model(cfg["inference"]["path_to_default_model"])
 
     def _load_model(self, model: str):
         print("proc: ", self._proc)
@@ -27,15 +28,16 @@ class Yolov5():
         ret = self._rknnlite.load_rknn(model)
         if ret != 0:
             print('%d. Export rknn model failed!'%(self._proc))
-            exit(ret)
+            return ret
         print('%d. done'%(self._proc))
 
         print('%d. Init runtime environment'%(self._proc))
         ret = self._rknnlite.init_runtime(async_mode=cfg["inference"]["async_mode"], core_mask = self._core)
         if ret != 0:
             print('%d. Init runtime environment failed!'%(self._proc))
-            exit(ret)
-        print('%d. done'%(self._proc))
+            return ret
+        print('%d. done with %s model'%(self._proc, model))
+        return ret
 
     def inference(self):
         while True:

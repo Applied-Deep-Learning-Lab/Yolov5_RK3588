@@ -16,9 +16,16 @@
     <div id="model_upload">
       <label for="model_file">
         <p id="file_chooser_label">Choose model file...</p>
-        <input hidden type="file" id="model_file" name="f" onchange="updateFileName()">
+        <input hidden type="file" id="model_file" name="f" onchange="updateModelFileName()">
       </label>
-        <button id="upload" class="control_buttons" onclick="updateModel()">Upload model</button>
+      <button id="btn_model_upload" class="control_buttons" onclick="updateModel()">Upload model</button>
+    </div>
+    <div id="settings_upload">
+      <label for="settings_file">
+        <p id="settings_chooser_label">Choose settings file...</p>
+        <input hidden type="file" id="settings_file" name="f" onchange="updateSettingsFileName()">
+      </label>
+      <button id="btn_settings_upload" class="control_buttons" onclick="updateSettings()">Upload settings</button>
     </div>
     <button id="download_model" class="control_buttons" onclick="downloadModel()">Download model</button>
 
