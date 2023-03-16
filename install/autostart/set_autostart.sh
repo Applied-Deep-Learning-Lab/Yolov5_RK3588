@@ -21,7 +21,7 @@ if [ $(whoami) <> 'root' ]; then
 fi
 
 # Remove prev autostart service
-service autostart stop
+service obj_det_autostart stop
 rm -rf /etc/systemd/system/obj_det_autostart.service
 
 # Set "Exec" line in .desktop file
@@ -34,4 +34,4 @@ cp $AUTOSTART_SERVICE /etc/systemd/system/
 systemctl daemon-reload
 
 # Start autostart service
-service autostart start
+service obj_det_autostart start

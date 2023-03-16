@@ -8,26 +8,38 @@
 </head>
 <body>
 
+<div id="upload_status_modal" class="modal">
+  <div class="modal-content">
+    <p>Uploading...</p>
+  </div>
+</div>
+
 <div id="media">
   <audio id="audio" autoplay="true"></audio>
   <video id="video" width="640" autoplay="true" playsinline="true"></video>
     <button id="start" class="control_buttons" onclick="start()">Start Stream</button>
     <button id="inference" class="control_buttons" onclick="requestInference()">Get Inference</button>
-    <div id="model_upload">
-      <label for="model_file">
-        <p id="file_chooser_label">Choose model file...</p>
-        <input hidden type="file" id="model_file" name="f" onchange="updateModelFileName()">
+    <div id="new_model_upload">
+      <label for="new_model_file">
+        <p id="new_model_chooser">Browse model file...</p>
+        <input hidden type="file" id="new_model_file" name="f" onchange="updateFileName(this)">
       </label>
-      <button id="btn_model_upload" class="control_buttons" onclick="updateModel()">Upload model</button>
+      <button id="btn_new_model_upload" class="control_buttons" onclick="updateNewModel()">Upload new model</button>
+    </div>
+    <div id="local_model_upload">
+      <select id="select_local_model" onmousedown="showModels()">
+        <option>Select model from local...</option>
+      </select>
+      <button id="btn_local_model_upload" class="control_buttons" onclick="updateLocalModel()">Change local model</button>
     </div>
     <div id="settings_upload">
       <label for="settings_file">
         <p id="settings_chooser_label">Choose settings file...</p>
-        <input hidden type="file" id="settings_file" name="f" onchange="updateSettingsFileName()">
+        <input hidden type="file" id="settings_file" name="f" onchange="updateFileName(this)">
       </label>
       <button id="btn_settings_upload" class="control_buttons" onclick="updateSettings()">Upload settings</button>
     </div>
-    <button id="download_model" class="control_buttons" onclick="downloadModel()">Download model</button>
+    <!-- <button id="download_model" class="control_buttons" onclick="downloadModel()">Download model</button> -->
 
 </div>
 <pre id="counters"></pre>

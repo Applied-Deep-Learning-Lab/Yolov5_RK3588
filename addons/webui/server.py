@@ -14,7 +14,8 @@ from multidict import MultiDict
 
 
 # Getting config
-CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+ROOT = Path(__file__).parent.parent.parent.absolute()
+CONFIG_FILE = str(ROOT) + "/config.json"
 cfg = config_from_json(CONFIG_FILE, read_from_file = True)
 
 
@@ -46,15 +47,56 @@ class webUI():
     async def _update_model(self, request):
         """Retrieve model from request and loads it to inference"""
 
-        def _load_model(model):
-            with open(cfg["inference"]["path_to_new_model"], "wb") as f:
-                f.write(model)
+        def _load_new_model(new_model: bytes, path_to_new_model: str):
+            """Create file for new model and rewrite path"""
+            with open(CONFIG_FILE, "r") as json_file:
+                data = json.load(json_file)
+            data["inference"]["path_to_new_model"] = path_to_new_model
+            with open(CONFIG_FILE, "w") as json_file:
+                json.dump(
+                    obj = data,
+                    fp = json_file,
+                    indent = 4
+                )
+            with open(path_to_new_model, "wb") as f:
+                f.write(new_model)
             print("Model loaded")
 
+        def _load_local_model(local_model):
+            """Rewrite path to running model"""
+            with open(CONFIG_FILE, "r") as json_file:
+                data = json.load(json_file)
+            data["inference"]["path_to_new_model"] = local_model
+            with open(CONFIG_FILE, "w") as json_file:
+                json.dump(
+                    obj = data,
+                    fp = json_file,
+                    indent = 4
+                )
+            print("Model changed")
+
         model_form = await request.post()
-        content = model_form["file"].file.read()
-        _load_model(content[:])
+        if "file" in model_form.keys():
+            _load_new_model(
+                new_model = model_form["file"].file.read(),
+                path_to_new_model = str(ROOT)+"/models/" + model_form["file"].filename
+            )
+        else:
+            _load_local_model(
+                local_model = model_form["text"]
+            )
         return web.Response(content_type="text", text="OK")
+    
+    async def _show_models(self, request):
+        """"Send all uploaded models to show"""
+        models = [str(ROOT)+"/models/"+model for model in os.listdir(str(ROOT)+"/models") if ".rknn" in model]
+        return web.Response(text=json.dumps(models))
+
+    # async def _send_model(self, request):
+    #     """Send current running model"""
+    #     model = os.path.join(self._ROOT, "yolov5m_leaky_352x352.rknn")
+    #     headers = {'Content-Disposition': 'attachment; filename="yolov5m_leaky_352x352.rknn"'}
+    #     return web.FileResponse(path=model, headers=headers)
 
     async def _update_settings(self, request):
         """Retrieve settings from request and loads it to inference"""
@@ -68,12 +110,6 @@ class webUI():
         content = settings_form["file"].file.read()
         _load_settings(content[:])
         return web.Response(content_type="text", text="OK")
-
-    # async def _send_model(self, request):
-    #     """Send current running model"""
-    #     model = os.path.join(self._ROOT, "yolov5m_leaky_352x352.rknn")
-    #     headers = {'Content-Disposition': 'attachment; filename="yolov5m_leaky_352x352.rknn"'}
-    #     return web.FileResponse(path=model, headers=headers)
 
     async def _send_inference(self, request):
         """
@@ -178,6 +214,8 @@ class webUI():
         app.router.add_post("/settings", self._update_settings)
         # Model updating
         app.router.add_post("/model", self._update_model)
+        # Showing local models
+        app.router.add_get("/show_models", self._show_models)
         # Getting images and json for lableme
         app.router.add_get("/request_inference", self._send_inference)
         web.run_app(

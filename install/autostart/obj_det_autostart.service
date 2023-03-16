@@ -2,7 +2,7 @@
 Description=Autostart object detection service
 After=network.target
 [Service]
-ExecStart=/home/firefly/miniconda3/envs/rknn/bin/python3 /home/firefly/workspace/Yolov5_RK3588/main.py --webui
+ExecStart=/home/orangepi/miniconda3/envs/rknn/bin/python3 /home/orangepi/workspace/Yolov5_RK3588/main.py --webui
 Restart=always
 [Install]
 WantedBy=multi-user.target

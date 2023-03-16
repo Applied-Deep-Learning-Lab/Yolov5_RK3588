@@ -1,9 +1,35 @@
-body, button, #model_file{
+body, button, #model_file, #select_local_model{
   padding: 4px 8px;
   background-color: #000000;
   color: #FFFFFF;
   border: solid 1px;
   border-color: #000000;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  color: #fff;
+  pointer-events: auto;
+  background-color: #212529;
+  background-clip: padding-box;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.5rem;
+  outline: 0;
 }
 
 label, button{
@@ -28,7 +54,7 @@ th.header {
     text-align: center;
 }
 
-.control_buttons:hover, label:hover{
+.control_buttons:hover, label:hover, #select_local_model:hover{
   background-color: #555555;
   color: #AAAAAA;
   border: solid 1px;
@@ -39,7 +65,10 @@ pre {
   overflow-y: auto;
 }
 
-#btn_settings_upload, #btn_model_upload{
+#btn_settings_upload,
+#btn_new_model_upload,
+#btn_local_model_upload,
+#select_local_model{
   text-align: center;
 }
 
@@ -51,7 +80,9 @@ video {
   margin-bottom: 8px;
 }
 
-#model_upload, #settings_upload{
+#new_model_upload,
+#local_model_upload,
+#settings_upload{
   grid-template-columns: 1fr 1fr;
   display: grid;
 }
