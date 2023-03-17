@@ -1,26 +1,85 @@
-from config import config_from_json
-from pathlib import Path
-from .media import MediaBlackhole, MediaRelay, InferenceTrack
-from .utils import request_inference
-import addons.storages as strgs
 import asyncio
 import json
 import logging
 import os
 import uuid
+from pathlib import Path
+
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from multidict import MultiDict
+
+import addons.storages as strgs
+
+from .media import InferenceTrack, MediaBlackhole, MediaRelay
+from .utils import request_inference
 
 
 # Getting config
 ROOT = Path(__file__).parent.parent.parent.absolute()
 CONFIG_FILE = str(ROOT) + "/config.json"
-cfg = config_from_json(CONFIG_FILE, read_from_file = True)
 
 
-class webUI():
-    def __init__(self, raw_img_strg: strgs.ImageStorage, inf_img_strg: strgs.ImageStorage, dets_strg: strgs.DetectionsStorage):
+class WebUI():
+    """Class for Web User Interface
+    
+    Args
+    ---------------------------------------------------------------------------
+    raw_img_strg : storages.ImageStorage
+        Object of ImageStorage that stored raw frames
+    inf_img_strg : storages.ImageStorage
+        Object of ImageStorage that stored inferenced frames
+    dets_strg : storages.DetectionsStorage
+        Object of DetectionsStorage that stored numpy array with detections
+    ---------------------------------------------------------------------------
+    
+    Attributes
+    ---------------------------------------------------------------------------
+    _raw_img_strg : storages.ImageStorage
+        Object of ImageStorage that stored raw frames
+    _inf_img_strg : storages.ImageStorage
+        Object of ImageStorage that stored inferenced frames
+    _dets_strg : storages.DetectionsStorage
+        Object of DetectionsStorage that stored numpy array with detections
+    _ROOT : str
+        Path to addon's root directory
+    _logger : Logger
+    _pcs : set
+    _relay : MediaRelay
+    ---------------------------------------------------------------------------
+
+    Methods
+    ---------------------------------------------------------------------------
+    _index(request) : web.Response
+        Response with main page HTML file on request
+    _javascript(request) : web.Response
+        Response with main page JavaScript client on request
+    _style(request) : web.Response
+        Response with main page CSS file on request
+    _update_model(request) : web.Response
+        Retrieve model from request and loads it to inference
+    _show_models(request) : web.Response
+        Send all uploaded models to show
+    _update_settings(request) : web.Response
+        Retrieve settings from request and loads it to inference
+    _send_inference : web.Response | web.FileResponse
+        Return path of inference.zip 
+        containing number of inferenced images
+        grabbed by settings in labelme format
+    _offer(request) : web.Response
+        Initialize sdp session
+    _on_shutdown(request) : web.Response
+        Close peer connections
+    start() : None
+        Starts Web User Interface
+    ---------------------------------------------------------------------------
+    """
+    def __init__(
+            self,
+            raw_img_strg: strgs.ImageStorage,
+            inf_img_strg: strgs.ImageStorage,
+            dets_strg: strgs.DetectionsStorage
+        ):
         self._raw_img_strg = raw_img_strg
         self._inf_img_strg = inf_img_strg
         self._dets_strg = dets_strg
@@ -30,23 +89,21 @@ class webUI():
         self._relay = MediaRelay()
 
     async def _index(self, request):
-        """Response with main page HTML file on request"""
-        content = open(os.path.join(self._ROOT, "index/index.html"), "r").read().replace('|Hostname|', os.uname()[1])
+        content = open(
+            file=os.path.join(self._ROOT, "index/index.html"),
+            mode='r'
+        ).read().replace('|Hostname|', os.uname()[1])
         return web.Response(content_type="text/html", text=content)
 
     async def _javascript(self, request):
-        """Response with main page JavaScript client on request"""
         content = open(os.path.join(self._ROOT, "index/client.js"), "r").read()
         return web.Response(content_type="application/javascript", text=content)
 
     async def _style(self, request):
-        """Response with main page CSS file on request"""
         content = open(os.path.join(self._ROOT, "index/style.css"), "r").read()
         return web.Response(content_type="text/css", text=content)
 
     async def _update_model(self, request):
-        """Retrieve model from request and loads it to inference"""
-
         def _load_new_model(new_model: bytes, path_to_new_model: str):
             """Create file for new model and rewrite path"""
             with open(CONFIG_FILE, "r") as json_file:
@@ -79,7 +136,8 @@ class webUI():
         if "file" in model_form.keys():
             _load_new_model(
                 new_model = model_form["file"].file.read(),
-                path_to_new_model = str(ROOT)+"/models/" + model_form["file"].filename
+                path_to_new_model = str(ROOT)+"/models/" + \
+                    model_form["file"].filename
             )
         else:
             _load_local_model(
@@ -88,19 +146,14 @@ class webUI():
         return web.Response(content_type="text", text="OK")
     
     async def _show_models(self, request):
-        """"Send all uploaded models to show"""
-        models = [str(ROOT)+"/models/"+model for model in os.listdir(str(ROOT)+"/models") if ".rknn" in model]
+        models_dir = str(ROOT)+"/models/"
+        local_models = os.listdir(models_dir)
+        models = [
+            models_dir + model for model in local_models if ".rknn" in model
+        ]
         return web.Response(text=json.dumps(models))
 
-    # async def _send_model(self, request):
-    #     """Send current running model"""
-    #     model = os.path.join(self._ROOT, "yolov5m_leaky_352x352.rknn")
-    #     headers = {'Content-Disposition': 'attachment; filename="yolov5m_leaky_352x352.rknn"'}
-    #     return web.FileResponse(path=model, headers=headers)
-
     async def _update_settings(self, request):
-        """Retrieve settings from request and loads it to inference"""
-
         def _load_settings(settings):
             with open(CONFIG_FILE, "wb") as f:
                 f.write(settings)
@@ -112,21 +165,18 @@ class webUI():
         return web.Response(content_type="text", text="OK")
 
     async def _send_inference(self, request):
-        """
-        Return path of inference.zip 
-        containing number of inferenced images
-        grabbed by settings in labelme format
-        """
         path = await request_inference(
             dets_strg = self._dets_strg,
             raw_img_strg = self._raw_img_strg
         )
         if path is not None:
-            return web.FileResponse(path=path, headers=MultiDict({'Content-Disposition': 'Attachment'}))
+            return web.FileResponse(
+                path=path,
+                headers=MultiDict({'Content-Disposition': 'Attachment'})
+            )
         return web.Response(content_type="text", text="ERR")
 
     async def _offer(self, request):
-        """Initialize sdp session"""
         params = await request.json()
         offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
         pc = RTCPeerConnection()
@@ -183,17 +233,20 @@ class webUI():
 
         # send answer
         answer = await pc.createAnswer()
-        await pc.setLocalDescription(answer)
+        if answer is not None:
+            await pc.setLocalDescription(answer)
 
         return web.Response(
             content_type="application/json",
             text=json.dumps(
-                {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
+                {
+                    "sdp": pc.localDescription.sdp,
+                    "type": pc.localDescription.type
+                }
             ),
         )
 
     async def _on_shutdown(self, app):
-        # close peer connections
         coros = [pc.close() for pc in self._pcs]
         await asyncio.gather(*coros)
         self._pcs.clear()
@@ -219,5 +272,9 @@ class webUI():
         # Getting images and json for lableme
         app.router.add_get("/request_inference", self._send_inference)
         web.run_app(
-            app, access_log=None, host='0.0.0.0', port=8080, ssl_context=ssl_context
+            app,
+            access_log=None,
+            host='0.0.0.0',
+            port=8080,
+            ssl_context=ssl_context
         )

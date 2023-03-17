@@ -1,14 +1,33 @@
-from base import Rk3588
-from base import show_frames
-import addons.storages as strgs
-from addons.byte_tracker import BYTETracker, BTArgs
-from addons.byte_tracker import tracking, draw_info
-from threading import Thread
 import argparse
-from addons.webui import webUI
+from threading import Thread
+
+import addons.storages as strgs
+from addons.byte_tracker import BTArgs, BYTETracker, draw_info, tracking
+from addons.webui import WebUI
+from base import Rk3588, show_frames
 
 
-def fill_storages(rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, inf_img_strg: strgs.ImageStorage, dets_strg: strgs.DetectionsStorage):
+def fill_storages(
+    rk3588: Rk3588,
+    raw_img_strg: strgs.ImageStorage,
+    inf_img_strg: strgs.ImageStorage,
+    dets_strg: strgs.DetectionsStorage
+):
+    """Fill storages with raw frames, frames with bboxes, numpy arrays with
+    detctions
+
+    Args
+    -----------------------------------
+    rk3588 : Rk3588
+        Object of Rk3588 class for getting data after inference
+    raw_img_strg : storages.ImageStorage
+        Object of ImageStorage for storage raw frames
+    inf_img_strg : storages.ImageStorage
+        Object of ImageStorage for storage inferenced frames
+    dets_strg : storages.DetectionsStorage
+        Object of DetectionsStorage for numpy arrays with detctions
+    -----------------------------------
+    """
     while True:
             output = rk3588.get_data()
             if output is not None:
@@ -17,7 +36,27 @@ def fill_storages(rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, inf_img_strg
                 dets_strg.set_data(output[2])
 
 
-def fill_storages_bytetracker(rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, inf_img_strg: strgs.ImageStorage, dets_strg: strgs.DetectionsStorage):
+def fill_storages_bytetracker(
+    rk3588: Rk3588,
+    raw_img_strg: strgs.ImageStorage,
+    inf_img_strg: strgs.ImageStorage,
+    dets_strg: strgs.DetectionsStorage
+):
+    """Fill storages with raw frames, frames with bboxes, numpy arrays with
+    bytetrack detctions
+
+    Args
+    -----------------------------------
+    rk3588 : Rk3588
+        Object of Rk3588 class for getting data after inference
+    raw_img_strg : storages.ImageStorage
+        Object of ImageStorage for storage raw frames
+    inf_img_strg : storages.ImageStorage
+        Object of ImageStorage for storage inferenced frames
+    dets_strg : storages.DetectionsStorage
+        Object of DetectionsStorage for numpy arrays with bytetrack detctions
+    -----------------------------------
+    """
     bytetrack_args = BTArgs()
     bytetracker = BYTETracker(
         args = bytetrack_args,
@@ -40,10 +79,11 @@ def fill_storages_bytetracker(rk3588: Rk3588, raw_img_strg: strgs.ImageStorage, 
                     )
             raw_img_strg.set_data(raw_frame)
             inf_img_strg.set_data(inferenced_frame)
-            dets_strg.set_data(detections)
+            dets_strg.set_data(detections) # type: ignore
 
 
 def parse_opt():
+    """Using for turn on/off addons"""
     parser = argparse.ArgumentParser()
     # add required arguments
     # required = parser.add_argument_group('required arguments')
@@ -65,6 +105,19 @@ def parse_opt():
 
 
 def main(webui: bool, bytetracker: bool):
+    """Runs inference and addons (if mentions)
+    Creating storages and sending data to them,
+
+    Args
+    -----------------------------------
+    webui: bool
+        Turn on/off web user interface
+        Gets from parse_opt
+    bytetracker: bool
+        Turn on/off BYTEtrack
+        Gets from parse_opt
+    -----------------------------------
+    """
     raw_frames_storage = strgs.ImageStorage(
         strgs.StoragePurpose.RAW_FRAME
     )
@@ -98,7 +151,7 @@ def main(webui: bool, bytetracker: bool):
     rk3588.start()
     fill_thread.start()
     if webui:
-        ui = webUI(
+        ui = WebUI(
             raw_img_strg = raw_frames_storage,
             inf_img_strg = inferenced_frames_storage,
             dets_strg = detections_storage

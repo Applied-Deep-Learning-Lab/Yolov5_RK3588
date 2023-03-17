@@ -1,11 +1,13 @@
-from config import config_from_json
+import json
 from pathlib import Path
-import numpy as np
+
 import cv2
+import numpy as np
 
 
 CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
-cfg = config_from_json(CONFIG_FILE, read_from_file = True)
+with open(CONFIG_FILE, 'r') as config_file:
+    cfg = json.load(config_file)
 
 
 def sigmoid(x):
@@ -51,7 +53,8 @@ def process(input, mask, anchors):
 
 
 def filter_boxes(boxes, box_confidences, box_class_probs):
-    """Filter boxes with box threshold. It's a bit different with origin yolov5 post process!
+    """Filter boxes with box threshold. It's a bit different with origin
+    yolov5 post process!
 
     # Arguments
         boxes: ndarray, boxes of objects.
@@ -174,14 +177,28 @@ def draw(image, boxes, scores, classes):
         all_classes: all classes name.
     """
     for box, score, cl in zip(boxes, scores, classes):
+        width = cfg["camera"]["width"]
+        height = cfg["camera"]["height"]
+        net_size = cfg["inference"]["net_size"]
         top, left, right, bottom = box
-        top = int(top*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
-        left = int(left*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
-        right = int(right*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
-        bottom = int(bottom*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
+        top = int(top*(width / net_size))
+        left = int(left*(height / net_size))
+        right = int(right*(width / net_size))
+        bottom = int(bottom*(height / net_size))
 
-        cv2.rectangle(image, (top, left), (right, bottom), (255, 0, 0), 2)
-        cv2.putText(image, '{0} {1:.2f}'.format(cfg["inference"]["classes"][cl], score),
-                    (top, left - 6),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6, (0, 0, 255), 2)
+        cv2.rectangle(
+            img=image,
+            pt1=(top, left),
+            pt2=(right, bottom),
+            color=(255, 0, 0),
+            thickness=2
+        )
+        cv2.putText(
+            img=image,
+            text='{0} {1:.2f}'.format(cfg["inference"]["classes"][cl], score),
+            org=(top, left - 6),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.6,
+            color=(0, 0, 255),
+            thickness=2
+        )

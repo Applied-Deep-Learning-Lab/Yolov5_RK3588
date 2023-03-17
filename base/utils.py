@@ -1,28 +1,46 @@
-from config import config_from_json
+import json
 from pathlib import Path
-import numpy as np
+
 import cv2
+import numpy as np
 
 
 CONFIG_FILE = str(Path(__file__).parent.parent.absolute()) + "/config.json"
-cfg = config_from_json(CONFIG_FILE, read_from_file = True)
+with open(CONFIG_FILE, 'r') as config_file:
+    cfg = json.load(config_file)
 
 
 def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
+    """Formating detections to numpy array
+    ([top, left, right, bottom, class, score])
+
+    Args
+    -----------------------------------
+    boxes : np.ndarray
+        boxes of objects
+    classes : np.ndarray
+        classes of objects
+    scores : np.ndarray
+        scores of objects
+    -----------------------------------
+    """
     dets=np.zeros([len(boxes), 6], dtype=np.float32)
     count=0
+    width = cfg["camera"]["width"]
+    height = cfg["camera"]["height"]
+    net_size = cfg["inference"]["net_size"]
     for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
-        top = int(top*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
-        left = int(left*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
-        right = int(right*(cfg["camera"]["width"]/cfg["inference"]["net_size"]))
-        bottom = int(bottom*(cfg["camera"]["height"]/cfg["inference"]["net_size"]))
+        top = int(top*(width / net_size))
+        left = int(left*(height / net_size))
+        right = int(right*(width / net_size))
+        bottom = int(bottom*(height / net_size))
         dets[count]=[top, left, right, bottom, cl, score]
         count+=1
-    # dets = dets[np.where(np.isin(dets[..., 4], cfg["bytetrack"]["tracking_classes"]))]
     return dets
 
 
 def show_frames(frame):
+    """Showes frames"""
     cv2.imshow("frame", frame)
     cv2.waitKey(1)

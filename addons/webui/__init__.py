@@ -1,1 +1,1 @@
-from .server import webUI
+from .server import WebUI

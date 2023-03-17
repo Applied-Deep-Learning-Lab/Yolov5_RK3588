@@ -1,25 +1,82 @@
-import cv2
+import json
 import time
-from config import config_from_json
-from pathlib import Path
 from multiprocessing import Queue
+from pathlib import Path
+
+import cv2
 import numpy as np
 
 
 CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
-cfg = config_from_json(CONFIG_FILE, read_from_file = True)
+with open(CONFIG_FILE, 'r') as config_file:
+    cfg = json.load(config_file)
 Mat = np.ndarray[int, np.dtype[np.generic]]
 
 
 class Cam():
+    """Class for camera
+    Sets camera settings, gets raw frames, shows inferenced frames (optional)
+
+    Args
+    ---------------------------------------------------------------------------
+    source : int
+        Camera index
+    q_in : multiprocessing.Queue
+        Queue that data reads from
+    q_out : multiprocessing.Queue
+        Queue that data sends to
+    ---------------------------------------------------------------------------
+
+    Attributes
+    ---------------------------------------------------------------------------
+    _q_out : multiprocessing.Queue
+        Queue that data sends to
+    _q_in : multiprocessing.Queue
+        Queue that data reads from
+    _cap : cv2.VideoCapture
+        Object of VideoCapture class
+    _frame_id : int
+        Index of recorded frame
+    _fps : float
+        Frames per second
+    _count : int
+        Counts all recorded frames
+    _begin : float | int
+        Start time of counting every 30 frames
+    ---------------------------------------------------------------------------
+
+    Methods
+    ---------------------------------------------------------------------------
+    _pre_process(frame: np.ndarray) : np.ndarray
+        Resizing raw frames to net size
+    record() : None
+        Recordes raw frames
+    show() : None
+        Showes frames with bboxes
+    ---------------------------------------------------------------------------
+    """
     def __init__(self, source: int, q_in: Queue, q_out: Queue):
         self._q_out = q_out
         self._q_in = q_in
         self._cap = cv2.VideoCapture(source)
-        self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*cfg["camera"]["pixel_format"]))
-        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, cfg["camera"]["width"])
-        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, cfg["camera"]["height"])
-        self._cap.set(cv2.CAP_PROP_FPS, cfg["camera"]["fps"])
+
+        self._cap.set(
+            cv2.CAP_PROP_FOURCC,
+            cv2.VideoWriter.fourcc(*cfg["camera"]["pixel_format"])
+        )
+        self._cap.set(
+            cv2.CAP_PROP_FRAME_WIDTH,
+            cfg["camera"]["width"]
+        )
+        self._cap.set(
+            cv2.CAP_PROP_FRAME_HEIGHT,
+            cfg["camera"]["height"]
+        )
+        self._cap.set(
+            cv2.CAP_PROP_FPS,
+            cfg["camera"]["fps"]
+        )
+
         self._frame_id = 0
         self._fps = 0
         self._max_fps = 0
@@ -28,7 +85,10 @@ class Cam():
 
     def _pre_process(self, frame: Mat):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        frame = cv2.resize(frame, (cfg["inference"]["net_size"], cfg["inference"]["net_size"]))
+        frame = cv2.resize(
+            frame,
+            (cfg["inference"]["net_size"], cfg["inference"]["net_size"])
+        )
         return frame
 
     def record(self):
