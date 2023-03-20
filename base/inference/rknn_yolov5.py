@@ -95,10 +95,6 @@ class Yolov5():
 
     def inference(self):
         while True:
-            if self._q_in.empty():
-                continue
             frame, raw_frame, frame_id = self._q_in.get()
             outputs = self._rknnlite.inference(inputs=[frame])
-            if self._q_out.full():
-                continue
             self._q_out.put((outputs, raw_frame, frame_id))

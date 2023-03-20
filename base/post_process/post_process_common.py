@@ -18,8 +18,6 @@ def post_process(q_in: Queue, q_out: Queue):
     -----------------------------------
     """
     while True:
-        if q_in.empty():
-            continue
         outputs, raw_frame, frame_id = q_in.get()
         frame = raw_frame.copy()
         dets = None
@@ -35,6 +33,4 @@ def post_process(q_in: Queue, q_out: Queue):
                 classes = classes, # type: ignore
                 scores = scores # type: ignore
             )
-        if q_out.full():
-            continue
         q_out.put((raw_frame, frame, dets, frame_id))

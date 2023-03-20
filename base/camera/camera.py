@@ -99,8 +99,6 @@ class Cam():
             while ret:
                 ret, frame = self._cap.read()
                 raw_frame = frame.copy()
-                if self._q_out.full():
-                    continue
                 frame = self._pre_process(frame)
                 self._q_out.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
@@ -108,8 +106,6 @@ class Cam():
             self._cap.release()
 
     def show(self):
-        if self._q_in.empty():
-            return
         self._count+=1
         raw_frame, frame, dets, frame_id = self._q_in.get()
         # FPS COUNTER
