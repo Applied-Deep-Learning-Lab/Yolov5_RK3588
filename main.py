@@ -118,60 +118,62 @@ def main(webui: bool, bytetracker: bool):
         Gets from parse_opt
     -----------------------------------
     """
-    raw_frames_storage = strgs.ImageStorage(
-        strgs.StoragePurpose.RAW_FRAME
-    )
-    inferenced_frames_storage = strgs.ImageStorage(
-        strgs.StoragePurpose.INFERENCED_FRAME
-    )
-    detections_storage = strgs.DetectionsStorage()
+    # raw_frames_storage = strgs.ImageStorage(
+    #     strgs.StoragePurpose.RAW_FRAME
+    # )
+    # inferenced_frames_storage = strgs.ImageStorage(
+    #     strgs.StoragePurpose.INFERENCED_FRAME
+    # )
+    # detections_storage = strgs.DetectionsStorage()
     rk3588 = Rk3588()
-    if bytetracker:
-        fill_thread = Thread(
-            target = fill_storages_bytetracker,
-            kwargs = {
-                "rk3588" : rk3588,
-                "raw_img_strg" : raw_frames_storage,
-                "inf_img_strg" : inferenced_frames_storage,
-                "dets_strg" : detections_storage
-            },
-            daemon = True
-        )
-    else:
-        fill_thread = Thread(
-            target = fill_storages,
-            kwargs = {
-                "rk3588" : rk3588,
-                "raw_img_strg" : raw_frames_storage,
-                "inf_img_strg" : inferenced_frames_storage,
-                "dets_strg" : detections_storage
-            },
-            daemon = True
-        )
+    # if bytetracker:
+    #     fill_thread = Thread(
+    #         target = fill_storages_bytetracker,
+    #         kwargs = {
+    #             "rk3588" : rk3588,
+    #             "raw_img_strg" : raw_frames_storage,
+    #             "inf_img_strg" : inferenced_frames_storage,
+    #             "dets_strg" : detections_storage
+    #         },
+    #         daemon = True
+    #     )
+    # else:
+    #     fill_thread = Thread(
+    #         target = fill_storages,
+    #         kwargs = {
+    #             "rk3588" : rk3588,
+    #             "raw_img_strg" : raw_frames_storage,
+    #             "inf_img_strg" : inferenced_frames_storage,
+    #             "dets_strg" : detections_storage
+    #         },
+    #         daemon = True
+    #     )
     rk3588.start()
-    fill_thread.start()
-    if webui:
-        ui = WebUI(
-            raw_img_strg = raw_frames_storage,
-            inf_img_strg = inferenced_frames_storage,
-            dets_strg = detections_storage
-        )
-        try:
-            ui.start()
-        finally:
-            raw_frames_storage.clear_buffer()
-            inferenced_frames_storage.clear_buffer()
-            detections_storage.clear_buffer()
-            return
-    else:
-        while True:
-            try:
-                show_frames(inferenced_frames_storage.get_last_data())
-            except:
-                raw_frames_storage.clear_buffer()
-                inferenced_frames_storage.clear_buffer()
-                detections_storage.clear_buffer()
-                break
+    while True:
+        rk3588.show()
+    # fill_thread.start()
+    # if webui:
+    #     ui = WebUI(
+    #         raw_img_strg = raw_frames_storage,
+    #         inf_img_strg = inferenced_frames_storage,
+    #         dets_strg = detections_storage
+    #     )
+    #     try:
+    #         ui.start()
+    #     finally:
+    #         raw_frames_storage.clear_buffer()
+    #         inferenced_frames_storage.clear_buffer()
+    #         detections_storage.clear_buffer()
+    #         return
+    # else:
+    #     while True:
+    #         try:
+    #             show_frames(inferenced_frames_storage.get_last_data())
+    #         except:
+    #             raw_frames_storage.clear_buffer()
+    #             inferenced_frames_storage.clear_buffer()
+    #             detections_storage.clear_buffer()
+    #             break
 
 
 if __name__ == "__main__":

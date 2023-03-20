@@ -1,6 +1,6 @@
 import json
 import os
-from multiprocessing import Queue
+from multiprocessing import Queue, Value
 from pathlib import Path
 
 from rknnlite.api import RKNNLite
@@ -55,10 +55,12 @@ class Yolov5():
         proc: int,
         q_in: Queue,
         q_out: Queue,
+        last_proc: Value, # type: ignore
         core: int = RKNNLite.NPU_CORE_AUTO
     ):
         self._q_in = q_in
         self._q_out = q_out
+        self._last_proc = last_proc
         self._core = core
         self._proc = proc
         #Check new model loaded
@@ -75,7 +77,7 @@ class Yolov5():
         print("proc: ", self._proc)
         self._rknnlite = RKNNLite(
             verbose=cfg["debug"]["verbose"],
-            verbose_file=cfg["debug"]["verbose_file"]
+            verbose_file=str(ROOT) + "/" + cfg["debug"]["verbose_file"]
         )
         print("%d. Export rknn model"%(self._proc))
         ret = self._rknnlite.load_rknn(model)
@@ -97,4 +99,6 @@ class Yolov5():
         while True:
             frame, raw_frame, frame_id = self._q_in.get()
             outputs = self._rknnlite.inference(inputs=[frame])
+            while self._proc != (self._last_proc.value + 1) % cfg["inference"]["inf_proc"]:
+                pass
             self._q_out.put((outputs, raw_frame, frame_id))

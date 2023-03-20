@@ -7,7 +7,8 @@ import cv2
 import numpy as np
 
 
-CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+ROOT = Path(__file__).parent.parent.parent.absolute()
+CONFIG_FILE = str(ROOT) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 Mat = np.ndarray[int, np.dtype[np.generic]]
@@ -148,7 +149,7 @@ class Cam():
 
         # Debug
         if cfg["debug"]["print_ids"]:
-            with open(cfg["debug"]["frames_ids_file"], 'a') as f:
+            with open(str(ROOT)+"/"+cfg["debug"]["frames_ids_file"], 'a') as f:
                 f.write(str(frame_id)+'\n')
 
         cv2.imshow('frame', frame)
