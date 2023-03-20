@@ -458,7 +458,7 @@ async function showModels() {
         for(var i = 0; i < models.length; i++) {
             var model = models[i];
             var el = document.createElement("option");
-            el.textContent = model.split("/")[model.split("/").length -1];
+            el.textContent = model;
             el.value = model;
             select.add(el);
         }

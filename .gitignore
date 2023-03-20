@@ -3,6 +3,7 @@ __pycache__
 *jpg
 *.txt
 !install/requirements.txt
+.vscode
 
 #cython_bbox
 install/cython_bbox/.eggs

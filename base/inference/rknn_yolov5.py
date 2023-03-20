@@ -6,7 +6,9 @@ from pathlib import Path
 from rknnlite.api import RKNNLite
 
 
-CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+ROOT = Path(__file__).parent.parent.parent.absolute()
+MODELS = str(ROOT) + "/models/"
+CONFIG_FILE = str(ROOT) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 
@@ -60,13 +62,13 @@ class Yolov5():
         self._core = core
         self._proc = proc
         #Check new model loaded
-        if os.path.isfile(cfg["inference"]["path_to_new_model"]):
+        if os.path.isfile(MODELS + cfg["inference"]["new_model"]):
             self._load_model(
-                cfg["inference"]["path_to_new_model"]
+                MODELS + cfg["inference"]["new_model"]
             )
         else:
             self._ret = self._load_model(
-                cfg["inference"]["path_to_default_model"]
+                MODELS + cfg["inference"]["default_model"]
             )
 
     def _load_model(self, model: str):

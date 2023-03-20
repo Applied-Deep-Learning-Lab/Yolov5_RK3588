@@ -18,6 +18,7 @@ from .utils import request_inference
 # Getting config
 ROOT = Path(__file__).parent.parent.parent.absolute()
 CONFIG_FILE = str(ROOT) + "/config.json"
+MODELS = str(ROOT) + "/models/"
 
 
 class WebUI():
@@ -104,18 +105,22 @@ class WebUI():
         return web.Response(content_type="text/css", text=content)
 
     async def _update_model(self, request):
-        def _load_new_model(new_model: bytes, path_to_new_model: str):
+        def _load_new_model(new_model: bytes, new_model_name: str):
             """Create file for new model and rewrite path"""
             with open(CONFIG_FILE, "r") as json_file:
                 data = json.load(json_file)
-            data["inference"]["path_to_new_model"] = path_to_new_model
+            if "640" in new_model_name:
+                data["inference"]["net_size"] = 640
+            elif "352" in new_model_name:
+                data["inference"]["net_size"] = 352
+            data["inference"]["new_model"] = MODELS + new_model_name
             with open(CONFIG_FILE, "w") as json_file:
                 json.dump(
                     obj = data,
                     fp = json_file,
                     indent = 4
                 )
-            with open(path_to_new_model, "wb") as f:
+            with open(MODELS + new_model_name, "wb") as f:
                 f.write(new_model)
             print("Model loaded")
 
@@ -123,7 +128,7 @@ class WebUI():
             """Rewrite path to running model"""
             with open(CONFIG_FILE, "r") as json_file:
                 data = json.load(json_file)
-            data["inference"]["path_to_new_model"] = local_model
+            data["inference"]["new_model"] = local_model
             with open(CONFIG_FILE, "w") as json_file:
                 json.dump(
                     obj = data,
@@ -136,8 +141,7 @@ class WebUI():
         if "file" in model_form.keys():
             _load_new_model(
                 new_model = model_form["file"].file.read(),
-                path_to_new_model = str(ROOT)+"/models/" + \
-                    model_form["file"].filename
+                new_model_name = MODELS + model_form["file"].filename
             )
         else:
             _load_local_model(
@@ -146,10 +150,9 @@ class WebUI():
         return web.Response(content_type="text", text="OK")
     
     async def _show_models(self, request):
-        models_dir = str(ROOT)+"/models/"
-        local_models = os.listdir(models_dir)
+        local_models = os.listdir(MODELS)
         models = [
-            models_dir + model for model in local_models if ".rknn" in model
+            model for model in local_models if ".rknn" in model
         ]
         return web.Response(text=json.dumps(models))
 
