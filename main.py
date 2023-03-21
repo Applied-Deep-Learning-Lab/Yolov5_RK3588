@@ -28,12 +28,15 @@ def fill_storages(
         Object of DetectionsStorage for numpy arrays with detctions
     -----------------------------------
     """
+    last_id = 0
     while True:
             output = rk3588.get_data()
             if output is not None:
-                raw_img_strg.set_data(output[0])
-                inf_img_strg.set_data(output[1])
-                dets_strg.set_data(output[2])
+                if output[3] > last_id:
+                    raw_img_strg.set_data(output[0])
+                    inf_img_strg.set_data(output[1])
+                    dets_strg.set_data(output[2])
+                    last_id = output[3]
 
 
 def fill_storages_bytetracker(

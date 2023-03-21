@@ -14,7 +14,7 @@
     },
     "inference": {
         "net_size": 352,
-        "buf_size": 3,
+        "buf_size": 1,
         "obj_thresh": 0.25,
         "nms_thresh": 0.45,
         "inf_proc": 3,

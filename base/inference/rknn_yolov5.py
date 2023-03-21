@@ -55,7 +55,7 @@ class Yolov5():
         proc: int,
         q_in: Queue,
         q_out: Queue,
-        core: int = RKNNLite.NPU_CORE_AUTO
+        core: int = RKNNLite.NPU_CORE_AUTO # NPU_CORE_0_1_2
     ):
         self._q_in = q_in
         self._q_out = q_out
@@ -100,5 +100,11 @@ class Yolov5():
     def inference(self):
         while True:
             frame, raw_frame, frame_id = self._q_in.get()
+
+            # input marker
+
             outputs = self._rknnlite.inference(inputs=[frame])
+
+            # output maker
+
             self._q_out.put((outputs, raw_frame, frame_id))
