@@ -10,7 +10,7 @@
         "pixel_format": "MJPG",
         "width": 640,
         "height": 480,
-        "fps": 120
+        "fps": 60
     },
     "inference": {
         "net_size": 352,

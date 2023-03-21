@@ -36,6 +36,8 @@ class Cam():
         Queue that data reads from
     _cap : cv2.VideoCapture
         Object of VideoCapture class
+    _last_frame_id : int
+        Index of last showed frame
     _frame_id : int
         Index of recorded frame
     _fps : float
@@ -60,7 +62,7 @@ class Cam():
         self._q_out = q_out
         self._q_in = q_in
         self._cap = cv2.VideoCapture(source)
-
+        self._last_frame_id = 0
         self._cap.set(
             cv2.CAP_PROP_FOURCC,
             cv2.VideoWriter.fourcc(*cfg["camera"]["pixel_format"])
@@ -95,20 +97,27 @@ class Cam():
     def record(self):
         if(not self._cap.isOpened()):
             print("Bad source")
-        ret, frame = self._cap.read()
+            raise
         try:
-            while ret:
+            while True:
                 ret, frame = self._cap.read()
+                if not ret:
+                    print("Camera stopped!")
+                    raise
                 raw_frame = frame.copy()
                 frame = self._pre_process(frame)
                 self._q_out.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
-        finally:
+        except Exception as e:
+            print("Exception {}",e)
             self._cap.release()
+            raise
 
     def show(self):
         self._count+=1
         raw_frame, frame, dets, frame_id = self._q_in.get()
+        if frame_id < self._last_frame_id:
+            return
         # FPS COUNTER
         if not self._count % 30:
             self._fps = 30/(time.time() - self._begin)
@@ -152,5 +161,11 @@ class Cam():
             with open(str(ROOT)+"/"+cfg["debug"]["frames_ids_file"], 'a') as f:
                 f.write(str(frame_id)+'\n')
 
-        cv2.imshow('frame', frame)
-        cv2.waitKey(1)
+        try:
+            cv2.imshow('frame', frame)
+            self._last_frame_id = frame_id
+            cv2.waitKey(1)
+        except Exception as e:
+            print("Exception {}",e)
+            self._cap.release()
+            raise

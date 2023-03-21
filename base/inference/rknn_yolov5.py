@@ -55,23 +55,25 @@ class Yolov5():
         proc: int,
         q_in: Queue,
         q_out: Queue,
-        last_proc: Value, # type: ignore
         core: int = RKNNLite.NPU_CORE_AUTO
     ):
         self._q_in = q_in
         self._q_out = q_out
-        self._last_proc = last_proc
         self._core = core
         self._proc = proc
         #Check new model loaded
-        if os.path.isfile(MODELS + cfg["inference"]["new_model"]):
-            self._load_model(
-                MODELS + cfg["inference"]["new_model"]
-            )
-        else:
-            self._ret = self._load_model(
-                MODELS + cfg["inference"]["default_model"]
-            )
+        try:
+            if os.path.isfile(MODELS + cfg["inference"]["new_model"]):
+                self._load_model(
+                    MODELS + cfg["inference"]["new_model"]
+                )
+            else:
+                self._ret = self._load_model(
+                    MODELS + cfg["inference"]["default_model"]
+                )
+        except Exception as e:
+            print("Exception {}",e)
+            raise
 
     def _load_model(self, model: str):
         print("proc: ", self._proc)
@@ -99,6 +101,4 @@ class Yolov5():
         while True:
             frame, raw_frame, frame_id = self._q_in.get()
             outputs = self._rknnlite.inference(inputs=[frame])
-            while self._proc != (self._last_proc.value + 1) % cfg["inference"]["inf_proc"]:
-                pass
             self._q_out.put((outputs, raw_frame, frame_id))

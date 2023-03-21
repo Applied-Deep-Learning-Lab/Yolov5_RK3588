@@ -74,8 +74,6 @@ class Rk3588():
         self._q_pre = Queue(maxsize=cfg["inference"]["buf_size"])
         self._q_outs = Queue(maxsize=cfg["inference"]["buf_size"])
         self._q_post = Queue(maxsize=cfg["inference"]["buf_size"])
-        self._last_inf_proc = Value("i", -1)
-        # self._last_post_proc = Value("i", -1)
         self._cam = Cam(
             source = cfg["camera"]["source"],
             q_in = self._q_post,
@@ -91,7 +89,6 @@ class Rk3588():
                 proc = i,
                 q_in = self._q_pre,
                 q_out = self._q_outs,
-                last_proc = self._last_inf_proc,
                 core = self._cores[i%3]
             ) for i in range(cfg["inference"]["inf_proc"])
         ]
