@@ -1,6 +1,6 @@
 {
     "debug": {
-        "print_ids": true,
+        "print_ids": false,
         "frames_ids_file": "frames_ids.txt",
         "verbose": false,
         "verbose_file": "verbose.txt"
@@ -18,7 +18,7 @@
         "obj_thresh": 0.25,
         "nms_thresh": 0.45,
         "inf_proc": 3,
-        "post_proc": 3,
+        "post_proc": 1,
         "async_mode": true,
         "default_model": "yolov5m_leaky_352x352.rknn",
         "new_model": "yolov5m_leaky_352x352.rknn",

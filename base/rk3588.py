@@ -39,8 +39,6 @@ class Rk3588():
 
     Inference
     -----------------------------------
-    _cores : list(int) or int
-        List for NPU cores that will be using for inference
     _yolov5 : inference.Yolov5 or inference.VariableYolov5
         Yolov5 object for creating inference processes
     -----------------------------------
@@ -79,17 +77,11 @@ class Rk3588():
             q_in = self._q_post,
             q_out = self._q_pre
         )
-        self._cores = [
-            RKNNLite.NPU_CORE_0,
-            RKNNLite.NPU_CORE_1,
-            RKNNLite.NPU_CORE_2
-        ]
         self._yolov5 = [
             Yolov5(
                 proc = i,
                 q_in = self._q_pre,
-                q_out = self._q_outs,
-                core = self._cores[i%3]
+                q_out = self._q_outs
             ) for i in range(cfg["inference"]["inf_proc"])
         ]
         self._rec = Process(
