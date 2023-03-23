@@ -2,6 +2,7 @@
 __pycache__
 .vscode
 *.jpg
+*.png
 *.txt
 !install/requirements.txt
 

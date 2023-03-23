@@ -117,5 +117,8 @@
         "tracking_classes": [
             62
         ]
+    },
+    "telegram_notifier": {
+        "time_period": 10
     }
 }

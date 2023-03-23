@@ -72,8 +72,8 @@ class Yolov5():
                     MODELS + cfg["inference"]["default_model"]
                 )
         except Exception as e:
-            print("Exception {}",e)
-            raise
+            print("Cannot load model. Exception {}",e)
+            raise SystemExit
 
     def _load_model(self, model: str):
         print("proc: ", self._proc)

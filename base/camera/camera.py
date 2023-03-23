@@ -97,21 +97,22 @@ class Cam():
     def record(self):
         if(not self._cap.isOpened()):
             print("Bad source")
-            raise
+            raise SystemExit
         try:
             while True:
                 ret, frame = self._cap.read()
                 if not ret:
                     print("Camera stopped!")
-                    raise
+                    raise SystemExit
                 raw_frame = frame.copy()
                 frame = self._pre_process(frame)
                 self._q_out.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
         except Exception as e:
-            print("Exception {}",e)
+            print("Stop recording loop. Exception {}",e)
+        finally:
             self._cap.release()
-            raise
+            raise SystemExit
 
     def show(self):
         self._count+=1
@@ -166,6 +167,7 @@ class Cam():
             self._last_frame_id = frame_id
             cv2.waitKey(1)
         except Exception as e:
-            print("Exception {}",e)
+            print("Stop showing loop. Exception {}",e)
+        finally:
             self._cap.release()
-            raise
+            raise SystemExit

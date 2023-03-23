@@ -1,8 +1,10 @@
 import argparse
+from multiprocessing import Process
 from threading import Thread
 
 import addons.storages as strgs
 from addons.byte_tracker import BTArgs, BYTETracker, draw_info, tracking
+from addons.telegram_notifier import TelegramNotifier
 from addons.webui import WebUI
 from base import Rk3588, show_frames
 
@@ -47,7 +49,6 @@ def fill_storages_bytetracker(
 ):
     """Fill storages with raw frames, frames with bboxes, numpy arrays with
     bytetrack detctions
-
     Args
     -----------------------------------
     rk3588 : Rk3588
@@ -65,24 +66,27 @@ def fill_storages_bytetracker(
         args = bytetrack_args,
         frame_rate = 60
     )
+    last_id = 0
     while True:
         output = rk3588.get_data()
         if output is not None:
             raw_frame, inferenced_frame, detections, frame_id = output
-            if detections is not None:
-                detections = tracking(
-                    bytetracker = bytetracker,
-                    dets = detections,
-                    frame_shape = inferenced_frame.shape[:2]
-                )
+            if frame_id > last_id:
                 if detections is not None:
-                    draw_info(
-                        frame = inferenced_frame,
-                        dets = detections
+                    detections = tracking(
+                        bytetracker = bytetracker,
+                        dets = detections,
+                        frame_shape = inferenced_frame.shape[:2]
                     )
-            raw_img_strg.set_data(raw_frame)
-            inf_img_strg.set_data(inferenced_frame)
-            dets_strg.set_data(detections) # type: ignore
+                    if detections is not None:
+                        draw_info(
+                            frame = inferenced_frame,
+                            dets = detections
+                        )
+                raw_img_strg.set_data(raw_frame)
+                inf_img_strg.set_data(inferenced_frame)
+                dets_strg.set_data(detections) # type: ignore
+                last_id = frame_id
 
 
 def parse_opt():
@@ -100,6 +104,11 @@ def parse_opt():
         help = "Turn on/off webui"
     )
     parser.add_argument(
+        "--notifier", "-n",
+        action = "store_true",
+        help = "Turn on/off telegram bot notifier"
+    )
+    parser.add_argument(
         "--bytetracker", "-bt",
         action = "store_true",
         help = "Turn on/off BYTEtracker"
@@ -107,14 +116,17 @@ def parse_opt():
     return parser.parse_args()
 
 
-def main(webui: bool, bytetracker: bool):
+def main(webui: bool, notifier: bool, bytetracker: bool):
     """Runs inference and addons (if mentions)
-    Creating storages and sending data to them,
+    Creating storages and sending data to them
 
     Args
     -----------------------------------
     webui: bool
         Turn on/off web user interface
+        Gets from parse_opt
+    notifier: bool
+        Turn on/off telegram bot notifier
         Gets from parse_opt
     bytetracker: bool
         Turn on/off BYTEtrack
@@ -153,6 +165,18 @@ def main(webui: bool, bytetracker: bool):
         )
     rk3588.start()
     fill_thread.start()
+    if notifier:
+        telegram_notifier = TelegramNotifier(
+            inf_img_strg=inferenced_frames_storage
+        )
+        notifier_process = Process(
+            target=telegram_notifier.start,
+            daemon=True
+        )
+        try:
+            notifier_process.start()
+        except Exception as e:
+            print("Bot exception: {}",e)
     if webui:
         ui = WebUI(
             raw_img_strg = raw_frames_storage,
@@ -162,21 +186,22 @@ def main(webui: bool, bytetracker: bool):
         try:
             ui.start()
         except Exception as e:
-            print("Exception {}",e)
+            print("WebUI exception: {}",e)
+        finally:
             raw_frames_storage.clear_buffer()
             inferenced_frames_storage.clear_buffer()
             detections_storage.clear_buffer()
-            raise
-    else:
+            exit()
+    try:
         while True:
-            try:
-                show_frames(inferenced_frames_storage.get_last_data())
-            except Exception as e:
-                print("Exception {}",e)
-                raw_frames_storage.clear_buffer()
-                inferenced_frames_storage.clear_buffer()
-                detections_storage.clear_buffer()
-                break
+            print(1)
+            show_frames(inferenced_frames_storage.get_last_data())
+    except Exception as e:
+        print("Main exception: {}",e)
+    finally:
+        raw_frames_storage.clear_buffer()
+        inferenced_frames_storage.clear_buffer()
+        detections_storage.clear_buffer()
 
 
 if __name__ == "__main__":
