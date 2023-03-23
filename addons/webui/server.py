@@ -5,6 +5,8 @@ import os
 import uuid
 from pathlib import Path
 
+import cv2
+import numpy as np
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from multidict import MultiDict
@@ -14,11 +16,12 @@ import addons.storages as strgs
 from .media import InferenceTrack, MediaBlackhole, MediaRelay
 from .utils import request_inference
 
-
 # Getting config
 ROOT = Path(__file__).parent.parent.parent.absolute()
 CONFIG_FILE = str(ROOT) + "/config.json"
 MODELS = str(ROOT) + "/models/"
+with open(CONFIG_FILE, 'r') as config_file:
+    cfg = json.load(config_file)
 
 
 class WebUI():
@@ -88,6 +91,23 @@ class WebUI():
         self._logger = logging.getLogger("pc")
         self._pcs = set()
         self._relay = MediaRelay()
+        self._blank_frame = np.zeros(
+            shape=(cfg["camera"]["height"], cfg["camera"]["width"], 3),
+            dtype=np.uint8
+        )
+        cv2.putText(
+            img=self._blank_frame,
+            text="BAD SOURCE",
+            org=(
+                int(self._blank_frame.shape[1]/2 - 95),
+                int(self._blank_frame.shape[0]/2 - 15)
+            ),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.9,
+            color=(123,123,0),
+            thickness=3,
+            lineType=cv2.LINE_AA
+        )
 
     async def _index(self, request):
         content = open(
@@ -221,7 +241,10 @@ class WebUI():
             log_info("Track %s received", track.kind)
 
             nonlocal videoTrackProducer
-            videoTrackProducer = InferenceTrack(self._inf_img_strg)
+            videoTrackProducer = InferenceTrack(
+                self._inf_img_strg,
+                self._blank_frame
+            )
             pc.addTrack(videoTrackProducer)
             videoTrackProducer.onClientShowedFrameInfo(0)
 

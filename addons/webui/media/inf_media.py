@@ -3,6 +3,7 @@ from av import VideoFrame
 from fractions import Fraction
 from timeit import default_timer as timer
 import addons.storages as strgs
+import numpy as np
 
 
 class Statistics:
@@ -33,7 +34,10 @@ class InferenceTrack(MediaStreamTrack):
     """
     kind = "video"
 
-    def __init__(self, inf_img_strg: strgs.ImageStorage):
+    def __init__(
+        self, inf_img_strg: strgs.ImageStorage,
+        blank_frame: np.ndarray
+    ):
         """
         InferenceTrack object initializer
             Parameters:
@@ -44,14 +48,18 @@ class InferenceTrack(MediaStreamTrack):
         super().__init__()
         self.stats = Statistics()
         self._inf_img_strg = inf_img_strg
+        self._blank_frame = blank_frame
 
     async def recv(self):
         """
         Redefined MediaStreamTrack.recv method to work with inference object
             Returns:
-                new_frame(av.VideoFrame): formatted frame retrieved from inference object 
+                new_frame(av.VideoFrame): formatted frame retrieved from
+                inference object 
         """
         frame = await self._inf_img_strg.get_last_data_async()
+        if not np.any(frame):
+            frame = self._blank_frame
         new_frame = VideoFrame.from_ndarray(frame, format="bgr24")
         new_frame.pts = int(self.stats.getFrameCount()) * 500
         new_frame.time_base = Fraction(1, 30000)
