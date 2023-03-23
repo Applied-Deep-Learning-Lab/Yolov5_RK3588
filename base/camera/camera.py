@@ -1,5 +1,6 @@
 import json
 import time
+from datetime import datetime
 from multiprocessing import Queue
 from pathlib import Path
 
@@ -111,6 +112,10 @@ class Cam():
         except Exception as e:
             print("Stop recording loop. Exception {}",e)
         finally:
+            message = "camera released - " +\
+                datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f') + "\n"
+            with open(str(ROOT) + "/camera_release.txt", "a") as debug_file:
+                debug_file.write(message)
             self._cap.release()
             raise SystemExit
 
@@ -169,5 +174,9 @@ class Cam():
         except Exception as e:
             print("Stop showing loop. Exception {}",e)
         finally:
+            message = "camera released - " +\
+                datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f') + "\n"
+            with open(str(ROOT) + "/camera_release.txt", "a") as debug_file:
+                debug_file.write(message)
             self._cap.release()
             raise SystemExit
