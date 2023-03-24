@@ -70,6 +70,7 @@ class Storage():
         data_amount: int,
         data_type: type
     ):
+        self._data_amount=data_amount
         def _create_buffer(size, name):
             try:
                 return shared_memory.SharedMemory(
@@ -85,39 +86,50 @@ class Storage():
                 )
         self.storage_name = storage_name
         self._buffer = _create_buffer(
-            size = math.prod(
-                (math.prod(data_size), data_amount, np.dtype(data_type).itemsize)
+            size=math.prod(
+                (
+                    math.prod(data_size),
+                    self._data_amount,
+                    np.dtype(data_type).itemsize
+                )
             ),
-            name = str(self.storage_name)
+            name=str(self.storage_name)
+        )
+        self._ids_buffer = _create_buffer(
+            size=self._data_amount * np.dtype(int).itemsize,
+            name="ids storage"
         )
         self._storage = np.ndarray(
-            shape = (data_amount,) + data_size,
+            shape=(self._data_amount,) + data_size,
             dtype=data_type,
             buffer=self._buffer.buf
         )
+        self._ids_storage = np.ndarray(
+            shape=self._data_amount,
+            dtype=np.dtype(int),
+            buffer=self._ids_buffer.buf
+        )
         self._index_counter = Value('i', 0)
 
-    def set_data(self, data: np.ndarray):
-        data_amount = cfg["storages"]["stored_data_amount"]
-        data_index = self._index_counter.value % data_amount # type: ignore
+    def set_data(self, data: np.ndarray, id: int):
+        data_index = self._index_counter.value % self._data_amount # type: ignore
         if data is not None:
             self._storage[data_index][:len(data),:] = data
         else:
             self._storage[data_index][:] = data
+        self._ids_storage[data_index] = id
         self._index_counter.value += 1 # type: ignore
 
     def get_data_by_index(self, index: int):
-        return self._storage[index][:]
+        return (self._storage[index][:], self._ids_storage[index])
     
     def get_last_data(self):
-        data_amount = cfg["storages"]["stored_data_amount"]
-        data_index = (self._index_counter.value - 1) % data_amount # type: ignore
-        return self._storage[data_index][:]
+        data_index = (self._index_counter.value - 1) % self._data_amount # type: ignore
+        return (self._storage[data_index][:], self._ids_storage[data_index])
     
     async def get_last_data_async(self):
-        data_amount = cfg["storages"]["stored_data_amount"]
-        data_index = (self._index_counter.value - 1) % data_amount # type: ignore
-        return self._storage[data_index][:]
+        data_index = (self._index_counter.value - 1) % self._data_amount # type: ignore
+        return (self._storage[data_index][:], self._ids_storage[data_index])
 
     def get_last_index(self):
         return(self._index_counter.value - 1) # type: ignore

@@ -91,7 +91,7 @@ class TelegramNotifier():
                 obj=self._counters,
                 indent=4
             )
-            img = self._inf_img_strg.get_last_data()
+            img, cur_id = self._inf_img_strg.get_last_data()
             ret, img = cv2.imencode('.jpg', img)
             sent = False
             retries_left = 5

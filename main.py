@@ -30,15 +30,12 @@ def fill_storages(
         Object of DetectionsStorage for numpy arrays with detctions
     -----------------------------------
     """
-    last_id = 0
     while True:
             output = rk3588.get_data()
             if output is not None:
-                if output[3] > last_id:
-                    raw_img_strg.set_data(output[0])
-                    inf_img_strg.set_data(output[1])
-                    dets_strg.set_data(output[2])
-                    last_id = output[3]
+                raw_img_strg.set_data(output[0], output[3])
+                inf_img_strg.set_data(output[1], output[3])
+                dets_strg.set_data(output[2], output[3])
 
 
 def fill_storages_bytetracker(
@@ -66,27 +63,24 @@ def fill_storages_bytetracker(
         args = bytetrack_args,
         frame_rate = 60
     )
-    last_id = 0
     while True:
         output = rk3588.get_data()
         if output is not None:
             raw_frame, inferenced_frame, detections, frame_id = output
-            if frame_id > last_id:
+            if detections is not None:
+                detections = tracking(
+                    bytetracker = bytetracker,
+                    dets = detections,
+                    frame_shape = inferenced_frame.shape[:2]
+                )
                 if detections is not None:
-                    detections = tracking(
-                        bytetracker = bytetracker,
-                        dets = detections,
-                        frame_shape = inferenced_frame.shape[:2]
+                    draw_info(
+                        frame = inferenced_frame,
+                        dets = detections
                     )
-                    if detections is not None:
-                        draw_info(
-                            frame = inferenced_frame,
-                            dets = detections
-                        )
-                raw_img_strg.set_data(raw_frame)
-                inf_img_strg.set_data(inferenced_frame)
-                dets_strg.set_data(detections) # type: ignore
-                last_id = frame_id
+            raw_img_strg.set_data(raw_frame, frame_id)
+            inf_img_strg.set_data(inferenced_frame, frame_id)
+            dets_strg.set_data(detections, frame_id) # type: ignore
 
 
 def parse_opt():
@@ -193,9 +187,12 @@ def main(webui: bool, notifier: bool, bytetracker: bool):
             detections_storage.clear_buffer()
             exit()
     try:
+        last_id = 0
         while True:
-            print(1)
-            show_frames(inferenced_frames_storage.get_last_data())
+            frame, cur_id = inferenced_frames_storage.get_last_data()
+            if cur_id > last_id:
+                show_frames(frame)
+                last_id = cur_id
     except Exception as e:
         print("Main exception: {}",e)
     finally:
