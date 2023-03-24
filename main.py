@@ -6,7 +6,7 @@ import addons.storages as strgs
 from addons.byte_tracker import BTArgs, BYTETracker, draw_info, tracking
 from addons.telegram_notifier import TelegramNotifier
 from addons.webui import WebUI
-from base import Rk3588, show_frames
+from base import Rk3588, show_frames_localy
 
 
 def fill_storages(
@@ -46,6 +46,7 @@ def fill_storages_bytetracker(
 ):
     """Fill storages with raw frames, frames with bboxes, numpy arrays with
     bytetrack detctions
+    
     Args
     -----------------------------------
     rk3588 : Rk3588
@@ -187,12 +188,8 @@ def main(webui: bool, notifier: bool, bytetracker: bool):
             detections_storage.clear_buffer()
             exit()
     try:
-        last_id = 0
         while True:
-            frame, cur_id = inferenced_frames_storage.get_last_data()
-            if cur_id > last_id:
-                show_frames(frame)
-                last_id = cur_id
+            show_frames_localy(inferenced_frames_storage)
     except Exception as e:
         print("Main exception: {}",e)
     finally:

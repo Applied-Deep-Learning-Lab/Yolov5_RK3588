@@ -1,8 +1,11 @@
 import json
+import time
 from pathlib import Path
 
 import cv2
 import numpy as np
+
+import addons.storages as strgs
 
 
 CONFIG_FILE = str(Path(__file__).parent.parent.absolute()) + "/config.json"
@@ -40,7 +43,36 @@ def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
     return dets
 
 
-def show_frames(frame):
-    """Showes frames"""
-    cv2.imshow("frame", frame)
-    cv2.waitKey(1)
+
+def show_frames_localy(inf_img_strg: strgs.ImageStorage):
+    """Show inferenced frames with fps on device"""
+    cur_index = 0
+    counter = 0
+    calculated = False
+    begin_time = time.time()
+    fps = 0
+    while True:
+        last_index = inf_img_strg.get_last_index()
+        frame =\
+            inf_img_strg.get_data_by_index(last_index % 100)
+        cv2.putText(
+            img=frame,
+            text="{:.2f}".format(fps),
+            org=(5, 25),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.8,
+            color=(255, 255, 255),
+            thickness=2,
+            lineType=cv2.LINE_AA
+        )
+        cv2.imshow("frame", frame)
+        cv2.waitKey(1)
+        if last_index > cur_index:
+            counter += 1
+            cur_index = last_index
+        if counter % 60 == 0 and not calculated:
+            calculated = True
+            fps = 60/(time.time() - begin_time)
+            begin_time = time.time()
+        if counter % 60 != 0:
+            calculated = False

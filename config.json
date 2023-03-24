@@ -1,7 +1,7 @@
 {
     "debug": {
-        "print_ids": false,
-        "frames_ids_file": "frames_ids.txt",
+        "print_camera_release": true,
+        "camera_release_file": "camera_release.txt",
         "verbose": false,
         "verbose_file": "verbose.txt"
     },

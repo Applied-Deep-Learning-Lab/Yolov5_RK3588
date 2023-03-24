@@ -1,9 +1,13 @@
-from aiortc import MediaStreamTrack
-from av import VideoFrame
+import time
 from fractions import Fraction
 from timeit import default_timer as timer
-import addons.storages as strgs
+
+from ..utils import draw_fps
 import numpy as np
+from aiortc import MediaStreamTrack
+from av import VideoFrame
+
+import addons.storages as strgs
 
 
 class Statistics:
@@ -49,6 +53,9 @@ class InferenceTrack(MediaStreamTrack):
         self.stats = Statistics()
         self._inf_img_strg = inf_img_strg
         self._blank_frame = blank_frame
+        self._begin = time.time()
+        self._counter = 0
+        self._fps = 0.0
 
     async def recv(self):
         """
@@ -58,6 +65,11 @@ class InferenceTrack(MediaStreamTrack):
                 inference object 
         """
         frame = await self._inf_img_strg.get_last_data_async()
+        self._counter += 1
+        if self._counter % 60 == 0:
+            self._fps = 60 / (time.time() - self._begin)
+            self._begin = time.time()
+        frame = draw_fps(frame, self._fps)
         if not np.any(frame):
             frame = self._blank_frame
         new_frame = VideoFrame.from_ndarray(frame, format="bgr24")

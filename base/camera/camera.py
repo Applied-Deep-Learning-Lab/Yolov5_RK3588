@@ -8,8 +8,8 @@ import cv2
 import numpy as np
 
 
-ROOT = Path(__file__).parent.parent.parent.absolute()
-CONFIG_FILE = str(ROOT) + "/config.json"
+ROOT = str(Path(__file__).parent.parent.parent.absolute()) + '/'
+CONFIG_FILE = ROOT + "config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 Mat = np.ndarray[int, np.dtype[np.generic]]
@@ -114,8 +114,9 @@ class Cam():
         finally:
             message = "camera released - " +\
                 datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f') + "\n"
-            with open(str(ROOT) + "/camera_release.txt", "a") as debug_file:
-                debug_file.write(message)
+            if cfg["debug"]["print_camera_release"]:
+                with open(ROOT + cfg["debug"]["camera_release_file"], "a") as f:
+                    f.write(message)
             self._cap.release()
             raise SystemExit
 
@@ -171,7 +172,8 @@ class Cam():
         finally:
             message = "camera released - " +\
                 datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f') + "\n"
-            with open(str(ROOT) + "/camera_release.txt", "a") as debug_file:
-                debug_file.write(message)
+            if cfg["debug"]["print_camera_release"]:
+                with open(ROOT + cfg["debug"]["camera_release_file"], "a") as f:
+                    f.write(message)
             self._cap.release()
             raise SystemExit
