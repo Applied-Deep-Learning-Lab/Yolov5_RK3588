@@ -162,11 +162,6 @@ class Cam():
             lineType = cv2.LINE_AA
         )
 
-        # Debug
-        if cfg["debug"]["print_ids"]:
-            with open(str(ROOT)+"/"+cfg["debug"]["frames_ids_file"], 'a') as f:
-                f.write(str(frame_id)+'\n')
-
         try:
             cv2.imshow('frame', frame)
             self._last_frame_id = frame_id

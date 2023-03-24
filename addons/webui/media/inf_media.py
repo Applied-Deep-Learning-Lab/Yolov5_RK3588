@@ -48,8 +48,6 @@ class InferenceTrack(MediaStreamTrack):
         super().__init__()
         self.stats = Statistics()
         self._inf_img_strg = inf_img_strg
-        self._cur_id = 0
-        self._last_id = 0
         self._blank_frame = blank_frame
 
     async def recv(self):
@@ -59,15 +57,13 @@ class InferenceTrack(MediaStreamTrack):
                 new_frame(av.VideoFrame): formatted frame retrieved from
                 inference object 
         """
-        while not self._cur_id > self._last_id:
-            frame, self._cur_id = await self._inf_img_strg.get_last_data_async()
+        frame = await self._inf_img_strg.get_last_data_async()
         if not np.any(frame):
             frame = self._blank_frame
         new_frame = VideoFrame.from_ndarray(frame, format="bgr24")
         new_frame.pts = int(self.stats.getFrameCount()) * 500
         new_frame.time_base = Fraction(1, 30000)
         self.stats.registerFrame()
-        self._last_id = self._cur_id
         return new_frame
 
     def onClientShowedFrameInfo(self, frameNum):

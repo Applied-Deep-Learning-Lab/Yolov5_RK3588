@@ -107,7 +107,8 @@
     },
     "storages": {
         "stored_data_amount": 100,
-        "dets_amount": 100
+        "dets_amount": 100,
+        "frames_delay": 6
     },
     "webui": {
         "send_data_amount": 10

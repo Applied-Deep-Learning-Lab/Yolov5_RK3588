@@ -117,10 +117,10 @@ async def request_inference(
     last_index = dets_strg.get_last_index()
     with ZipFile(zip_path, 'w') as zip_file:
         for i in range(cfg["webui"]["send_data_amount"]):
-            raw_img, cur_id = raw_img_strg.get_data_by_index(
+            raw_img = raw_img_strg.get_data_by_index(
                 (last_index - i) % cfg["storages"]["stored_data_amount"]
             )
-            dets, cur_id = dets_strg.get_data_by_index(
+            dets = dets_strg.get_data_by_index(
                 (last_index - i) % cfg["storages"]["stored_data_amount"]
             )
             dets = dets[np.where(dets[..., 5] > 0)] # type: ignore

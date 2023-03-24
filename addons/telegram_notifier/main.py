@@ -62,7 +62,7 @@ class TelegramNotifier():
         self._CHAT_ID = bot_cfg["telegram_notifier"]["chat_id"]
         try:
             self._bot = Bot(token=self._TOKEN)
-            self._start = time.time()
+            self._start = datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')
         except Exception as e:
             print("Can't start bot:")
             print(e)
@@ -91,7 +91,7 @@ class TelegramNotifier():
                 obj=self._counters,
                 indent=4
             )
-            img, cur_id = self._inf_img_strg.get_last_data()
+            img = self._inf_img_strg.get_last_data()
             ret, img = cv2.imencode('.jpg', img)
             sent = False
             retries_left = 5
