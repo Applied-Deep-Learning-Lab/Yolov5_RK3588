@@ -12,6 +12,7 @@ from base import Rk3588, show_frames_localy
 
 def fill_storages(
         rk3588: Rk3588,
+        bytetracker_state: bool,
         raw_img_strg: strgs.ImageStorage,
         inf_img_strg: strgs.ImageStorage,
         dets_strg: strgs.DetectionsStorage,
@@ -32,87 +33,47 @@ def fill_storages(
         Object of DetectionsStorage for numpy arrays with detctions
     start_time : float
         Program start time
+    bytetracker_state : bool
+        Turn on/off BYTEtracker
     -----------------------------------
     """
+    if bytetracker_state:
+        bytetrack_args = BTArgs()
+        bytetracker = BYTETracker(
+            args = bytetrack_args,
+            frame_rate = 60
+        )
     while True:
             output = rk3588.get_data()
             if output is not None:
+                raw_frame, inferenced_frame, detections, frame_id = output
+                if bytetracker_state:
+                    if detections is not None:
+                        detections = tracking(
+                            bytetracker=bytetracker,
+                            dets=detections,
+                            frame_shape=inferenced_frame.shape[:2]
+                        )
+                        if detections is not None:
+                            draw_info(
+                                frame=inferenced_frame,
+                                dets=detections
+                            )
                 raw_img_strg.set_data(
-                    data=output[0],
-                    id=output[3],
+                    data=raw_frame,
+                    id=frame_id,
                     start_time=start_time
                 )
                 inf_img_strg.set_data(
-                    data=output[1],
-                    id=output[3],
+                    data=inferenced_frame,
+                    id=frame_id,
                     start_time=start_time
                 )
                 dets_strg.set_data(
-                    data=output[2],
-                    id=output[3],
+                    data=detections, # type: ignore
+                    id=frame_id,
                     start_time=start_time
                 )
-
-
-def fill_storages_bytetracker(
-        rk3588: Rk3588,
-        raw_img_strg: strgs.ImageStorage,
-        inf_img_strg: strgs.ImageStorage,
-        dets_strg: strgs.DetectionsStorage,
-        start_time: float
-):
-    """Fill storages with raw frames, frames with bboxes, numpy arrays with
-    bytetrack detctions
-    
-    Args
-    -----------------------------------
-    rk3588 : Rk3588
-        Object of Rk3588 class for getting data after inference
-    raw_img_strg : storages.ImageStorage
-        Object of ImageStorage for storage raw frames
-    inf_img_strg : storages.ImageStorage
-        Object of ImageStorage for storage inferenced frames
-    dets_strg : storages.DetectionsStorage
-        Object of DetectionsStorage for numpy arrays with bytetrack detctions
-    start_time : float
-        Program start time
-    -----------------------------------
-    """
-    bytetrack_args = BTArgs()
-    bytetracker = BYTETracker(
-        args = bytetrack_args,
-        frame_rate = 60
-    )
-    while True:
-        output = rk3588.get_data()
-        if output is not None:
-            raw_frame, inferenced_frame, detections, frame_id = output
-            if detections is not None:
-                detections = tracking(
-                    bytetracker=bytetracker,
-                    dets=detections,
-                    frame_shape=inferenced_frame.shape[:2]
-                )
-                if detections is not None:
-                    draw_info(
-                        frame=inferenced_frame,
-                        dets=detections
-                    )
-            raw_img_strg.set_data(
-                data=raw_frame,
-                id=frame_id,
-                start_time=start_time
-            )
-            inf_img_strg.set_data(
-                data=inferenced_frame,
-                id=frame_id,
-                start_time=start_time
-            )
-            dets_strg.set_data(
-                data=detections, # type: ignore
-                id=frame_id,
-                start_time=start_time
-            )
 
 
 def parse_opt():
@@ -198,30 +159,18 @@ def main(
         strgs.StoragePurpose.INFERENCED_FRAME
     )
     detections_storage = strgs.DetectionsStorage()
-    if bytetracker:
-        fill_thread = Thread(
-            target = fill_storages_bytetracker,
-            kwargs = {
-                "rk3588" : rk3588,
-                "raw_img_strg" : raw_frames_storage,
-                "inf_img_strg" : inferenced_frames_storage,
-                "dets_strg" : detections_storage,
-                "start_time" : start_time
-            },
-            daemon = True
-        )
-    else:
-        fill_thread = Thread(
-            target = fill_storages,
-            kwargs = {
-                "rk3588" : rk3588,
-                "raw_img_strg" : raw_frames_storage,
-                "inf_img_strg" : inferenced_frames_storage,
-                "dets_strg" : detections_storage,
-                "start_time" : start_time
-            },
-            daemon = True
-        )
+    fill_thread = Thread(
+        target = fill_storages,
+        kwargs = {
+            "rk3588" : rk3588,
+            "bytetracker_state" : bytetracker,
+            "raw_img_strg" : raw_frames_storage,
+            "inf_img_strg" : inferenced_frames_storage,
+            "dets_strg" : detections_storage,
+            "start_time" : start_time
+        },
+        daemon = True
+    )
     rk3588.start()
     fill_thread.start()
     if notifier:
