@@ -1,5 +1,6 @@
 import json
 import math
+import time
 from enum import IntEnum
 from multiprocessing import Value, shared_memory
 from pathlib import Path
@@ -64,11 +65,11 @@ class Storage():
     ---------------------------------------------------------------------------
     """
     def __init__(
-        self,
-        storage_name: StoragePurpose,
-        data_size: tuple,
-        data_amount: int,
-        data_type: type
+            self,
+            storage_name: StoragePurpose,
+            data_size: tuple,
+            data_amount: int,
+            data_type: type
     ):
         self._DATA_AMOUNT=data_amount
         self._DELAY = cfg["storages"]["frames_delay"]
@@ -103,12 +104,20 @@ class Storage():
             buffer=self._buffer.buf
         )
 
-    def set_data(self, data: np.ndarray, id: int):
+    def set_data(self, data: np.ndarray, id: int, start_time: float):
         data_index = id % self._DATA_AMOUNT # type: ignore
         if data is not None:
             self._storage[data_index][:len(data),:] = data
         else:
             self._storage[data_index][:] = data
+        if cfg["debug"]["filled_frame_id"] and self.storage_name == 2:
+            with open(cfg["debug"]["filled_id_file"], 'a') as f:
+                f.write(
+                    "{}\t{:.3f}\n".format(
+                        data_index,
+                        time.time() - start_time
+                    )
+                )
         self._index_counter.value += 1 # type: ignore
 
     def get_data_by_index(self, index: int):
@@ -116,12 +125,12 @@ class Storage():
     
     def get_last_data(self):
         data_index =\
-            (self._index_counter.value - self._DELAY) % self._DATA_AMOUNT # type: ignore
+            (self._index_counter.value - (self._DELAY + 1)) % self._DATA_AMOUNT # type: ignore
         return self._storage[data_index][:]
     
     async def get_last_data_async(self):
         data_index =\
-            (self._index_counter.value - self._DELAY) % self._DATA_AMOUNT # type: ignore
+            (self._index_counter.value - (self._DELAY + 1)) % self._DATA_AMOUNT # type: ignore
         return self._storage[data_index][:]
 
     def get_last_index(self):

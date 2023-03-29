@@ -1,7 +1,11 @@
 {
     "debug": {
-        "print_camera_release": true,
+        "print_camera_release": false,
         "camera_release_file": "camera_release.txt",
+        "showed_frame_id": false,
+        "showed_id_file": "showed_frames.txt",
+        "filled_frame_id": false,
+        "filled_id_file": "filled_ids.txt",
         "verbose": false,
         "verbose_file": "verbose.txt"
     },
@@ -14,11 +18,11 @@
     },
     "inference": {
         "net_size": 352,
-        "buf_size": 1,
+        "buf_size": 3,
         "obj_thresh": 0.25,
         "nms_thresh": 0.45,
         "inf_proc": 3,
-        "post_proc": 1,
+        "post_proc": 3,
         "async_mode": true,
         "default_model": "yolov5m_leaky_352x352.rknn",
         "new_model": "yolov5m_leaky_352x352.rknn",
@@ -106,9 +110,9 @@
         ]
     },
     "storages": {
-        "stored_data_amount": 100,
+        "stored_data_amount": 300,
         "dets_amount": 100,
-        "frames_delay": 6
+        "frames_delay": 10
     },
     "webui": {
         "send_data_amount": 10

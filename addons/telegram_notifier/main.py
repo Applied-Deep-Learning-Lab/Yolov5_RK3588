@@ -64,8 +64,7 @@ class TelegramNotifier():
             self._bot = Bot(token=self._TOKEN)
             self._start = datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')
         except Exception as e:
-            print("Can't start bot:")
-            print(e)
+            print("Can't start bot: {}".format(e))
             return
         self._hostname = os.uname()[1]
         self._counters = {

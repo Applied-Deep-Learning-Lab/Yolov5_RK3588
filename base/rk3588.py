@@ -1,10 +1,12 @@
 import json
+from multiprocessing import Process, Queue
 from pathlib import Path
+
+from rknnlite.api import RKNNLite
+
 from base.camera import Cam
 from base.inference import Yolov5
 from base.post_process import post_process
-from multiprocessing import Process, Queue, Value
-from rknnlite.api import RKNNLite
 
 
 CONFIG_FILE = str(Path(__file__).parent.parent.absolute()) + "/config.json"
@@ -77,11 +79,17 @@ class Rk3588():
             q_in = self._q_post,
             q_out = self._q_pre
         )
+        self._cores=[
+            RKNNLite.NPU_CORE_0,
+            RKNNLite.NPU_CORE_1,
+            RKNNLite.NPU_CORE_2
+        ]
         self._yolov5 = [
             Yolov5(
                 proc = i,
                 q_in = self._q_pre,
-                q_out = self._q_outs
+                q_out = self._q_outs,
+                core=self._cores[i%3]
             ) for i in range(cfg["inference"]["inf_proc"])
         ]
         self._rec = Process(
@@ -110,8 +118,8 @@ class Rk3588():
         for inference in self._inf: inference.start()
         for post_process in self._post: post_process.start()
 
-    def show(self):
-        self._cam.show()
+    def show(self, start_time):
+        self._cam.show(start_time)
 
     def get_data(self):
         if self._q_post.empty():

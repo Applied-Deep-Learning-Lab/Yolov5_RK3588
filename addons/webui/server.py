@@ -83,7 +83,7 @@ class WebUI():
             raw_img_strg: strgs.ImageStorage,
             inf_img_strg: strgs.ImageStorage,
             dets_strg: strgs.DetectionsStorage
-        ):
+    ):
         self._raw_img_strg = raw_img_strg
         self._inf_img_strg = inf_img_strg
         self._dets_strg = dets_strg
