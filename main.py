@@ -1,79 +1,20 @@
 import argparse
+import json
 import time
 from multiprocessing import Process
+from pathlib import Path
 from threading import Thread
 
 import addons.storages as strgs
-from addons.byte_tracker import BTArgs, BYTETracker, draw_info, tracking
+from addons.byte_tracker import BTArgs, BYTETracker
 from addons.telegram_notifier import TelegramNotifier
 from addons.webui import WebUI
-from base import Rk3588, show_frames_localy
+from base import Rk3588
+from utils import fill_storages, fill_storages_bytetracker, show_frames_localy
 
-
-def fill_storages(
-        rk3588: Rk3588,
-        bytetracker_state: bool,
-        raw_img_strg: strgs.ImageStorage,
-        inf_img_strg: strgs.ImageStorage,
-        dets_strg: strgs.DetectionsStorage,
-        start_time: float
-):
-    """Fill storages with raw frames, frames with bboxes, numpy arrays with
-    detctions
-
-    Args
-    -----------------------------------
-    rk3588 : Rk3588
-        Object of Rk3588 class for getting data after inference
-    raw_img_strg : storages.ImageStorage
-        Object of ImageStorage for storage raw frames
-    inf_img_strg : storages.ImageStorage
-        Object of ImageStorage for storage inferenced frames
-    dets_strg : storages.DetectionsStorage
-        Object of DetectionsStorage for numpy arrays with detctions
-    start_time : float
-        Program start time
-    bytetracker_state : bool
-        Turn on/off BYTEtracker
-    -----------------------------------
-    """
-    if bytetracker_state:
-        bytetrack_args = BTArgs()
-        bytetracker = BYTETracker(
-            args = bytetrack_args,
-            frame_rate = 60
-        )
-    while True:
-            output = rk3588.get_data()
-            if output is not None:
-                raw_frame, inferenced_frame, detections, frame_id = output
-                if bytetracker_state:
-                    if detections is not None:
-                        detections = tracking(
-                            bytetracker=bytetracker,
-                            dets=detections,
-                            frame_shape=inferenced_frame.shape[:2]
-                        )
-                        if detections is not None:
-                            draw_info(
-                                frame=inferenced_frame,
-                                dets=detections
-                            )
-                raw_img_strg.set_data(
-                    data=raw_frame,
-                    id=frame_id,
-                    start_time=start_time
-                )
-                inf_img_strg.set_data(
-                    data=inferenced_frame,
-                    id=frame_id,
-                    start_time=start_time
-                )
-                dets_strg.set_data(
-                    data=detections, # type: ignore
-                    id=frame_id,
-                    start_time=start_time
-                )
+CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
+with open(CONFIG_FILE, 'r') as config_file:
+    cfg = json.load(config_file)
 
 
 def parse_opt():
@@ -87,26 +28,31 @@ def parse_opt():
     # add optional arguments
     parser.add_argument(
         "--storages",
+        dest="storages_state",
         action = "store_true",
         help = "Turn on/off storages"
     )
     parser.add_argument(
         "--show",
+        dest="show_state",
         action = "store_true",
         help = "Show frames from storage or not"
     )
     parser.add_argument(
         "--webui",
+        dest="webui_state",
         action = "store_true",
         help = "Turn on/off webui"
     )
     parser.add_argument(
         "--notifier", "-n",
+        dest="notifier_state",
         action = "store_true",
         help = "Turn on/off telegram bot notifier"
     )
     parser.add_argument(
         "--bytetracker", "-bt",
+        dest="bytetracker_state",
         action = "store_true",
         help = "Turn on/off BYTEtracker"
     )
@@ -114,11 +60,11 @@ def parse_opt():
 
 
 def main(
-        storages: bool,
-        show: bool,
-        webui: bool,
-        notifier: bool,
-        bytetracker: bool
+        storages_state: bool,
+        show_state: bool,
+        webui_state: bool,
+        notifier_state: bool,
+        bytetracker_state: bool
 ):
     """Runs inference and addons (if mentions)
     Creating storages and sending data to them
@@ -144,9 +90,9 @@ def main(
     """
     rk3588 = Rk3588()
     start_time = time.time()
-    if not storages:
+    rk3588.start()
+    if not storages_state:
         try:
-            rk3588.start()
             while True:
                 rk3588.show(start_time)
         except Exception as e:
@@ -160,20 +106,36 @@ def main(
     )
     detections_storage = strgs.DetectionsStorage()
     fill_thread = Thread(
-        target = fill_storages,
-        kwargs = {
-            "rk3588" : rk3588,
-            "bytetracker_state" : bytetracker,
-            "raw_img_strg" : raw_frames_storage,
-            "inf_img_strg" : inferenced_frames_storage,
-            "dets_strg" : detections_storage,
-            "start_time" : start_time
+        target=fill_storages,
+        kwargs={
+            "rk3588": rk3588,
+            "raw_img_strg": raw_frames_storage,
+            "inf_img_strg": inferenced_frames_storage,
+            "dets_strg": detections_storage,
+            "start_time": start_time
         },
-        daemon = True
+        daemon=True
     )
-    rk3588.start()
+    if bytetracker_state:
+        bytetrack_args = BTArgs()
+        bytetracker = BYTETracker(
+            args = bytetrack_args,
+            frame_rate = cfg["bytetrack"]["fps"]
+        )
+        fill_thread = Thread(
+            target=fill_storages_bytetracker,
+            kwargs={
+                "rk3588": rk3588,
+                "bytetracker": bytetracker,
+                "raw_img_strg": raw_frames_storage,
+                "inf_img_strg": inferenced_frames_storage,
+                "dets_strg": detections_storage,
+                "start_time": start_time
+            },
+            daemon=True
+        )
     fill_thread.start()
-    if notifier:
+    if notifier_state:
         telegram_notifier = TelegramNotifier(
             inf_img_strg=inferenced_frames_storage
         )
@@ -185,7 +147,7 @@ def main(
             notifier_process.start()
         except Exception as e:
             print("Bot exception: {}".format(e))
-    if webui:
+    if webui_state:
         ui = WebUI(
             raw_img_strg = raw_frames_storage,
             inf_img_strg = inferenced_frames_storage,
@@ -201,7 +163,7 @@ def main(
             detections_storage.clear_buffer()
             exit()
     try:
-        show_frames_localy(inferenced_frames_storage, start_time, show)
+        show_frames_localy(inferenced_frames_storage, start_time, show_state)
     except Exception as e:
         print("Main exception: {}".format(e))
     finally:
