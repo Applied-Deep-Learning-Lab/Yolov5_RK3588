@@ -119,8 +119,7 @@ def fill_storages_bytetracker(
 
 def show_frames_localy(
         inf_img_strg: strgs.ImageStorage,
-        start_time: float,
-        show: bool
+        start_time: float
 ):
     """Show inferenced frames with fps on device
     
@@ -130,9 +129,6 @@ def show_frames_localy(
         Object of ImageStorage for storage inferenced frames
     start_time: float
         Program start time
-    show: bool
-        Show frames from storage or not
-        Gets from parse_opt
     -----------------------------------
     """
     cur_index = -1
@@ -160,7 +156,7 @@ def show_frames_localy(
         )
         frame =\
             inf_img_strg.get_data_by_index(last_index % stored_data_amount)
-        if show:
+        if cfg["camera"]["show"]:
             cv2.putText(
                 img=frame,
                 text="{:.2f}".format(fps),

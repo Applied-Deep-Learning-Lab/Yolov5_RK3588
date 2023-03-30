@@ -10,6 +10,7 @@
         "verbose_file": "verbose.txt"
     },
     "camera": {
+        "show": true,
         "source": 0,
         "pixel_format": "MJPG",
         "width": 640,
@@ -110,20 +111,24 @@
         ]
     },
     "storages": {
+        "state": true,
         "stored_data_amount": 300,
         "dets_amount": 100,
         "frames_delay": 10
     },
     "webui": {
+        "state": false,
         "send_data_amount": 10
     },
     "bytetrack": {
+        "state": false,
         "fps": 60,
         "tracking_classes": [
             62
         ]
     },
     "telegram_notifier": {
+        "state": false,
         "time_period": 10
     }
 }

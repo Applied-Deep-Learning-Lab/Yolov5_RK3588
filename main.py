@@ -1,4 +1,3 @@
-import argparse
 import json
 import time
 from multiprocessing import Process
@@ -17,81 +16,14 @@ with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 
 
-def parse_opt():
-    """Using for turn on/off addons"""
-    parser = argparse.ArgumentParser()
-    # add required arguments
-    # required = parser.add_argument_group('required arguments')
-
-    # some reqired args
-
-    # add optional arguments
-    parser.add_argument(
-        "--storages",
-        dest="storages_state",
-        action = "store_true",
-        help = "Turn on/off storages"
-    )
-    parser.add_argument(
-        "--show",
-        dest="show_state",
-        action = "store_true",
-        help = "Show frames from storage or not"
-    )
-    parser.add_argument(
-        "--webui",
-        dest="webui_state",
-        action = "store_true",
-        help = "Turn on/off webui"
-    )
-    parser.add_argument(
-        "--notifier", "-n",
-        dest="notifier_state",
-        action = "store_true",
-        help = "Turn on/off telegram bot notifier"
-    )
-    parser.add_argument(
-        "--bytetracker", "-bt",
-        dest="bytetracker_state",
-        action = "store_true",
-        help = "Turn on/off BYTEtracker"
-    )
-    return parser.parse_args()
-
-
-def main(
-        storages_state: bool,
-        show_state: bool,
-        webui_state: bool,
-        notifier_state: bool,
-        bytetracker_state: bool
-):
+def main():
     """Runs inference and addons (if mentions)
     Creating storages and sending data to them
-
-    Args
-    -----------------------------------
-    storages: bool
-        Turn on/off storages
-        Gets from parse_opt
-    show: bool
-        Show frames from storage or not
-        Gets from parse_opt
-    webui: bool
-        Turn on/off web user interface
-        Gets from parse_opt
-    notifier: bool
-        Turn on/off telegram bot notifier
-        Gets from parse_opt
-    bytetracker: bool
-        Turn on/off BYTEtrack
-        Gets from parse_opt
-    -----------------------------------
     """
     rk3588 = Rk3588()
     start_time = time.time()
     rk3588.start()
-    if not storages_state:
+    if not cfg["storages"]["state"]:
         try:
             while True:
                 rk3588.show(start_time)
@@ -116,7 +48,7 @@ def main(
         },
         daemon=True
     )
-    if bytetracker_state:
+    if cfg["bytetrack"]["state"]:
         bytetrack_args = BTArgs()
         bytetracker = BYTETracker(
             args = bytetrack_args,
@@ -135,7 +67,7 @@ def main(
             daemon=True
         )
     fill_thread.start()
-    if notifier_state:
+    if cfg["telegram_notifier"]["state"]:
         telegram_notifier = TelegramNotifier(
             inf_img_strg=inferenced_frames_storage
         )
@@ -147,7 +79,7 @@ def main(
             notifier_process.start()
         except Exception as e:
             print("Bot exception: {}".format(e))
-    if webui_state:
+    if cfg["webui"]["state"]:
         ui = WebUI(
             raw_img_strg = raw_frames_storage,
             inf_img_strg = inferenced_frames_storage,
@@ -163,7 +95,10 @@ def main(
             detections_storage.clear_buffer()
             exit()
     try:
-        show_frames_localy(inferenced_frames_storage, start_time, show_state)
+        show_frames_localy(
+            inf_img_strg=inferenced_frames_storage,
+            start_time=start_time
+        )
     except Exception as e:
         print("Main exception: {}".format(e))
     finally:
@@ -173,5 +108,4 @@ def main(
 
 
 if __name__ == "__main__":
-    opt = parse_opt()
-    main(**vars(opt))
+    main()
