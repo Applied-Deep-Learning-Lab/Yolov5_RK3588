@@ -6,32 +6,19 @@ CONDA_ENV_PATH=$(conda info --envs | grep '^rknn' | awk '{print $2}')
 # Get script parent folder
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-# Get absolute path to autostart service
-AUTOSTART_SERVICE=$DIR/obj_det_autostart.service
-
 # Get absolute path to main.py
 OBJ_DET_PROG=$(dirname $(dirname "$DIR"))/main.py
 
-# Set permissions for cp/rm service file
-if [ $(whoami) <> 'root' ]; then
-    sudo chmod 777 /etc/systemd/system
-    sudo chmod 777 $AUTOSTART_SERVICE
-    rm ./root
-    rm $DIR/root
+# Check if "exit 0" line exists in /etc/rc.local
+if grep -q "^exit 0$" /etc/rc.local; then
+    # Remove "exit 0" line from /etc/rc.local
+    sudo sed -i '/^exit 0$/d' /etc/rc.local
+    # Append LD_PRELOAD and python commands
+    echo "Appending LD_PRELOAD and python commands"
+    sudo tee -a /etc/rc.local > /dev/null <<EOF
+export LD_PRELOAD=$LD_PRELOAD:/usr/lib/aarch64-linux-gnu/libffi.so.7
+exec $CONDA_ENV_PATH/bin/python3 $OBJ_DET_PROG
+EOF
 fi
 
-# Remove prev autostart service
-service obj_det_autostart stop
-rm -rf /etc/systemd/system/obj_det_autostart.service
-
-# Set "Exec" line in .desktop file
-sed -i "s|ExecStart=.*|ExecStart=$CONDA_ENV_PATH/bin/python3 $OBJ_DET_PROG --webui --notifier|" $AUTOSTART_SERVICE
-
-# Send autostart service to system folder
-cp $AUTOSTART_SERVICE /etc/systemd/system/
-
-# Reload the systemd daemon to read the new service file
-systemctl daemon-reload
-
-# Start autostart service
-service obj_det_autostart start
+sudo /etc/rc.local start

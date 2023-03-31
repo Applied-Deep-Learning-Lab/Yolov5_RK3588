@@ -133,7 +133,7 @@ class WebUI():
                 data["inference"]["net_size"] = 640
             elif "352" in new_model_name:
                 data["inference"]["net_size"] = 352
-            data["inference"]["new_model"] = MODELS + new_model_name
+            data["inference"]["new_model"] = new_model_name
             with open(CONFIG_FILE, "w") as json_file:
                 json.dump(
                     obj = data,
@@ -161,7 +161,7 @@ class WebUI():
         if "file" in model_form.keys():
             _load_new_model(
                 new_model = model_form["file"].file.read(),
-                new_model_name = MODELS + model_form["file"].filename
+                new_model_name = model_form["file"].filename
             )
         else:
             _load_local_model(

@@ -163,16 +163,16 @@ function start() {
                 dataChannelLog.textContent += '> ' + message + '\n';
                 dc.send(message);
             }, 5000);
-            countersInterval = setInterval(function() {
-                fetch("/counters", {method: 'GET'})
-                .then(response=>response.json())
-                .then(response=>{
-                  jsonOut = JSON.parse(response)
-                  jsonOut = JSON.stringify(jsonOut, null, 2)
-                  // jsonOut = jsonOut.replace('{', '').replace('}', '').replaceAll('"', '').replaceAll(',', '')
-                  document.getElementById('counters').innerHTML = jsonOut
-                })
-              }, 1000);
+            // countersInterval = setInterval(function() {
+            //     fetch("/counters", {method: 'GET'})
+            //     .then(response=>response.json())
+            //     .then(response=>{
+            //       jsonOut = JSON.parse(response)
+            //       jsonOut = JSON.stringify(jsonOut, null, 2)
+            //       // jsonOut = jsonOut.replace('{', '').replace('}', '').replaceAll('"', '').replaceAll(',', '')
+            //       document.getElementById('counters').innerHTML = jsonOut
+            //     })
+            //   }, 1000);
         };
 
         dc.onmessage = function(evt) {
@@ -374,7 +374,7 @@ function download(response, fileName, contentType) {
 function updateNewModel() {
     document.getElementById("new_model_upload").disabled = true;
     setTimeout(function() {
-        document.getElementById("new_model_uploa").disabled = false;
+        document.getElementById("new_model_upload").disabled = false;
     }, 15000);
     const formData = new FormData()
 
@@ -440,10 +440,10 @@ function showModal(modal_message, load_time) {
     }, load_time);
 }
 
-function updateFileName(elem){
-    var file = document.getElementById(elem.id).files[0];
-    document.getElementById(elem.previousElementSibling.id).innerHTML = file.name
-}
+// function updateFileName(elem){
+//     var file = document.getElementById(elem.id).files[0];
+//     document.getElementById(elem.previousElementSibling.id).innerHTML = file.name
+// }
 
 async function showModels() {
     try {
