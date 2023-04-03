@@ -1,0 +1,8 @@
+[Unit]
+Description=Autostart object detection service
+After=network.target
+[Service]
+ExecStart=
+Restart=always
+[Install]
+WantedBy=multi-user.target
