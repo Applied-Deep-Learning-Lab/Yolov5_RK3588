@@ -353,16 +353,6 @@ function requestInference() {
        download(data, name, 'multipart/mixed'); } )
 }
 
-// function downloadModel() {
-//     fetch("/model", {
-//     method: 'GET'})
-//       .then(response=>response.blob())
-//       .then(data=>{
-//        const d = new Date();
-//        name = new String('model.rknn');
-//        download(data, name, 'multipart/mixed'); } )
-// }
-
 function download(response, fileName, contentType) {
     var a = document.createElement("a");
     var file = response;//new Blob([content], {type: contentType});
@@ -372,78 +362,54 @@ function download(response, fileName, contentType) {
 }
 
 function updateNewModel() {
-    document.getElementById("new_model_upload").disabled = true;
-    setTimeout(function() {
-        document.getElementById("new_model_upload").disabled = false;
-    }, 15000);
     const formData = new FormData()
 
     formData.append('file', document.getElementById("new_model_file").files[0])
     fetch("/model", {
         method: 'POST',
         body: formData,
-    }).then((response) => {
-        dataChannelLog.textContent += "response: " + response + "\n";
     })
-    showModal("Model uploaded! Reboot device for confirm.", 5000)
+    showModal("Model", "Uploading...", 5000)
 }
 
 function updateLocalModel(){
-    document.getElementById("local_model_upload").disabled = true;
-    setTimeout(function() {
-        document.getElementById("local_model_upload").disabled = false;
-    }, 15000);
     const formData = new FormData()
-
     formData.append('text', document.getElementById("select_local_model").value)
     fetch("/model", {
         method: 'POST',
         body: formData,
-    }).then((response) => {
-        dataChannelLog.textContent += "response: " + response + "\n";
     })
-    showModal("Model changed! Reboot device for confirm.", 1000)
+    showModal("Model", "Changing...", 1000)
 }
 
 function updateSettings() {
-    document.getElementById("settings_upload").disabled = true;
-    setTimeout(function() {
-        document.getElementById("settings_upload").disabled = false;
-    }, 15000);
     const formData = new FormData()
-
     formData.append('file', document.getElementById("settings_file").files[0])
-    fetch("/settings", {
+    fetch("/update_settings", {
         method: 'POST',
         body: formData,
-    }).then((response) => {
-        dataChannelLog.textContent += "response: " + response + "\n";
     })
-    showModal("Settings updated! Reboot device for confirm them.", 1000);
+    showModal("Settings", "Changing...", 1000);
 }
 
-function showModal(modal_message, load_time) {
-    var modal = document.getElementById("upload_status_modal");
+function showModal(modalLabel, modalContent, loadTime) {
+    let modal = document.getElementById("HomeModal");
+    let label = document.getElementById("HomeModalLabel");
+    label.innerText = modalLabel;
+    let content = document.getElementById("HomeModalContent");
+    content.innerText = modalContent;
     modal.style.display = "block";
-    var message = modal.querySelector("p");
-    message.innerText = "Updloading...";
     
     // Simulate work being done (e.g. AJAX request)
     setTimeout(function() {
         // Update modal content with result
-        message.innerText = modal_message;
-        
+        content.innerText = "Successfuly!!!";
         // Hide modal after a delay
         setTimeout(function() {
             modal.style.display = "none";
         }, 1000);
-    }, load_time);
+    }, loadTime);
 }
-
-// function updateFileName(elem){
-//     var file = document.getElementById(elem.id).files[0];
-//     document.getElementById(elem.previousElementSibling.id).innerHTML = file.name
-// }
 
 async function showModels() {
     try {
@@ -466,4 +432,42 @@ async function showModels() {
     } catch (error) {
         console.error(error);
     }
+}
+
+function ResetModalShow(){
+    let modal = document.getElementById("ResetModal");
+    modal.style.display = "block";
+}
+
+function CloseResetModal(){
+    let modal = document.getElementById("ResetModal");
+    modal.style.display = "none";
+}
+
+function RestartProgram(){
+    CloseResetModal()
+    ShowResetWaitingModal()
+    setTimeout(function () {
+        fetch("/restart", {
+            method: 'POST',
+            body: "",
+        })
+        setTimeout(function() {
+            location.reload(true); 
+        }, 6500);
+    }, 100);
+}
+
+function ShowResetWaitingModal(){
+    let modal = document.getElementById("ResetWaitingModal");
+    modal.style.display = "block";
+}
+
+function RebootDevice(){
+    fetch("/reboot", {
+        method: 'POST',
+        body: "",
+    }).then((response) => {
+        dataChannelLog.textContent += "response: " + response + "\n";
+    })
 }

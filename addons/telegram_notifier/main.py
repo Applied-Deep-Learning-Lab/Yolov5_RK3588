@@ -58,8 +58,14 @@ class TelegramNotifier():
     ---------------------------------------------------------------------------
     """
     def __init__(self, inf_img_strg: strgs.ImageStorage):
-        self._TOKEN = bot_cfg["telegram_notifier"]["token"]
-        self._CHAT_ID = bot_cfg["telegram_notifier"]["chat_id"]
+        try:
+            self._TOKEN = cfg["telegram_notifier"]["token"]
+        except:
+            self._TOKEN = bot_cfg["telegram_notifier"]["token"]
+        try:
+            self._CHAT_ID = cfg["telegram_notifier"]["chat_id"]
+        except:
+            self._CHAT_ID = bot_cfg["telegram_notifier"]["chat_id"]
         try:
             self._bot = Bot(token=self._TOKEN)
             self._start = datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')

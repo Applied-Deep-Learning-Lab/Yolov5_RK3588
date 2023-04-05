@@ -1,0 +1,563 @@
+<html data-bs-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>|Hostname| WebUI Settings</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+      integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.min.js"
+      integrity="sha384-heAjqF+bCxXpCWLa6Zhcp4fu20XoNIA98ecBC1YkdXhszjoejr5y9Q77hIrv8R9i"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp"
+      crossorigin="anonymous"
+    />
+  </head>
+  <div class="modal fade show" id="ResetModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="ResetModalLabel">Restart</h1>
+        </div>
+        <div class="modal-body">Are you sure that you want to restart?</div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            onclick="CloseResetModal()"
+          >
+            No
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="RestartProgram()"
+          >
+            Restart program
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="RebootDevice()"
+          >
+            Reboot device
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade show" id="SettingsModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="SettingsModalLabel">Settings</h1>
+        </div>
+        <div class="modal-body">Successfuly updated!!!</div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            onclick="CloseSettingsModal()"
+          >
+            Restart later
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="RestartProgram()"
+          >
+            Restart now and apply changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade show" id="ResetWaitingModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="ResetWaitingModalLabel">Reseting</h1>
+        </div>
+        <div class="modal-body text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Reseting...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <body>
+    <header
+      class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"
+    >
+      <div class="col-md-3 mb-2 mb-md-0 px-4">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          fill="currentColor"
+          class="bi bi-gear-fill"
+          viewBox="0 0 16 16"
+        >
+          <path
+            d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"
+          />
+        </svg>
+      </div>
+      <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+        <li><a href="../" class="nav-link px-2">Video</a></li>
+        <li><a href="#" class="nav-link px-2 link-secondary">Settings</a></li>
+      </ul>
+      <div class="col-md-3 text-end">
+        <div class="btn-group mx-2 px-5" role="group">
+          <button
+            type="button"
+            class="btn btn-success mx-2 px-5"
+            onclick="SendSettingsValues()"
+          >
+            Apply
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            onclick="ResetModalShow()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="currentColor"
+              class="bi bi-power"
+              viewBox="0 0 16 16"
+            >
+              <path d="M7.5 1v7h1V1h-1z" />
+              <path
+                d="M3 8.812a4.999 4.999 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+    <div class="row text-center mb-5 mt-5">
+      <div class="col">
+        <h1>Base functions</h1>
+        <div class="row mt-4 d-flex align-items-center justify-content-center">
+          <div class="card" style="width: 20rem; height: 40rem">
+            <div class="card-body">
+              <h3 class="card-title">Inference</h3>
+              <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
+              <div class="d-flex flex-column gap-2">
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="async_mode_state"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >async mode</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">net size</label>
+                  <input
+                    id="net_size"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">buffer size</label>
+                  <input
+                    id="buf_size"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">object thresh</label>
+                  <input
+                    id="obj_thresh"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">nms thresh</label>
+                  <input
+                    id="nms_thresh"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">inference processes</label>
+                  <input
+                    id="inf_proc"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">post process processes</label>
+                  <input
+                    id="post_proc"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="width: 20rem; height: 40rem">
+            <div class="card-body">
+              <h3 class="card-title">Camera</h3>
+              <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
+              <div class="d-flex flex-column gap-2 align-items-start">
+                <div
+                  class="row-md-3 d-flex align-items-center justify-content-center"
+                >
+                  <div class="form-check form-switch">
+                    <input
+                      id="show_state"
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="flexSwitchCheckChecked"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >show state</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">source</label>
+                  <input
+                    id="source"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">width</label>
+                  <input
+                    id="width"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">height</label>
+                  <input
+                    id="height"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label for="exampleSelect" class="form-label"
+                    >pixel format</label
+                  >
+                  <select
+                    id="pixel_format"
+                    class="form-select rounded-pill"
+                    id="exampleSelect"
+                  >
+                    <option selected="">choose pixel format</option>
+                    <option value="MJPG">MJPG</option>
+                    <option value="YUYV">YUYV</option>
+                  </select>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label for="exampleSelect" class="form-label">fps</label>
+                  <select
+                    id="camera_framerate"
+                    class="form-select rounded-pill"
+                    id="exampleSelect"
+                  >
+                    <option selected="">choose framerate</option>
+                    <option value="30">30</option>
+                    <option value="60">60</option>
+                    <option value="120">120</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="width: 20rem; height: 40rem">
+            <div class="card-body">
+              <h3 class="card-title">Debug</h3>
+              <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
+              <div class="d-flex flex-column gap-2 mb-3">
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <div class="form-check form-switch">
+                    <input
+                      id="print_camera_release"
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="flexSwitchCheckChecked"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >print camera release</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <div class="form-check form-switch">
+                    <input
+                      id="showed_frame_id"
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="flexSwitchCheckChecked"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >showed frame id</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <div class="form-check form-switch">
+                    <input
+                      id="filled_frame_id"
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="flexSwitchCheckChecked"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >filled frame id</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">send data amount</label>
+                  <input
+                    id="send_data_amount"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row text-center">
+      <div class="col align-items-center mb-5 mt-5">
+        <h1>Addons functions</h1>
+        <div
+          class="row mt-4 mb-5 d-flex align-items-center justify-content-center"
+        >
+          <div class="card" style="width: 20rem; height: 40rem">
+            <div class="card-body">
+              <h3 class="card-title">Storages</h3>
+              <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
+              <div class="d-flex flex-column gap-2">
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <div class="form-check form-switch">
+                    <input
+                      id="storages_state"
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="flexSwitchCheckChecked"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >storages state</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">stored data amount</label>
+                  <input
+                    id="stored_data_amount"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">detections amount</label>
+                  <input
+                    id="dets_amount"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">frames delay</label>
+                  <input
+                    id="frames_delay"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="width: 20rem; height: 40rem">
+            <div class="card-body">
+              <h3 class="card-title">BYTEtrack</h3>
+              <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
+              <div class="d-flex flex-column gap-2 align-items-start">
+                <div
+                  class="row-md-3 d-flex align-items-center justify-content-center"
+                >
+                  <div class="form-check form-switch">
+                    <input
+                      id="bytetrack_state"
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="flexSwitchCheckChecked"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >BYTEtrack state</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label for="exampleSelect" class="form-label">fps</label>
+                  <select
+                    id="bytetrack_framerate"
+                    class="form-select rounded-pill"
+                    id="exampleSelect"
+                  >
+                    <option selected="">choose framerate</option>
+                    <option value="30">30</option>
+                    <option value="60">60</option>
+                    <option value="120">120</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="width: 20rem; height: 40rem">
+            <div class="card-body">
+              <h3 class="card-title">Telegram notifier</h3>
+              <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
+              <div class="d-flex flex-column gap-2 mb-3">
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <div class="form-check form-switch">
+                    <input
+                      id="telegram_notifier_state"
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="flexSwitchCheckChecked"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >telegram notifier state</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label"
+                    >sending notifications delay (sec)</label
+                  >
+                  <input
+                    id="time_period"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder="seconds"
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">bot token</label>
+                  <input
+                    id="bot_token"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">chat id</label>
+                  <input
+                    id="chat_id"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript" src="settings.js"></script>
+</html>

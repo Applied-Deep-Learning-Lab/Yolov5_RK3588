@@ -26,7 +26,7 @@
         "post_proc": 3,
         "async_mode": true,
         "default_model": "yolov5m_leaky_352x352.rknn",
-        "new_model": "test_model.rknn",
+        "new_model": "yolov5m_leaky_352x352.rknn",
         "classes": [
             "person",
             "bicycle",
@@ -129,6 +129,8 @@
     },
     "telegram_notifier": {
         "state": false,
-        "time_period": 10
+        "time_period": 10,
+        "chat_id": "",
+        "token": ""
     }
 }

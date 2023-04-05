@@ -81,9 +81,10 @@ def main():
             print("Bot exception: {}".format(e))
     if cfg["webui"]["state"]:
         ui = WebUI(
-            raw_img_strg = raw_frames_storage,
-            inf_img_strg = inferenced_frames_storage,
-            dets_strg = detections_storage
+            raw_img_strg=raw_frames_storage,
+            inf_img_strg=inferenced_frames_storage,
+            dets_strg=detections_storage,
+            camera=rk3588._cam
         )
         try:
             ui.start()

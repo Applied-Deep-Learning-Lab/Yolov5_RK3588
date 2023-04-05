@@ -1,9 +1,9 @@
 <html data-bs-theme="dark">
   <head>
+    <meta http-equiv="Refresh" content="10">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>|Hostname| WebUI</title>
-    <!-- <link rel="stylesheet" href="styles.css" type="text/css" /> -->
+    <title>|Hostname| WebUI Video</title>
     <script type="text/javascript" src="client.js"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"
@@ -20,7 +20,6 @@
       integrity="sha384-heAjqF+bCxXpCWLa6Zhcp4fu20XoNIA98ecBC1YkdXhszjoejr5y9Q77hIrv8R9i"
       crossorigin="anonymous"
     ></script>
-
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -28,17 +27,108 @@
       crossorigin="anonymous"
     />
   </head>
-  <body>
-    <div id="upload_status_modal" class="modal">
+  <div class="modal fade show" id="HomeModal">
+    <div class="modal-dialog">
       <div class="modal-content">
-        <p>Uploading...</p>
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="HomeModalLabel">Settings</h1>
+        </div>
+        <div class="modal-body" id="HomeModalContent">Successfuly!!!</div>
       </div>
     </div>
-    <header class="d-flex justify-content-center py-3">
-      <ul class="nav nav-pills">
-        <li class="nav-item"><a href="#" class="nav-link active" aria-current="page">Video</a></li>
-        <li class="nav-item"><a href="#" class="nav-link">Settings</a></li>
+  </div>
+  <div class="modal fade show" id="ResetModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="ResetModalLabel">Restart</h1>
+        </div>
+        <div class="modal-body">Are you sure that you want to restart?</div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+            onclick="CloseResetModal()"
+          >
+            No
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="RestartProgram()"
+          >
+            Restart program
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="RebootDevice()"
+          >
+            Reboot device
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade show" id="ResetWaitingModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="ResetWaitingModalLabel">Reseting</h1>
+        </div>
+        <div class="modal-body text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Reseting...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <body>
+    <header
+      class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"
+    >
+      <div class="col-md-3 mb-2 mb-md-0 px-4">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          fill="currentColor"
+          class="bi bi-camera-fill"
+          viewBox="0 0 16 16"
+        >
+          <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />
+          <path
+            d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"
+          />
+        </svg>
+      </div>
+      <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+        <li><a href="#" class="nav-link px-2 link-secondary">Video</a></li>
+        <li>
+          <a href="../settings/" class="nav-link px-2" onclick="test_modal()"
+            >Settings</a
+          >
+        </li>
       </ul>
+      <div class="col-md-3 text-end mx-4 px-5">
+        <button type="button" class="btn btn-danger" onclick="ResetModalShow()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="currentColor"
+            class="bi bi-power"
+            viewBox="0 0 16 16"
+          >
+            <path d="M7.5 1v7h1V1h-1z" />
+            <path
+              d="M3 8.812a4.999 4.999 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812z"
+            />
+          </svg>
+        </button>
+      </div>
     </header>
     <div class="row mb-2 text-center">
       <div class="col-md-3"></div>
@@ -73,7 +163,7 @@
                 </button>
               </div>
             </div>
-            <div class="row mb-3 align-items-center">
+            <div class="row mb-3 align-items-center" id="local_model_upload">
               <div class="input-group gap-2">
                 <select
                   class="form-select rounded-pill"

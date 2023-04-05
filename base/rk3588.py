@@ -35,7 +35,7 @@ class Rk3588():
 
     Camera
     -----------------------------------
-    _cam : camera.Cam
+    cam : camera.Cam
         Camera object for creating recording, showing process
     -----------------------------------
 

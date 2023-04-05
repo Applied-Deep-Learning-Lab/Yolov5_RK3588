@@ -1,7 +1,7 @@
 import json
 import time
 from datetime import datetime
-from multiprocessing import Queue
+from multiprocessing import Queue, Value
 from pathlib import Path
 
 import cv2
@@ -62,6 +62,7 @@ class Cam():
     def __init__(self, source: int, q_in: Queue, q_out: Queue):
         self._q_out = q_out
         self._q_in = q_in
+        self._stop_record = Value('i', 0)
         self._cap = cv2.VideoCapture(source)
         self._last_frame_id = 0
         self._cap.set(
@@ -99,7 +100,7 @@ class Cam():
             print("Bad source")
             raise SystemExit
         try:
-            while True:
+            while not bool(self._stop_record.value): # type: ignore
                 ret, frame = self._cap.read()
                 if not ret:
                     print("Camera stopped!")
@@ -108,6 +109,7 @@ class Cam():
                 frame = self._pre_process(frame)
                 self._q_out.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
+            self._cap.release()
         except Exception as e:
             print("Stop recording loop. Exception {}".format(e))
         finally:
@@ -171,3 +173,6 @@ class Cam():
                         time.time() - start_time
                     )
                 )
+
+    def release(self):
+        self._stop_record.value = 1 # type: ignore
