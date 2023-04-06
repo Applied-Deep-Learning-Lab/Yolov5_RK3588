@@ -26,16 +26,6 @@
       crossorigin="anonymous"
     />
   </head>
-  <div class="modal fade show" id="HomeModal">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="HomeModalLabel">Settings</h1>
-        </div>
-        <div class="modal-body" id="HomeModalContent">Successfuly!!!</div>
-      </div>
-    </div>
-  </div>
   <div class="modal fade show" id="ResetModal">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -88,7 +78,9 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="RebootWaitingModalLabel">Rebooting</h1>
+          <h1 class="modal-title fs-5" id="RebootWaitingModalLabel">
+            Rebooting
+          </h1>
         </div>
         <div class="modal-body text-center">
           <div class="spinner-border text-danger" role="status">
@@ -143,8 +135,7 @@
         </button>
       </div>
     </header>
-    <div class="row mb-2 text-center">
-      <div class="col-md-3"></div>
+    <div class="row d-flex align-items-center justify-content-center">
       <div class="col-md-6">
         <div id="media" class="container text-center">
           <div class="row align-items-center mb-4">
@@ -176,66 +167,9 @@
                 </button>
               </div>
             </div>
-            <div class="row mb-3 align-items-center" id="local_model_upload">
-              <div class="input-group gap-2">
-                <select
-                  class="form-select rounded-pill"
-                  id="select_local_model"
-                  onmousedown="showModels()"
-                >
-                  <option>Select model from local...</option>
-                </select>
-                <button
-                  id="btn_local_model_upload"
-                  class="btn btn-primary rounded-pill"
-                  onclick="updateLocalModel()"
-                >
-                  Change local model
-                </button>
-              </div>
-            </div>
-            <div class="row mb-3 align-items-center">
-              <div class="input-group gap-2 align-items-center">
-                <label class="form-label-md" for="UploadNewModel"
-                  >Upload new model</label
-                >
-                <input
-                  class="form-control rounded-pill"
-                  type="file"
-                  id="new_model_file"
-                />
-                <button
-                  id="btn_new_model_upload"
-                  class="btn btn-primary rounded-pill"
-                  onclick="updateNewModel()"
-                >
-                  Upload new model
-                </button>
-              </div>
-            </div>
-            <div class="row mb-3 align-items-center">
-              <div class="input-group gap-2 align-items-center">
-                <label class="form-label-md" for="UploadNewModel"
-                  >Upload settings</label
-                >
-                <input
-                  class="form-control rounded-pill"
-                  type="file"
-                  id="settings_file"
-                />
-                <button
-                  id="btn_settings_upload"
-                  class="btn btn-primary rounded-pill"
-                  onclick="updateSettings()"
-                >
-                  Upload settings
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
-      <div class="col-md-3"></div>
     </div>
 
     <div style="display: none">
