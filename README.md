@@ -160,24 +160,33 @@
     </h2>
   </summary>
 
-  ``main.py`` runs inference. Also you can add arguments ``--webui``, ``--bytetracker`` for turn on **WebUI** that runs on the local host and **BYTEtracker** that assigns indexes to objects.
+  ``main.py`` runs inference  with WebUI. You can turn on/off some options in config file or using **Settings** page at webUI.
   
   ```
-  python3 main.py #--webui --bytetracker
+  python3 main.py
   ```
 
-  You also can set autostart for running this. For do it run ``set_autostart.sh`` (*before it write absolute path to your model in ``config.json``*):
+  Or run it using bash script:
 
   ```
-  #cd <repo-dir>/install/autostart/
-  source set_autostart.sh
+  source run.sh
   ```
 
-  It runs inference with webui. You can remove ``--webui`` from ``set_autostart.sh`` or add other arguments in next line:
+  You also can set autostart for running this. For do it run:
 
-  ```
-  sed -i "s|ExecStart=.*|ExecStart=$CONDA_ENV_PATH/bin/python3 $OBJ_DET_PROG --webui|" $AUTOSTART_SERVICE
-  ```
+  * For Orange Pi
+
+    ```
+    #cd <repo-dir>/install/autostart/
+    source orangepi_autostart.sh
+    ```
+
+  * For Firefly:
+
+    ```
+    #cd <repo-dir>/install/autostart/
+    source firefly_autostart.sh
+    ```
 
 </details>
 
