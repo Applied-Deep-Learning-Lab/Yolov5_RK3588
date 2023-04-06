@@ -1,14 +1,15 @@
 import json
 import time
-from multiprocessing import Queue
+from datetime import datetime
+from multiprocessing import Queue, Value
 from pathlib import Path
 
 import cv2
 import numpy as np
 
 
-ROOT = Path(__file__).parent.parent.parent.absolute()
-CONFIG_FILE = str(ROOT) + "/config.json"
+ROOT = str(Path(__file__).parent.parent.parent.absolute()) + '/'
+CONFIG_FILE = ROOT + "config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 Mat = np.ndarray[int, np.dtype[np.generic]]
@@ -61,6 +62,7 @@ class Cam():
     def __init__(self, source: int, q_in: Queue, q_out: Queue):
         self._q_out = q_out
         self._q_in = q_in
+        self._stop_record = Value('i', 0)
         self._cap = cv2.VideoCapture(source)
         self._last_frame_id = 0
         self._cap.set(
@@ -79,7 +81,6 @@ class Cam():
             cv2.CAP_PROP_FPS,
             cfg["camera"]["fps"]
         )
-
         self._frame_id = 0
         self._fps = 0
         self._max_fps = 0
@@ -97,29 +98,35 @@ class Cam():
     def record(self):
         if(not self._cap.isOpened()):
             print("Bad source")
-            raise
+            raise SystemExit
         try:
-            while True:
+            while not bool(self._stop_record.value): # type: ignore
                 ret, frame = self._cap.read()
                 if not ret:
                     print("Camera stopped!")
-                    raise
+                    raise SystemExit
                 raw_frame = frame.copy()
                 frame = self._pre_process(frame)
                 self._q_out.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
-        except Exception as e:
-            print("Exception {}",e)
             self._cap.release()
-            raise
+        except Exception as e:
+            print("Stop recording loop. Exception {}".format(e))
+        finally:
+            if cfg["debug"]["print_camera_release"]:
+                message = "camera released - " +\
+                    datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f') + "\n"
+                with open(ROOT + cfg["debug"]["camera_release_file"], "a") as f:
+                    f.write(message)
+            self._cap.release()
+            raise SystemExit
 
-    def show(self):
-        self._count+=1
+    def show(self, start_time):
         raw_frame, frame, dets, frame_id = self._q_in.get()
+        self._count+=1
         if frame_id < self._last_frame_id:
             return
-        # FPS COUNTER
-        if not self._count % 30:
+        if self._count % 30 == 0:
             self._fps = 30/(time.time() - self._begin)
             if self._fps > self._max_fps:
                 self._max_fps = self._fps
@@ -127,7 +134,7 @@ class Cam():
 
         frame = cv2.putText(
             img = frame,
-            text = f"id: {frame_id}",
+            text = "id: {}".format(frame_id),
             org = (5, 30),
             fontFace = cv2.FONT_HERSHEY_SIMPLEX,
             fontScale = 1,
@@ -137,7 +144,7 @@ class Cam():
         )
         frame = cv2.putText(
             img = frame,
-            text = "fps: %.2f"%(self._fps),
+            text = "fps: {:.2f}".format(self._fps),
             org = (5, 60),
             fontFace = cv2.FONT_HERSHEY_SIMPLEX,
             fontScale = 1,
@@ -147,7 +154,7 @@ class Cam():
         )
         frame = cv2.putText(
             img = frame,
-            text = f"max_fps: {self._max_fps}",
+            text = "max_fps: {:.2f}".format(self._max_fps),
             org = (5, 90),
             fontFace = cv2.FONT_HERSHEY_SIMPLEX,
             fontScale = 1,
@@ -155,17 +162,17 @@ class Cam():
             thickness = 1,
             lineType = cv2.LINE_AA
         )
+        cv2.imshow('frame', frame)
+        self._last_frame_id = frame_id
+        cv2.waitKey(1)
+        if cfg["debug"]["showed_frame_id"]:
+            with open(cfg["debug"]["showed_id_file"], 'a') as f:
+                f.write(
+                    "{}\t{:.3f}\n".format(
+                        frame_id,
+                        time.time() - start_time
+                    )
+                )
 
-        # Debug
-        if cfg["debug"]["print_ids"]:
-            with open(str(ROOT)+"/"+cfg["debug"]["frames_ids_file"], 'a') as f:
-                f.write(str(frame_id)+'\n')
-
-        try:
-            cv2.imshow('frame', frame)
-            self._last_frame_id = frame_id
-            cv2.waitKey(1)
-        except Exception as e:
-            print("Exception {}",e)
-            self._cap.release()
-            raise
+    def release(self):
+        self._stop_record.value = 1 # type: ignore

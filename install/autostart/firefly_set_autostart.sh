@@ -25,7 +25,7 @@ service obj_det_autostart stop
 rm -rf /etc/systemd/system/obj_det_autostart.service
 
 # Set "Exec" line in .desktop file
-sed -i "s|ExecStart=.*|ExecStart=$CONDA_ENV_PATH/bin/python3 $OBJ_DET_PROG --webui|" $AUTOSTART_SERVICE
+sed -i "s|ExecStart=.*|ExecStart=$CONDA_ENV_PATH/bin/python3 $OBJ_DET_PROG|" $AUTOSTART_SERVICE
 
 # Send autostart service to system folder
 cp $AUTOSTART_SERVICE /etc/systemd/system/

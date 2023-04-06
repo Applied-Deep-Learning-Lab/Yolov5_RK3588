@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-import cv2
 import numpy as np
 
 
@@ -38,9 +37,3 @@ def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
         dets[count]=[top, left, right, bottom, cl, score]
         count+=1
     return dets
-
-
-def show_frames(frame):
-    """Showes frames"""
-    cv2.imshow("frame", frame)
-    cv2.waitKey(1)

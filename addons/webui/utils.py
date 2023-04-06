@@ -6,10 +6,12 @@ from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
 
+import cv2
 import numpy as np
 from PIL import Image
 
 import addons.storages as strgs
+
 
 CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
@@ -123,7 +125,7 @@ async def request_inference(
             dets = dets_strg.get_data_by_index(
                 (last_index - i) % cfg["storages"]["stored_data_amount"]
             )
-            dets = dets[np.where(dets[..., 5] > 0)]
+            dets = dets[np.where(dets[..., 5] > 0)] # type: ignore
             if not np.any(dets):
                 if i == 0:
                     print("No frames")
@@ -150,3 +152,17 @@ async def request_inference(
                 )
             )
     return zip_path
+
+
+def draw_fps(frame: np.ndarray, fps: float):
+    cv2.putText(
+        img=frame,
+        text="{:.2f}".format(fps),
+        org=(5, 25),
+        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=0.8,
+        color=(255, 255, 255),
+        thickness=2,
+        lineType=cv2.LINE_AA
+    )
+    return frame

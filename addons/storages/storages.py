@@ -1,5 +1,6 @@
 import json
 import math
+import time
 from enum import IntEnum
 from multiprocessing import Value, shared_memory
 from pathlib import Path
@@ -64,12 +65,15 @@ class Storage():
     ---------------------------------------------------------------------------
     """
     def __init__(
-        self,
-        storage_name: StoragePurpose,
-        data_size: tuple,
-        data_amount: int,
-        data_type: type
+            self,
+            storage_name: StoragePurpose,
+            data_size: tuple,
+            data_amount: int,
+            data_type: type
     ):
+        self._DATA_AMOUNT=data_amount
+        self._DELAY = cfg["storages"]["frames_delay"]
+        self._index_counter = Value('i', 0)
         def _create_buffer(size, name):
             try:
                 return shared_memory.SharedMemory(
@@ -85,42 +89,52 @@ class Storage():
                 )
         self.storage_name = storage_name
         self._buffer = _create_buffer(
-            size = math.prod(
-                (math.prod(data_size), data_amount, np.dtype(data_type).itemsize)
+            size=math.prod(
+                (
+                    math.prod(data_size),
+                    self._DATA_AMOUNT,
+                    np.dtype(data_type).itemsize
+                )
             ),
-            name = str(self.storage_name)
+            name=str(self.storage_name)
         )
         self._storage = np.ndarray(
-            shape = (data_amount,) + data_size,
+            shape=(self._DATA_AMOUNT,) + data_size,
             dtype=data_type,
             buffer=self._buffer.buf
         )
-        self._index_counter = Value('i', 0)
 
-    def set_data(self, data: np.ndarray):
-        data_amount = cfg["storages"]["stored_data_amount"]
-        data_index = self._index_counter.value % data_amount # type: ignore
+    def set_data(self, data: np.ndarray, id: int, start_time: float):
+        data_index = id % self._DATA_AMOUNT # type: ignore
         if data is not None:
             self._storage[data_index][:len(data),:] = data
         else:
             self._storage[data_index][:] = data
+        if cfg["debug"]["filled_frame_id"] and self.storage_name == 2:
+            with open(cfg["debug"]["filled_id_file"], 'a') as f:
+                f.write(
+                    "{}\t{:.3f}\n".format(
+                        data_index,
+                        time.time() - start_time
+                    )
+                )
         self._index_counter.value += 1 # type: ignore
 
     def get_data_by_index(self, index: int):
         return self._storage[index][:]
     
     def get_last_data(self):
-        data_amount = cfg["storages"]["stored_data_amount"]
-        data_index = (self._index_counter.value - 1) % data_amount # type: ignore
+        data_index =\
+            (self._index_counter.value - (self._DELAY + 1)) % self._DATA_AMOUNT # type: ignore
         return self._storage[data_index][:]
     
     async def get_last_data_async(self):
-        data_amount = cfg["storages"]["stored_data_amount"]
-        data_index = (self._index_counter.value - 1) % data_amount # type: ignore
+        data_index =\
+            (self._index_counter.value - (self._DELAY + 1)) % self._DATA_AMOUNT # type: ignore
         return self._storage[data_index][:]
 
     def get_last_index(self):
-        return(self._index_counter.value - 1) # type: ignore
+        return(self._index_counter.value - (self._DELAY + 1)) # type: ignore
 
     def clear_buffer(self):
         self._buffer.close()

@@ -1,126 +1,33 @@
-import argparse
+import json
+import time
+from pathlib import Path
 from threading import Thread
 
 import addons.storages as strgs
-from addons.byte_tracker import BTArgs, BYTETracker, draw_info, tracking
+from addons.byte_tracker import BTArgs, BYTETracker
 from addons.webui import WebUI
-from base import Rk3588, show_frames
+from base import Rk3588
+from utils import fill_storages, fill_storages_bytetracker, show_frames_localy
+
+CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
+with open(CONFIG_FILE, 'r') as config_file:
+    cfg = json.load(config_file)
 
 
-def fill_storages(
-    rk3588: Rk3588,
-    raw_img_strg: strgs.ImageStorage,
-    inf_img_strg: strgs.ImageStorage,
-    dets_strg: strgs.DetectionsStorage
-):
-    """Fill storages with raw frames, frames with bboxes, numpy arrays with
-    detctions
-
-    Args
-    -----------------------------------
-    rk3588 : Rk3588
-        Object of Rk3588 class for getting data after inference
-    raw_img_strg : storages.ImageStorage
-        Object of ImageStorage for storage raw frames
-    inf_img_strg : storages.ImageStorage
-        Object of ImageStorage for storage inferenced frames
-    dets_strg : storages.DetectionsStorage
-        Object of DetectionsStorage for numpy arrays with detctions
-    -----------------------------------
-    """
-    last_id = 0
-    while True:
-            output = rk3588.get_data()
-            if output is not None:
-                if output[3] > last_id:
-                    raw_img_strg.set_data(output[0])
-                    inf_img_strg.set_data(output[1])
-                    dets_strg.set_data(output[2])
-                    last_id = output[3]
-
-
-def fill_storages_bytetracker(
-    rk3588: Rk3588,
-    raw_img_strg: strgs.ImageStorage,
-    inf_img_strg: strgs.ImageStorage,
-    dets_strg: strgs.DetectionsStorage
-):
-    """Fill storages with raw frames, frames with bboxes, numpy arrays with
-    bytetrack detctions
-
-    Args
-    -----------------------------------
-    rk3588 : Rk3588
-        Object of Rk3588 class for getting data after inference
-    raw_img_strg : storages.ImageStorage
-        Object of ImageStorage for storage raw frames
-    inf_img_strg : storages.ImageStorage
-        Object of ImageStorage for storage inferenced frames
-    dets_strg : storages.DetectionsStorage
-        Object of DetectionsStorage for numpy arrays with bytetrack detctions
-    -----------------------------------
-    """
-    bytetrack_args = BTArgs()
-    bytetracker = BYTETracker(
-        args = bytetrack_args,
-        frame_rate = 60
-    )
-    while True:
-        output = rk3588.get_data()
-        if output is not None:
-            raw_frame, inferenced_frame, detections, frame_id = output
-            if detections is not None:
-                detections = tracking(
-                    bytetracker = bytetracker,
-                    dets = detections,
-                    frame_shape = inferenced_frame.shape[:2]
-                )
-                if detections is not None:
-                    draw_info(
-                        frame = inferenced_frame,
-                        dets = detections
-                    )
-            raw_img_strg.set_data(raw_frame)
-            inf_img_strg.set_data(inferenced_frame)
-            dets_strg.set_data(detections) # type: ignore
-
-
-def parse_opt():
-    """Using for turn on/off addons"""
-    parser = argparse.ArgumentParser()
-    # add required arguments
-    # required = parser.add_argument_group('required arguments')
-
-    # some reqired args
-
-    # add optional arguments
-    parser.add_argument(
-        "--webui",
-        action = "store_true",
-        help = "Turn on/off webui"
-    )
-    parser.add_argument(
-        "--bytetracker", "-bt",
-        action = "store_true",
-        help = "Turn on/off BYTEtracker"
-    )
-    return parser.parse_args()
-
-
-def main(webui: bool, bytetracker: bool):
+def main():
     """Runs inference and addons (if mentions)
-    Creating storages and sending data to them,
-
-    Args
-    -----------------------------------
-    webui: bool
-        Turn on/off web user interface
-        Gets from parse_opt
-    bytetracker: bool
-        Turn on/off BYTEtrack
-        Gets from parse_opt
-    -----------------------------------
+    Creating storages and sending data to them
     """
+    rk3588 = Rk3588()
+    start_time = time.time()
+    rk3588.start()
+    if not cfg["storages"]["state"]:
+        try:
+            while True:
+                rk3588.show(start_time)
+        except Exception as e:
+            print("Main exception: {}".format(e))
+            exit()
     raw_frames_storage = strgs.ImageStorage(
         strgs.StoragePurpose.RAW_FRAME
     )
@@ -128,57 +35,64 @@ def main(webui: bool, bytetracker: bool):
         strgs.StoragePurpose.INFERENCED_FRAME
     )
     detections_storage = strgs.DetectionsStorage()
-    rk3588 = Rk3588()
-    if bytetracker:
-        fill_thread = Thread(
-            target = fill_storages_bytetracker,
-            kwargs = {
-                "rk3588" : rk3588,
-                "raw_img_strg" : raw_frames_storage,
-                "inf_img_strg" : inferenced_frames_storage,
-                "dets_strg" : detections_storage
-            },
-            daemon = True
+    fill_thread = Thread(
+        target=fill_storages,
+        kwargs={
+            "rk3588": rk3588,
+            "raw_img_strg": raw_frames_storage,
+            "inf_img_strg": inferenced_frames_storage,
+            "dets_strg": detections_storage,
+            "start_time": start_time
+        },
+        daemon=True
+    )
+    if cfg["bytetrack"]["state"]:
+        bytetrack_args = BTArgs()
+        bytetracker = BYTETracker(
+            args=bytetrack_args,
+            frame_rate=cfg["bytetrack"]["fps"]
         )
-    else:
         fill_thread = Thread(
-            target = fill_storages,
-            kwargs = {
-                "rk3588" : rk3588,
-                "raw_img_strg" : raw_frames_storage,
-                "inf_img_strg" : inferenced_frames_storage,
-                "dets_strg" : detections_storage
+            target=fill_storages_bytetracker,
+            kwargs={
+                "rk3588": rk3588,
+                "bytetracker": bytetracker,
+                "raw_img_strg": raw_frames_storage,
+                "inf_img_strg": inferenced_frames_storage,
+                "dets_strg": detections_storage,
+                "start_time": start_time
             },
-            daemon = True
+            daemon=True
         )
-    rk3588.start()
     fill_thread.start()
-    if webui:
+    if cfg["webui"]["state"]:
         ui = WebUI(
-            raw_img_strg = raw_frames_storage,
-            inf_img_strg = inferenced_frames_storage,
-            dets_strg = detections_storage
+            raw_img_strg=raw_frames_storage,
+            inf_img_strg=inferenced_frames_storage,
+            dets_strg=detections_storage,
+            camera=rk3588._cam
         )
         try:
             ui.start()
         except Exception as e:
-            print("Exception {}",e)
+            print("WebUI exception: {}".format(e))
+        finally:
             raw_frames_storage.clear_buffer()
             inferenced_frames_storage.clear_buffer()
             detections_storage.clear_buffer()
-            raise
-    else:
-        while True:
-            try:
-                show_frames(inferenced_frames_storage.get_last_data())
-            except Exception as e:
-                print("Exception {}",e)
-                raw_frames_storage.clear_buffer()
-                inferenced_frames_storage.clear_buffer()
-                detections_storage.clear_buffer()
-                break
+            exit()
+    try:
+        show_frames_localy(
+            inf_img_strg=inferenced_frames_storage,
+            start_time=start_time
+        )
+    except Exception as e:
+        print("Main exception: {}".format(e))
+    finally:
+        raw_frames_storage.clear_buffer()
+        inferenced_frames_storage.clear_buffer()
+        detections_storage.clear_buffer()
 
 
 if __name__ == "__main__":
-    opt = parse_opt()
-    main(**vars(opt))
+    main()

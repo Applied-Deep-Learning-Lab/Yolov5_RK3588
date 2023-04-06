@@ -1,6 +1,6 @@
 import json
 import os
-from multiprocessing import Queue, Value
+from multiprocessing import Queue
 from pathlib import Path
 
 from rknnlite.api import RKNNLite
@@ -51,11 +51,11 @@ class Yolov5():
     ---------------------------------------------------------------------------
     """
     def __init__(
-        self,
-        proc: int,
-        q_in: Queue,
-        q_out: Queue,
-        core: int = RKNNLite.NPU_CORE_AUTO
+            self,
+            proc: int,
+            q_in: Queue,
+            q_out: Queue,
+            core: int = RKNNLite.NPU_CORE_AUTO
     ):
         self._q_in = q_in
         self._q_out = q_out
@@ -72,8 +72,8 @@ class Yolov5():
                     MODELS + cfg["inference"]["default_model"]
                 )
         except Exception as e:
-            print("Exception {}",e)
-            raise
+            print("Cannot load model. Exception {}".format(e))
+            raise SystemExit
 
     def _load_model(self, model: str):
         print("proc: ", self._proc)

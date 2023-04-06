@@ -2,28 +2,33 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import uuid
 from pathlib import Path
 
+import cv2
+import numpy as np
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from multidict import MultiDict
 
 import addons.storages as strgs
+from base.camera import Cam
 
 from .media import InferenceTrack, MediaBlackhole, MediaRelay
 from .utils import request_inference
-
 
 # Getting config
 ROOT = Path(__file__).parent.parent.parent.absolute()
 CONFIG_FILE = str(ROOT) + "/config.json"
 MODELS = str(ROOT) + "/models/"
+with open(CONFIG_FILE, 'r') as config_file:
+    cfg = json.load(config_file)
 
 
 class WebUI():
     """Class for Web User Interface
-    
+
     Args
     ---------------------------------------------------------------------------
     raw_img_strg : storages.ImageStorage
@@ -33,7 +38,7 @@ class WebUI():
     dets_strg : storages.DetectionsStorage
         Object of DetectionsStorage that stored numpy array with detections
     ---------------------------------------------------------------------------
-    
+
     Attributes
     ---------------------------------------------------------------------------
     _raw_img_strg : storages.ImageStorage
@@ -55,8 +60,6 @@ class WebUI():
         Response with main page HTML file on request
     _javascript(request) : web.Response
         Response with main page JavaScript client on request
-    _style(request) : web.Response
-        Response with main page CSS file on request
     _update_model(request) : web.Response
         Retrieve model from request and loads it to inference
     _show_models(request) : web.Response
@@ -75,34 +78,79 @@ class WebUI():
         Starts Web User Interface
     ---------------------------------------------------------------------------
     """
+
     def __init__(
             self,
             raw_img_strg: strgs.ImageStorage,
             inf_img_strg: strgs.ImageStorage,
-            dets_strg: strgs.DetectionsStorage
-        ):
+            dets_strg: strgs.DetectionsStorage,
+            camera: Cam
+    ):
         self._raw_img_strg = raw_img_strg
         self._inf_img_strg = inf_img_strg
         self._dets_strg = dets_strg
+        self._cam = camera
         self._ROOT = os.path.dirname(__file__)
         self._logger = logging.getLogger("pc")
         self._pcs = set()
         self._relay = MediaRelay()
+        self._blank_frame = np.zeros(
+            shape=(cfg["camera"]["height"], cfg["camera"]["width"], 3),
+            dtype=np.uint8
+        )
+        cv2.putText(
+            img=self._blank_frame,
+            text="BAD SOURCE",
+            org=(
+                int(self._blank_frame.shape[1]/2 - 95),
+                int(self._blank_frame.shape[0]/2 - 15)
+            ),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.9,
+            color=(123, 123, 0),
+            thickness=3,
+            lineType=cv2.LINE_AA
+        )
 
-    async def _index(self, request):
+    async def _home(self, request):
         content = open(
-            file=os.path.join(self._ROOT, "index/index.html"),
+            file=os.path.join(self._ROOT, "home/home.html"),
             mode='r'
         ).read().replace('|Hostname|', os.uname()[1])
         return web.Response(content_type="text/html", text=content)
 
     async def _javascript(self, request):
-        content = open(os.path.join(self._ROOT, "index/client.js"), "r").read()
+        content = open(os.path.join(self._ROOT, "home/client.js"), "r").read()
         return web.Response(content_type="application/javascript", text=content)
 
-    async def _style(self, request):
-        content = open(os.path.join(self._ROOT, "index/style.css"), "r").read()
-        return web.Response(content_type="text/css", text=content)
+    async def _settings(self, request):
+        content = open(
+            file=os.path.join(self._ROOT, "settings/settings.html"),
+            mode='r'
+        ).read().replace('|Hostname|', os.uname()[1])
+        return web.Response(content_type="text/html", text=content)
+
+    async def _settings_javascript(self, request):
+        content = open(
+            os.path.join(self._ROOT, "settings/settings.js"), 'r'
+        ).read()
+        return web.Response(content_type="application/javascript", text=content)
+
+    async def _send_settings(self, request):
+        content = open(CONFIG_FILE, 'r').read()
+        return web.json_response(data=content)
+
+    async def _get_settings(self, request):
+        model_form = await request.post()
+        settings_values = json.loads(model_form["text"])
+        with open(CONFIG_FILE, "w") as json_file:
+            json.dump(
+                obj=settings_values,
+                fp=json_file,
+                indent=4
+            )
+        print("Settings loaded")
+        return web.Response(content_type="text", text="OK")
 
     async def _update_model(self, request):
         def _load_new_model(new_model: bytes, new_model_name: str):
@@ -113,12 +161,12 @@ class WebUI():
                 data["inference"]["net_size"] = 640
             elif "352" in new_model_name:
                 data["inference"]["net_size"] = 352
-            data["inference"]["new_model"] = MODELS + new_model_name
+            data["inference"]["new_model"] = new_model_name
             with open(CONFIG_FILE, "w") as json_file:
                 json.dump(
-                    obj = data,
-                    fp = json_file,
-                    indent = 4
+                    obj=data,
+                    fp=json_file,
+                    indent=4
                 )
             with open(MODELS + new_model_name, "wb") as f:
                 f.write(new_model)
@@ -131,24 +179,24 @@ class WebUI():
             data["inference"]["new_model"] = local_model
             with open(CONFIG_FILE, "w") as json_file:
                 json.dump(
-                    obj = data,
-                    fp = json_file,
-                    indent = 4
+                    obj=data,
+                    fp=json_file,
+                    indent=4
                 )
             print("Model changed")
 
         model_form = await request.post()
         if "file" in model_form.keys():
             _load_new_model(
-                new_model = model_form["file"].file.read(),
-                new_model_name = MODELS + model_form["file"].filename
+                new_model=model_form["file"].file.read(),
+                new_model_name=model_form["file"].filename
             )
         else:
             _load_local_model(
-                local_model = model_form["text"]
+                local_model=model_form["text"]
             )
         return web.Response(content_type="text", text="OK")
-    
+
     async def _show_models(self, request):
         local_models = os.listdir(MODELS)
         models = [
@@ -169,8 +217,8 @@ class WebUI():
 
     async def _send_inference(self, request):
         path = await request_inference(
-            dets_strg = self._dets_strg,
-            raw_img_strg = self._raw_img_strg
+            dets_strg=self._dets_strg,
+            raw_img_strg=self._raw_img_strg
         )
         if path is not None:
             return web.FileResponse(
@@ -178,6 +226,15 @@ class WebUI():
                 headers=MultiDict({'Content-Disposition': 'Attachment'})
             )
         return web.Response(content_type="text", text="ERR")
+
+    async def _restart_program(self, request):
+        self._cam.release()
+        args = [sys.executable] + sys.argv
+        os.execv(sys.executable, args)
+
+    async def _reboot_device(self, request):
+        os.system("reboot")
+        return web.Response(content_type="text", text="OK")
 
     async def _offer(self, request):
         params = await request.json()
@@ -221,7 +278,10 @@ class WebUI():
             log_info("Track %s received", track.kind)
 
             nonlocal videoTrackProducer
-            videoTrackProducer = InferenceTrack(self._inf_img_strg)
+            videoTrackProducer = InferenceTrack(
+                self._inf_img_strg,
+                self._blank_frame
+            )
             pc.addTrack(videoTrackProducer)
             videoTrackProducer.onClientShowedFrameInfo(0)
 
@@ -262,14 +322,25 @@ class WebUI():
         app._client_max_size = 160000000
         app.on_shutdown.append(self._on_shutdown)
         # Routing adresses for each function
-        app.router.add_get("/", self._index)
-        app.router.add_get("/styles.css", self._style)
+        # home page
+        app.router.add_get("/", self._home)
         app.router.add_get("/client.js", self._javascript)
+
+        # settings page
+        app.router.add_get("/settings/", self._settings)
+        app.router.add_get("/settings/settings.js", self._settings_javascript)
+        app.router.add_get("/settings_values", self._send_settings)
+        app.router.add_post("/settings_values", self._get_settings)
+
         app.router.add_post("/offer", self._offer)
         # Camera/inference settings (set/update)
-        app.router.add_post("/settings", self._update_settings)
+        app.router.add_post("/update_settings", self._update_settings)
         # Model updating
         app.router.add_post("/model", self._update_model)
+        # Reboot device
+        app.router.add_post("/reboot", self._reboot_device)
+        # Restart program
+        app.router.add_post("/restart", self._restart_program)
         # Showing local models
         app.router.add_get("/show_models", self._show_models)
         # Getting images and json for lableme
