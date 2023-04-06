@@ -1,7 +1,7 @@
 // get DOM elements
 var dataChannelLog = null,
     iceConnectionLog = null,
-    iceGatheringLog = null, //document.getElementById('ice-gathering-state'),
+    iceGatheringLog = null,
     signalingLog = null;
 
 const videoControl = null
@@ -11,7 +11,6 @@ var pc = null;
 // data channel
 var dc = null, dcPingInterval = null, dcReportFrameInterval = null; const fps = 25;
 var settings = null;
-
 
 function createPeerConnection() {
     var config = {
@@ -126,7 +125,6 @@ function onSeekingByVideo() {
 }
 
 function start() {
-
     dataChannelLog = document.getElementById('data-channel'),
     iceConnectionLog = document.getElementById('ice-connection-state')
     iceGatheringLog = document.getElementById('ice-gathering-state')
@@ -134,7 +132,6 @@ function start() {
     const videoControl = document.querySelector('video');
     videoControl.controls = true;
     pc = createPeerConnection();
-    //deploySettingsHTML()
     var time_start = null;
 
     function current_stamp() {
@@ -153,7 +150,6 @@ function start() {
         dc = pc.createDataChannel('chat', parameters);
         dc.onclose = function() {
             clearInterval(dcPingInterval);
-            //clearInterval(countersInterval);
             dataChannelLog.textContent += '- close\n';
         };
         dc.onopen = function() {
@@ -163,16 +159,6 @@ function start() {
                 dataChannelLog.textContent += '> ' + message + '\n';
                 dc.send(message);
             }, 5000);
-            // countersInterval = setInterval(function() {
-            //     fetch("/counters", {method: 'GET'})
-            //     .then(response=>response.json())
-            //     .then(response=>{
-            //       jsonOut = JSON.parse(response)
-            //       jsonOut = JSON.stringify(jsonOut, null, 2)
-            //       // jsonOut = jsonOut.replace('{', '').replace('}', '').replaceAll('"', '').replaceAll(',', '')
-            //       document.getElementById('counters').innerHTML = jsonOut
-            //     })
-            //   }, 1000);
         };
 
         dc.onmessage = function(evt) {
@@ -217,7 +203,6 @@ function start() {
     }
 
     if (constraints.audio || constraints.video) {
-        //let blackSilence = (...args) => new MediaStream([black(...args), silence()]);
         let streams = []
         if (constraints.audio)
             streams.push(silence());
@@ -229,37 +214,21 @@ function start() {
         });
         negotiate();
 
-        //if (constraints.video)
-        //    document.getElementById('media').style.display = 'block';
-
         let sentFrameNum = 0;
 
         dcReportFrameInterval = setInterval(function() {
             let frameNum = videoControl.webkitDecodedFrameCount;
-                // This is not correct current frame. It can report 100 frames
-                // played when in fact 160 frames played, so everything stops
-            //if (videoControl.seeking)
             signalingLog.textContent = frameNum + '  ' + videoControl.webkitDroppedFrameCount +
                     ' ' + videoControl.currentTime + ' (' + (videoControl.currentTime * fps) + ')';
             frameNum = Math.round(videoControl.currentTime * fps)
-                // This is not precise, but more or less correct
-
             if (frameNum == sentFrameNum)
                 return;
-
-            var message = 'showed ' + frameNum;
-
-            //dataChannelLog.textContent += '> ' + message + '\n';
-            //dc.send(message);
             sentFrameNum = frameNum;
-
-            //videoControl.seekable =
         }, 300);
     }
 
     videoControl.addEventListener('timeupdate', onFramePlayed);
     videoControl.addEventListener('seeking', onSeekingByVideo);
-    //document.getElementById('stop').style.display = 'inline-block';
 }
 
 function stop() {
@@ -342,7 +311,6 @@ function sdpFilterCodec(kind, codec, realSdp) {
     return sdp;
 }
 
-
 function requestInference() {
     fetch("/request_inference", {
     method: 'GET'})
@@ -355,7 +323,7 @@ function requestInference() {
 
 function download(response, fileName, contentType) {
     var a = document.createElement("a");
-    var file = response;//new Blob([content], {type: contentType});
+    var file = response;
     a.href = URL.createObjectURL(file);
     a.download = fileName;
     a.click();
@@ -363,7 +331,6 @@ function download(response, fileName, contentType) {
 
 function updateNewModel() {
     const formData = new FormData()
-
     formData.append('file', document.getElementById("new_model_file").files[0])
     fetch("/model", {
         method: 'POST',
@@ -399,12 +366,8 @@ function showModal(modalLabel, modalContent, loadTime) {
     let content = document.getElementById("HomeModalContent");
     content.innerText = modalContent;
     modal.style.display = "block";
-    
-    // Simulate work being done (e.g. AJAX request)
     setTimeout(function() {
-        // Update modal content with result
         content.innerText = "Successfuly!!!";
-        // Hide modal after a delay
         setTimeout(function() {
             modal.style.display = "none";
         }, 1000);
@@ -414,16 +377,16 @@ function showModal(modalLabel, modalContent, loadTime) {
 async function showModels() {
     try {
         const response = await fetch('/show_models');
-        var models = await response.json();
+        let models = await response.json();
 
-        // Creating dropdown menu for local models
-        var select = document.getElementById("select_local_model");
+        // Creating select menu for local models
+        let select = document.getElementById("select_local_model");
         select.innerHTML = "";
 
         // Creating options for choose local model
-        for(var i = 0; i < models.length; i++) {
-            var model = models[i];
-            var el = document.createElement("option");
+        for(let i = 0; i < models.length; i++) {
+            let model = models[i];
+            let el = document.createElement("option");
             el.textContent = model;
             el.value = model;
             select.add(el);
@@ -445,8 +408,8 @@ function CloseResetModal(){
 }
 
 function RestartProgram(){
-    CloseResetModal()
-    ShowResetWaitingModal()
+    CloseResetModal();
+    ShowResetWaitingModal();
     setTimeout(function () {
         fetch("/restart", {
             method: 'POST',
@@ -464,10 +427,23 @@ function ShowResetWaitingModal(){
 }
 
 function RebootDevice(){
-    fetch("/reboot", {
-        method: 'POST',
-        body: "",
-    }).then((response) => {
-        dataChannelLog.textContent += "response: " + response + "\n";
-    })
+    CloseResetModal();
+    ShowRebootWaitingModal();
+    rebooting = true;
+    setTimeout(function () {
+        fetch("/reboot", {
+            method: 'POST',
+            body: "",
+        }).then((response) => {
+            dataChannelLog.textContent += "response: " + response + "\n";
+        })
+        setTimeout(function() {
+            location.reload(true); 
+        }, 50000);
+    }, 100);
+}
+
+function ShowRebootWaitingModal(){
+    let modal = document.getElementById("RebootWaitingModal");
+    modal.style.display = "block";
 }

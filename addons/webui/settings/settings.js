@@ -168,9 +168,9 @@ function CloseResetModal(){
 }
 
 function RestartProgram(){
-    CloseResetModal()
-    CloseSettingsModal()
-    ShowResetWaitingModal()
+    CloseResetModal();
+    CloseSettingsModal();
+    ShowResetWaitingModal();
     setTimeout(function () {
         fetch("/restart", {
             method: 'POST',
@@ -188,10 +188,23 @@ function ShowResetWaitingModal(){
 }
 
 function RebootDevice(){
-    fetch("/reboot", {
-        method: 'POST',
-        body: "",
-    }).then((response) => {
-        dataChannelLog.textContent += "response: " + response + "\n";
-    })
+    CloseResetModal();
+    CloseSettingsModal();
+    ShowRebootWaitingModal();
+    setTimeout(function () {
+        fetch("/reboot", {
+            method: 'POST',
+            body: "",
+        }).then((response) => {
+            dataChannelLog.textContent += "response: " + response + "\n";
+        })
+        setTimeout(function() {
+            location.reload(true); 
+        }, 50000);
+    }, 100);
+}
+
+function ShowRebootWaitingModal(){
+    let modal = document.getElementById("RebootWaitingModal");
+    modal.style.display = "block";
 }
