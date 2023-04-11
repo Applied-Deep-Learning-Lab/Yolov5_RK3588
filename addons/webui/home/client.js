@@ -13,7 +13,6 @@ var dc = null,
   dcPingInterval = null,
   dcReportFrameInterval = null;
 const fps = 25;
-var settings = null;
 
 function createPeerConnection() {
   var config = {
@@ -407,4 +406,49 @@ function RebootDevice() {
 function ShowRebootWaitingModal() {
   let modal = document.getElementById("RebootWaitingModal");
   modal.style.display = "block";
+}
+
+SetCounters()
+
+async function SetCounters() {
+  // Getting counters (json file data)
+  const response = await fetch("/counters", {
+    method: "GET",
+  });
+  let counters_data = await response.json(response);
+  let obj = 0;
+  // Getting grid for fill it with objects
+  let counters_grid = document.getElementById("CountersGrid");
+  let counters_row;
+  // Creating new row in grid
+  for(let counter in counters_data) {
+    if(obj % 8 === 0){
+      counters_row = document.createElement("div");
+      counters_row.className = "row mb-3 mt-3";
+    }
+    // Creating space for insert object info
+    let counters_col = document.createElement("div");
+    counters_col.className = "col col-row-3";
+    // Creating object label
+    let object_name =document.createElement("label");
+    object_name.innerText = counter;
+    // Creating object image
+    let div_object_img = document.createElement("div");
+    let object_img = document.createElement("img");
+    object_img.src = counters_data[counter].img_src;
+    object_img.width = 80;
+    object_img.height = 80;
+    object_img.alt = counter;
+    // Creating object counter
+    let object_count = document.createElement("label");
+    object_count.innerText = counters_data[counter].count;
+    // Add object image and counter to the object space and then to the grid
+    div_object_img.appendChild(object_img);
+    counters_col.appendChild(object_name);
+    counters_col.appendChild(div_object_img);
+    counters_col.appendChild(object_count);
+    counters_row.appendChild(counters_col);
+    counters_grid.appendChild(counters_row);
+    obj++;
+  }
 }

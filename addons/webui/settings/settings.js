@@ -1,5 +1,4 @@
 // Get settings elements
-
 /// Base
 //// Inference
 let async_mode = document.getElementById("async_mode_state");
@@ -21,7 +20,6 @@ let print_camera_release = document.getElementById("print_camera_release");
 let showed_frame_id = document.getElementById("showed_frame_id");
 let filled_frame_id = document.getElementById("filled_frame_id");
 let send_data_amount = document.getElementById("send_data_amount");
-
 /// Addons
 ////Storages
 let storages_state = document.getElementById("storages_state");
@@ -46,8 +44,6 @@ async function SetSettingsValues() {
     method: "GET",
   });
   let settings_data = await response.json(response);
-  settings_data = JSON.parse(settings_data);
-
   /// Base functions
   //// Inference
   async_mode.checked = settings_data.inference.async_mode;
@@ -69,7 +65,6 @@ async function SetSettingsValues() {
   showed_frame_id.checked = settings_data.debug.showed_frame_id;
   filled_frame_id.checked = settings_data.debug.filled_frame_id;
   send_data_amount.value = settings_data.webui.send_data_amount;
-
   /// Addons functions
   //// Storages
   storages_state.checked = settings_data.storages.state;
@@ -94,7 +89,6 @@ async function SendSettingsValues() {
   let settings_data = await response.json(response);
   settings_data = JSON.parse(settings_data);
   // Set settings values from page
-
   /// Base functions
   //// Inference
   settings_data.inference.async_mode = async_mode.checked;
@@ -116,7 +110,6 @@ async function SendSettingsValues() {
   settings_data.debug.showed_frame_id = showed_frame_id.checked;
   settings_data.debug.filled_frame_id = filled_frame_id.checked;
   settings_data.webui.send_data_amount = Number(send_data_amount.value);
-
   /// Addons functions
   //// Storages
   settings_data.storages.state = storages_state.checked;
@@ -147,11 +140,9 @@ async function showModels() {
   try {
     const response = await fetch("/show_models");
     let models = await response.json();
-
     // Creating select menu for local models
     let select = document.getElementById("select_local_model");
     select.innerHTML = "";
-
     // Creating options for choose local model
     for (let i = 0; i < models.length; i++) {
       let model = models[i];
@@ -185,6 +176,38 @@ function updateLocalModel() {
   showModal("Model", "Changing...", 1000);
 }
 
+function RestartProgram() {
+  CloseResetModal();
+  CloseSettingsModal();
+  ShowResetWaitingModal();
+  setTimeout(function () {
+    fetch("/restart", {
+      method: "POST",
+      body: "",
+    });
+    setTimeout(function () {
+      location.reload(true);
+    }, 6500);
+  }, 100);
+}
+
+function RebootDevice() {
+  CloseResetModal();
+  CloseSettingsModal();
+  ShowRebootWaitingModal();
+  setTimeout(function () {
+    fetch("/reboot", {
+      method: "POST",
+      body: "",
+    }).then((response) => {
+      dataChannelLog.textContent += "response: " + response + "\n";
+    });
+    setTimeout(function () {
+      location.reload(true);
+    }, 50000);
+  }, 100);
+}
+
 function showModal(modalLabel, modalContent, loadTime) {
   let modal = document.getElementById("SettingsModal");
   let label = document.getElementById("SettingsModalLabel");
@@ -198,16 +221,6 @@ function showModal(modalLabel, modalContent, loadTime) {
       modal.style.display = "none";
     }, 1000);
   }, loadTime);
-}
-
-function updateLocalModel() {
-  const formData = new FormData();
-  formData.append("text", document.getElementById("select_local_model").value);
-  fetch("/model", {
-    method: "POST",
-    body: formData,
-  });
-  showModal("Model", "Changing...", 1000);
 }
 
 function SettingsUpdateModal() {
@@ -230,41 +243,9 @@ function CloseResetModal() {
   modal.style.display = "none";
 }
 
-function RestartProgram() {
-  CloseResetModal();
-  CloseSettingsModal();
-  ShowResetWaitingModal();
-  setTimeout(function () {
-    fetch("/restart", {
-      method: "POST",
-      body: "",
-    });
-    setTimeout(function () {
-      location.reload(true);
-    }, 6500);
-  }, 100);
-}
-
 function ShowResetWaitingModal() {
   let modal = document.getElementById("ResetWaitingModal");
   modal.style.display = "block";
-}
-
-function RebootDevice() {
-  CloseResetModal();
-  CloseSettingsModal();
-  ShowRebootWaitingModal();
-  setTimeout(function () {
-    fetch("/reboot", {
-      method: "POST",
-      body: "",
-    }).then((response) => {
-      dataChannelLog.textContent += "response: " + response + "\n";
-    });
-    setTimeout(function () {
-      location.reload(true);
-    }, 50000);
-  }, 100);
 }
 
 function ShowRebootWaitingModal() {

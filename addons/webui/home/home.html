@@ -92,7 +92,7 @@
   </div>
   <body>
     <header
-      class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"
+      class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom sticky-top text-bg-dark p-3"
     >
       <div class="col-md-3 mb-2 mb-md-0 px-4">
         <svg
@@ -112,7 +112,7 @@
       <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
         <li><a href="#" class="nav-link px-2 link-secondary">Video</a></li>
         <li>
-          <a href="../settings/" class="nav-link px-2" onclick="test_modal()"
+          <a href="../settings" class="nav-link px-2" onclick="test_modal()"
             >Settings</a
           >
         </li>
@@ -135,8 +135,8 @@
         </button>
       </div>
     </header>
-    <div class="row d-flex align-items-center justify-content-center">
-      <div class="col-md-6">
+    <div class="row d-flex align-items-center justify-content-center px-4">
+      <div class="col-6">
         <div id="media" class="container text-center">
           <div class="row align-items-center mb-4">
             <audio id="audio" autoplay="true"></audio>
@@ -147,7 +147,7 @@
               playsinline="true"
             ></video>
           </div>
-          <div class="row-lg-6 align-items-center">
+          <div class="row-lg-6 mb-3 align-items-center">
             <div class="row mb-3 align-items-center">
               <div class="btn-group gap-2" role="group">
                 <button
@@ -168,6 +168,10 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="col-6 text-center" id="CountersGrid">
+        <div class="col col-row-2">
         </div>
       </div>
     </div>

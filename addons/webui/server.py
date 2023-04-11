@@ -137,8 +137,9 @@ class WebUI():
         return web.Response(content_type="application/javascript", text=content)
 
     async def _send_settings(self, request):
-        content = open(CONFIG_FILE, 'r').read()
-        return web.json_response(data=content)
+        with open(CONFIG_FILE, 'r') as json_file:
+            settings = json.load(json_file)
+        return web.json_response(data=settings)
 
     async def _get_settings(self, request):
         model_form = await request.post()
@@ -151,6 +152,36 @@ class WebUI():
             )
         print("Settings loaded")
         return web.Response(content_type="text", text="OK")
+
+    async def _send_inference(self, request):
+        path = await request_inference(
+            dets_strg=self._dets_strg,
+            raw_img_strg=self._raw_img_strg
+        )
+        if path is not None:
+            return web.FileResponse(
+                path=path,
+                headers=MultiDict({'Content-Disposition': 'Attachment'})
+            )
+        return web.Response(content_type="text", text="ERR")
+
+    async def _update_settings(self, request):
+        def _load_settings(settings):
+            with open(CONFIG_FILE, "wb") as f:
+                f.write(settings)
+            print("Settings loaded")
+
+        settings_form = await request.post()
+        content = settings_form["file"].file.read()
+        _load_settings(content[:])
+        return web.Response(content_type="text", text="OK")
+
+    async def _show_models(self, request):
+        local_models = os.listdir(MODELS)
+        models = [
+            model for model in local_models if ".rknn" in model
+        ]
+        return web.Response(text=json.dumps(models))
 
     async def _update_model(self, request):
         def _load_new_model(new_model: bytes, new_model_name: str):
@@ -197,35 +228,10 @@ class WebUI():
             )
         return web.Response(content_type="text", text="OK")
 
-    async def _show_models(self, request):
-        local_models = os.listdir(MODELS)
-        models = [
-            model for model in local_models if ".rknn" in model
-        ]
-        return web.Response(text=json.dumps(models))
-
-    async def _update_settings(self, request):
-        def _load_settings(settings):
-            with open(CONFIG_FILE, "wb") as f:
-                f.write(settings)
-            print("Settings loaded")
-
-        settings_form = await request.post()
-        content = settings_form["file"].file.read()
-        _load_settings(content[:])
-        return web.Response(content_type="text", text="OK")
-
-    async def _send_inference(self, request):
-        path = await request_inference(
-            dets_strg=self._dets_strg,
-            raw_img_strg=self._raw_img_strg
-        )
-        if path is not None:
-            return web.FileResponse(
-                path=path,
-                headers=MultiDict({'Content-Disposition': 'Attachment'})
-            )
-        return web.Response(content_type="text", text="ERR")
+    async def _set_counters(self, request):
+        with open(self._ROOT + "/counters/counters.json", 'r') as json_file:
+            counters = json.load(json_file)
+        return web.json_response(data=counters)
 
     async def _restart_program(self, request):
         self._cam.release()
@@ -325,26 +331,27 @@ class WebUI():
         # home page
         app.router.add_get("/", self._home)
         app.router.add_get("/client.js", self._javascript)
-
         # settings page
-        app.router.add_get("/settings/", self._settings)
-        app.router.add_get("/settings/settings.js", self._settings_javascript)
+        app.router.add_get("/settings", self._settings)
+        app.router.add_get("/settings.js", self._settings_javascript)
         app.router.add_get("/settings_values", self._send_settings)
         app.router.add_post("/settings_values", self._get_settings)
-
-        app.router.add_post("/offer", self._offer)
-        # Camera/inference settings (set/update)
-        app.router.add_post("/update_settings", self._update_settings)
-        # Model updating
-        app.router.add_post("/model", self._update_model)
-        # Reboot device
-        app.router.add_post("/reboot", self._reboot_device)
-        # Restart program
-        app.router.add_post("/restart", self._restart_program)
-        # Showing local models
-        app.router.add_get("/show_models", self._show_models)
         # Getting images and json for lableme
         app.router.add_get("/request_inference", self._send_inference)
+        # Camera/inference settings (set/update)
+        app.router.add_post("/update_settings", self._update_settings)
+        # Showing local models
+        app.router.add_get("/show_models", self._show_models)
+        # Model updating
+        app.router.add_post("/model", self._update_model)
+        # get couners
+        app.router.add_get("/counters", self._set_counters)
+        # Restart program
+        app.router.add_post("/restart", self._restart_program)
+        # Reboot device
+        app.router.add_post("/reboot", self._reboot_device)
+        # sdp session
+        app.router.add_post("/offer", self._offer)
         web.run_app(
             app,
             access_log=None,

@@ -8,6 +8,7 @@ import addons.storages as strgs
 from addons.byte_tracker import BTArgs, BYTETracker
 from addons.telegram_notifier import TelegramNotifier
 from addons.webui import WebUI
+from addons.webui.utils import obj_imgs_to_str
 from base import Rk3588
 from utils import fill_storages, fill_storages_bytetracker, show_frames_localy
 
@@ -87,6 +88,7 @@ def main():
             camera=rk3588._cam
         )
         try:
+            obj_imgs_to_str()
             ui.start()
         except Exception as e:
             print("WebUI exception: {}".format(e))
