@@ -11,10 +11,16 @@ from telegram import Bot
 
 import addons.storages as strgs
 
-
-CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+CONFIG_FILE = str(
+    Path(__file__).parent.parent.parent.absolute()) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
+
+
+COUNTERS_FILE = str(Path(__file__).parent.parent.absolute()) + \
+    "/pulse_counter/counters/counters.json"
+with open(COUNTERS_FILE, 'r') as counters_file:
+    counters = json.load(counters_file)
 
 
 class TelegramNotifier():
@@ -54,6 +60,7 @@ class TelegramNotifier():
         telegram channel/group
     ---------------------------------------------------------------------------
     """
+
     def __init__(self, inf_img_strg: strgs.ImageStorage):
         self._TOKEN = cfg["telegram_notifier"]["token"]
         self._CHAT_ID = cfg["telegram_notifier"]["chat_id"]
@@ -64,10 +71,12 @@ class TelegramNotifier():
             print("Can't start bot: {}".format(e))
             return
         self._hostname = os.uname()[1]
-        self._counters = {
+        first_object = list(counters.keys())[0]
+        self._caption = {
             "hostname": self._hostname,
             "start_time": self._start,
-            "current_time": datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')
+            "current_time": datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f'),
+            "count": counters[first_object]["count"]
         }
         self._inf_img_strg = inf_img_strg
         self._time_period = cfg["telegram_notifier"]["time_period"]
@@ -80,11 +89,16 @@ class TelegramNotifier():
     async def _notificate(self):
         while True:
             begin = time.time()
-            while time.time() - begin < self._time_period: pass
-            self._counters["current_time"] =\
+            while time.time() - begin < self._time_period:
+                pass
+            self._caption["current_time"] =\
                 datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')
+            with open(COUNTERS_FILE, 'r') as counters_file:
+                counters = json.load(counters_file)
+            first_object = list(counters.keys())[0]
+            self._caption["count"] = counters[first_object]["count"]
             caption = json.dumps(
-                obj=self._counters,
+                obj=self._caption,
                 indent=4
             )
             img = self._inf_img_strg.get_last_data()

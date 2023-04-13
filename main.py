@@ -6,11 +6,13 @@ from threading import Thread
 
 import addons.storages as strgs
 from addons.byte_tracker import BTArgs, BYTETracker
+from addons.pulse_counter import Monitor
 from addons.telegram_notifier import TelegramNotifier
 from addons.webui import WebUI
 from addons.webui.utils import obj_imgs_to_str
 from base import Rk3588
-from utils import fill_storages, fill_storages_bytetracker, show_frames_localy
+from utils import (do_counting, fill_storages, reload_counters,
+                   show_frames_localy)
 
 CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
@@ -38,10 +40,18 @@ def main():
         strgs.StoragePurpose.INFERENCED_FRAME
     )
     detections_storage = strgs.DetectionsStorage()
+    tracker = None
+    if cfg["bytetrack"]["state"]:
+        bytetrack_args = BTArgs()
+        tracker = BYTETracker(
+            args=bytetrack_args,
+            frame_rate=cfg["bytetrack"]["fps"]
+        )
     fill_thread = Thread(
         target=fill_storages,
         kwargs={
             "rk3588": rk3588,
+            "tracker": tracker,
             "raw_img_strg": raw_frames_storage,
             "inf_img_strg": inferenced_frames_storage,
             "dets_strg": detections_storage,
@@ -49,25 +59,20 @@ def main():
         },
         daemon=True
     )
-    if cfg["bytetrack"]["state"]:
-        bytetrack_args = BTArgs()
-        bytetracker = BYTETracker(
-            args = bytetrack_args,
-            frame_rate = cfg["bytetrack"]["fps"]
-        )
-        fill_thread = Thread(
-            target=fill_storages_bytetracker,
+    fill_thread.start()
+    if cfg["pulse_counter"]["state"]:
+        reload_counters()
+        pulse_monitor = Monitor()
+        counting_thread = Thread(
+            target=do_counting,
             kwargs={
-                "rk3588": rk3588,
-                "bytetracker": bytetracker,
-                "raw_img_strg": raw_frames_storage,
                 "inf_img_strg": inferenced_frames_storage,
                 "dets_strg": detections_storage,
-                "start_time": start_time
+                "pulse_monitor": pulse_monitor
             },
             daemon=True
         )
-    fill_thread.start()
+        counting_thread.start()
     if cfg["telegram_notifier"]["state"]:
         telegram_notifier = TelegramNotifier(
             inf_img_strg=inferenced_frames_storage

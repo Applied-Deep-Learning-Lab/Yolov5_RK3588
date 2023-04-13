@@ -13,7 +13,8 @@ from PIL import Image
 import addons.storages as strgs
 
 
-COUNTERS = str(Path(__file__).parent.absolute()) + '/counters/'
+COUNTERS = str(Path(__file__).parent.parent.absolute()) +\
+    '/pulse_counter/counters/'
 ROOT = str(Path(__file__).parent.parent.parent.absolute())
 CONFIG_FILE = ROOT + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:

@@ -26,7 +26,7 @@
         "post_proc": 3,
         "async_mode": true,
         "default_model": "yolov5m_leaky_352x352.rknn",
-        "new_model": "yolov5m_leaky_352x352.rknn",
+        "new_model": "test_model.rknn",
         "classes": [
             "person",
             "bicycle",
@@ -126,6 +126,9 @@
         "tracking_classes": [
             62
         ]
+    },
+    "pulse_counter": {
+        "state": true
     },
     "telegram_notifier": {
         "state": false,

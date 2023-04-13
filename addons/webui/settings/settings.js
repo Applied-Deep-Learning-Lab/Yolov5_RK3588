@@ -217,9 +217,6 @@ function showModal(modalLabel, modalContent, loadTime) {
   modal.style.display = "block";
   setTimeout(function () {
     content.innerText = "Successfuly!!!";
-    setTimeout(function () {
-      modal.style.display = "none";
-    }, 1000);
   }, loadTime);
 }
 

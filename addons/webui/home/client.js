@@ -408,9 +408,10 @@ function ShowRebootWaitingModal() {
   modal.style.display = "block";
 }
 
-SetCounters()
+CreateCounters();
+SetCounters();
 
-async function SetCounters() {
+async function CreateCounters() {
   // Getting counters (json file data)
   const response = await fetch("/counters", {
     method: "GET",
@@ -421,8 +422,8 @@ async function SetCounters() {
   let counters_grid = document.getElementById("CountersGrid");
   let counters_row;
   // Creating new row in grid
-  for(let counter in counters_data) {
-    if(obj % 8 === 0){
+  for (let counter in counters_data) {
+    if (obj % 8 === 0) {
       counters_row = document.createElement("div");
       counters_row.className = "row mb-3 mt-3";
     }
@@ -430,7 +431,7 @@ async function SetCounters() {
     let counters_col = document.createElement("div");
     counters_col.className = "col col-row-3";
     // Creating object label
-    let object_name =document.createElement("label");
+    let object_name = document.createElement("label");
     object_name.innerText = counter;
     // Creating object image
     let div_object_img = document.createElement("div");
@@ -451,4 +452,29 @@ async function SetCounters() {
     counters_grid.appendChild(counters_row);
     obj++;
   }
+}
+
+function SetCounters() {
+  setInterval(function () {
+    try {
+      // Getting counters (json file data)
+      fetch("/counters", { method: "GET" })
+        .then((response) => response.json())
+        .then((response) => {
+          // Getting grid for change counters value
+          let counters_grid = document.getElementById("CountersGrid");
+          // Getting elements of grid for change their labels (counters values)
+          let counters_elems =
+            counters_grid.getElementsByClassName("col col-row-3");
+          // Changng counters values
+          let obj_index = 0;
+          for (let obj in response) {
+            counters_elems[obj_index].lastChild.innerText = response[obj].count;
+            obj_index++;
+          }
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  }, 1000);
 }

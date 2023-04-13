@@ -2,7 +2,7 @@ import json
 import math
 import time
 from enum import IntEnum
-from multiprocessing import Value, shared_memory
+from multiprocessing import Value, shared_memory, resource_tracker
 from pathlib import Path
 
 import numpy as np
@@ -137,6 +137,7 @@ class Storage():
         return(self._index_counter.value - (self._DELAY + 1)) # type: ignore
 
     def clear_buffer(self):
+        resource_tracker.unregister(f"/{self._buffer.name}", "shared_memory")
         self._buffer.close()
         self._buffer.unlink()
 

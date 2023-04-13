@@ -1,25 +1,32 @@
 import json
 import time
 from pathlib import Path
+from typing import Union
 
 import cv2
 
 import addons.storages as strgs
 from addons.byte_tracker import BYTETracker, draw_info, tracking
+from addons.pulse_counter import Monitor
 from base import Rk3588
-
 
 CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 
+COUNTERS_FILE = str(Path(__file__).parent.absolute()) + \
+    "/addons/pulse_counter/counters/counters.json"
+with open(COUNTERS_FILE, 'r') as counters_file:
+    counters = json.load(counters_file)
+
 
 def fill_storages(
         rk3588: Rk3588,
+        tracker: Union[BYTETracker, None],
         raw_img_strg: strgs.ImageStorage,
         inf_img_strg: strgs.ImageStorage,
         dets_strg: strgs.DetectionsStorage,
-        start_time: float
+        start_time: float,
 ):
     """Fill storages with raw frames, frames with bboxes, numpy arrays with
     detctions
@@ -36,62 +43,18 @@ def fill_storages(
         Object of DetectionsStorage for numpy arrays with detctions
     start_time: float
         Program start time
-    -----------------------------------
-    """
-    while True:
-            output = rk3588.get_data()
-            if output is not None:
-                raw_frame, inferenced_frame, detections, frame_id = output
-                raw_img_strg.set_data(
-                    data=raw_frame,
-                    id=frame_id,
-                    start_time=start_time
-                )
-                inf_img_strg.set_data(
-                    data=inferenced_frame,
-                    id=frame_id,
-                    start_time=start_time
-                )
-                dets_strg.set_data(
-                    data=detections, # type: ignore
-                    id=frame_id,
-                    start_time=start_time
-                )
-
-
-def fill_storages_bytetracker(
-        rk3588: Rk3588,
-        bytetracker: BYTETracker,
-        raw_img_strg: strgs.ImageStorage,
-        inf_img_strg: strgs.ImageStorage,
-        dets_strg: strgs.DetectionsStorage,
-        start_time: float
-):
-    """Fill storages with raw frames, frames with bboxes, numpy arrays with
-    detctions
-
-    Args
-    -----------------------------------
-    rk3588: Rk3588
-        Object of Rk3588 class for getting data after inference
-    bytetracker: BYTETracker
-    raw_img_strg: storages.ImageStorage
-        Object of ImageStorage for storage raw frames
-    inf_img_strg: storages.ImageStorage
-        Object of ImageStorage for storage inferenced frames
-    dets_strg: storages.DetectionsStorage
-        Object of DetectionsStorage for numpy arrays with detctions
-    start_time: float
-        Program start time
+    tracker: BYTETracker | None
+        detections tracker
     -----------------------------------
     """
     while True:
         output = rk3588.get_data()
         if output is not None:
             raw_frame, inferenced_frame, detections, frame_id = output
-            if detections is not None:
+            # Bytetracker
+            if tracker is not None and detections is not None:
                 detections = tracking(
-                    bytetracker=bytetracker,
+                    bytetracker=tracker,
                     dets=detections,
                     frame_shape=inferenced_frame.shape[:2]
                 )
@@ -105,6 +68,13 @@ def fill_storages_bytetracker(
                 id=frame_id,
                 start_time=start_time
             )
+            cv2.rectangle(
+                img=inferenced_frame,
+                pt1=(316, 50),
+                pt2=(324, 58),
+                color=(128, 0, 0),
+                thickness=4
+            )
             inf_img_strg.set_data(
                 data=inferenced_frame,
                 id=frame_id,
@@ -115,6 +85,47 @@ def fill_storages_bytetracker(
                 id=frame_id,
                 start_time=start_time
             )
+
+
+def reload_counters():
+    for counter in counters:
+        counters[counter]["count"] = 0
+    with open(COUNTERS_FILE, 'w') as counters_file:
+        json.dump(
+            obj=counters,
+            fp=counters_file,
+            indent=4
+        )
+
+
+def do_counting(
+        inf_img_strg: strgs.ImageStorage,
+        dets_strg: strgs.DetectionsStorage,
+        pulse_monitor: Monitor
+):
+    stored_data_amount = cfg["storages"]["stored_data_amount"]
+    while True:
+        last_index = dets_strg.get_last_index()
+        dets = dets_strg.get_data_by_index(last_index % stored_data_amount)
+        if dets is not None:
+            pulse_monitor.update(dets)
+        img = inf_img_strg.get_data_by_index(last_index % stored_data_amount)
+        if pulse_monitor.signal:
+            cv2.rectangle(
+                img=img,
+                pt1=(316, 50),
+                pt2=(324, 58),
+                color=(0, 0, 128),
+                thickness=8
+            )
+            first_object = list(counters.keys())[0]
+            counters[first_object]["count"] = pulse_monitor.up_counter
+            with open(COUNTERS_FILE, 'w') as counters_file:
+                json.dump(
+                    obj=counters,
+                    fp=counters_file,
+                    indent=4
+                )
 
 
 def show_frames_localy(
@@ -154,8 +165,7 @@ def show_frames_localy(
             ),
             end='\r'
         )
-        frame =\
-            inf_img_strg.get_data_by_index(last_index % stored_data_amount)
+        frame = inf_img_strg.get_data_by_index(last_index % stored_data_amount)
         if cfg["camera"]["show"]:
             cv2.putText(
                 img=frame,

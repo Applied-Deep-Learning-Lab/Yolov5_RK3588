@@ -20,6 +20,7 @@ from .utils import request_inference
 
 # Getting config
 ROOT = Path(__file__).parent.parent.parent.absolute()
+COUNTERS_FILE = str(ROOT) + "/addons/pulse_counter/counters/counters.json"
 CONFIG_FILE = str(ROOT) + "/config.json"
 MODELS = str(ROOT) + "/models/"
 with open(CONFIG_FILE, 'r') as config_file:
@@ -31,50 +32,52 @@ class WebUI():
 
     Args
     ---------------------------------------------------------------------------
-    raw_img_strg : storages.ImageStorage
+    raw_img_strg: storages.ImageStorage
         Object of ImageStorage that stored raw frames
-    inf_img_strg : storages.ImageStorage
+    inf_img_strg: storages.ImageStorage
         Object of ImageStorage that stored inferenced frames
-    dets_strg : storages.DetectionsStorage
+    dets_strg: storages.DetectionsStorage
         Object of DetectionsStorage that stored numpy array with detections
+    camera: Cam
+        Object of Cam for release camera
     ---------------------------------------------------------------------------
 
     Attributes
     ---------------------------------------------------------------------------
-    _raw_img_strg : storages.ImageStorage
+    _raw_img_strg: storages.ImageStorage
         Object of ImageStorage that stored raw frames
-    _inf_img_strg : storages.ImageStorage
+    _inf_img_strg: storages.ImageStorage
         Object of ImageStorage that stored inferenced frames
-    _dets_strg : storages.DetectionsStorage
+    _dets_strg: storages.DetectionsStorage
         Object of DetectionsStorage that stored numpy array with detections
-    _ROOT : str
+    _ROOT: str
         Path to addon's root directory
-    _logger : Logger
-    _pcs : set
-    _relay : MediaRelay
+    _logger: Logger
+    _pcs: set
+    _relay: MediaRelay
     ---------------------------------------------------------------------------
 
     Methods
     ---------------------------------------------------------------------------
-    _index(request) : web.Response
+    _index(request): web.Response
         Response with main page HTML file on request
-    _javascript(request) : web.Response
+    _javascript(request): web.Response
         Response with main page JavaScript client on request
-    _update_model(request) : web.Response
+    _update_model(request): web.Response
         Retrieve model from request and loads it to inference
-    _show_models(request) : web.Response
+    _show_models(request): web.Response
         Send all uploaded models to show
-    _update_settings(request) : web.Response
+    _update_settings(request): web.Response
         Retrieve settings from request and loads it to inference
-    _send_inference : web.Response | web.FileResponse
+    _send_inference: web.Response | web.FileResponse
         Return path of inference.zip 
         containing number of inferenced images
         grabbed by settings in labelme format
-    _offer(request) : web.Response
+    _offer(request): web.Response
         Initialize sdp session
-    _on_shutdown(request) : web.Response
+    _on_shutdown(request): web.Response
         Close peer connections
-    start() : None
+    start(): None
         Starts Web User Interface
     ---------------------------------------------------------------------------
     """
@@ -229,7 +232,7 @@ class WebUI():
         return web.Response(content_type="text", text="OK")
 
     async def _set_counters(self, request):
-        with open(self._ROOT + "/counters/counters.json", 'r') as json_file:
+        with open(COUNTERS_FILE, 'r') as json_file:
             counters = json.load(json_file)
         return web.json_response(data=counters)
 
