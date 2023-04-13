@@ -410,6 +410,7 @@ function ShowRebootWaitingModal() {
 
 CreateCounters();
 SetCounters();
+SetInfoCpuTemperature();
 
 async function CreateCounters() {
   // Getting counters (json file data)
@@ -476,5 +477,16 @@ function SetCounters() {
     } catch (error) {
       console.log(error);
     }
+  }, 1000);
+}
+
+function SetInfoCpuTemperature() {
+  setInterval(function () {
+    let cpu_temperature = document.getElementById("cpu_temperature");
+    fetch("/cpu_temperature", { method: "GET"})
+    .then(response=>response.json())
+    .then(repsonse=>{
+      cpu_temperature.innerText = repsonse
+    })
   }, 1000);
 }

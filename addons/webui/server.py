@@ -11,6 +11,7 @@ import numpy as np
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from multidict import MultiDict
+import psutil
 
 import addons.storages as strgs
 from base.camera import Cam
@@ -236,6 +237,10 @@ class WebUI():
             counters = json.load(json_file)
         return web.json_response(data=counters)
 
+    async def _set_temperature(self, request):
+        temperature = psutil.sensors_temperatures()["center_thermal"][0][1]
+        return web.Response(text=str(temperature))
+
     async def _restart_program(self, request):
         self._cam.release()
         args = [sys.executable] + sys.argv
@@ -349,6 +354,8 @@ class WebUI():
         app.router.add_post("/model", self._update_model)
         # get couners
         app.router.add_get("/counters", self._set_counters)
+        # get cpu temperature
+        app.router.add_get("/cpu_temperature", self._set_temperature)
         # Restart program
         app.router.add_post("/restart", self._restart_program)
         # Reboot device
