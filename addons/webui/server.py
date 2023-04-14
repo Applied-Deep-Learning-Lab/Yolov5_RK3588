@@ -21,7 +21,6 @@ from .utils import request_inference
 
 # Getting config
 ROOT = Path(__file__).parent.parent.parent.absolute()
-COUNTERS_FILE = str(ROOT) + "/addons/pulse_counter/counters/counters.json"
 CONFIG_FILE = str(ROOT) + "/config.json"
 MODELS = str(ROOT) + "/models/"
 with open(CONFIG_FILE, 'r') as config_file:
@@ -88,12 +87,15 @@ class WebUI():
             raw_img_strg: strgs.ImageStorage,
             inf_img_strg: strgs.ImageStorage,
             dets_strg: strgs.DetectionsStorage,
+            counters_strg: strgs.Storage,
             camera: Cam
     ):
         self._raw_img_strg = raw_img_strg
         self._inf_img_strg = inf_img_strg
         self._dets_strg = dets_strg
+        self._counters_strg = counters_strg
         self._cam = camera
+        self._classes = cfg["inference"]["classes"]
         self._ROOT = os.path.dirname(__file__)
         self._logger = logging.getLogger("pc")
         self._pcs = set()
@@ -232,9 +234,18 @@ class WebUI():
             )
         return web.Response(content_type="text", text="OK")
 
+    async def _set_counters_images(self, request):
+        with open(self._ROOT + "/counters/counters.json", 'r') as json_file:
+            counters_imgs = json.load(json_file)
+        return web.json_response(data=counters_imgs)
+
     async def _set_counters(self, request):
-        with open(COUNTERS_FILE, 'r') as json_file:
-            counters = json.load(json_file)
+        counters = {
+            self._classes[i]: int(self._counters_strg.get_data_by_index(i))
+            for i in range(len(self._classes))
+        }
+        counters = json.dumps(counters)
+        counters = json.loads(counters)
         return web.json_response(data=counters)
 
     async def _set_temperature(self, request):
@@ -352,8 +363,9 @@ class WebUI():
         app.router.add_get("/show_models", self._show_models)
         # Model updating
         app.router.add_post("/model", self._update_model)
-        # get couners
-        app.router.add_get("/counters", self._set_counters)
+        # get couners images and data
+        app.router.add_get("/counters_images", self._set_counters_images)
+        app.router.add_get("/counters_data", self._set_counters)
         # get cpu temperature
         app.router.add_get("/cpu_temperature", self._set_temperature)
         # Restart program

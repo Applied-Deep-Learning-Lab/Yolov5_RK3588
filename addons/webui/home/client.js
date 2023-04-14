@@ -414,7 +414,7 @@ SetInfoCpuTemperature();
 
 async function CreateCounters() {
   // Getting counters (json file data)
-  const response = await fetch("/counters", {
+  const response = await fetch("/counters_images", {
     method: "GET",
   });
   let counters_data = await response.json(response);
@@ -443,7 +443,7 @@ async function CreateCounters() {
     object_img.alt = counter;
     // Creating object counter
     let object_count = document.createElement("label");
-    object_count.innerText = counters_data[counter].count;
+    object_count.innerText = 0;
     // Add object image and counter to the object space and then to the grid
     div_object_img.appendChild(object_img);
     counters_col.appendChild(object_name);
@@ -459,7 +459,7 @@ function SetCounters() {
   setInterval(function () {
     try {
       // Getting counters (json file data)
-      fetch("/counters", { method: "GET" })
+      fetch("/counters_data", { method: "GET" })
         .then((response) => response.json())
         .then((response) => {
           // Getting grid for change counters value
@@ -470,7 +470,7 @@ function SetCounters() {
           // Changng counters values
           let obj_index = 0;
           for (let obj in response) {
-            counters_elems[obj_index].lastChild.innerText = response[obj].count;
+            counters_elems[obj_index].lastChild.innerText = response[obj];
             obj_index++;
           }
         });

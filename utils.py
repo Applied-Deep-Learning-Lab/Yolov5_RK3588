@@ -14,11 +14,6 @@ CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 
-COUNTERS_FILE = str(Path(__file__).parent.absolute()) + \
-    "/addons/pulse_counter/counters/counters.json"
-with open(COUNTERS_FILE, 'r') as counters_file:
-    counters = json.load(counters_file)
-
 
 def fill_storages(
         rk3588: Rk3588,
@@ -87,20 +82,10 @@ def fill_storages(
             )
 
 
-def reload_counters():
-    for counter in counters:
-        counters[counter]["count"] = 0
-    with open(COUNTERS_FILE, 'w') as counters_file:
-        json.dump(
-            obj=counters,
-            fp=counters_file,
-            indent=4
-        )
-
-
 def do_counting(
         inf_img_strg: strgs.ImageStorage,
         dets_strg: strgs.DetectionsStorage,
+        counters_strg: strgs.Storage,
         pulse_monitor: Monitor
 ):
     stored_data_amount = cfg["storages"]["stored_data_amount"]
@@ -118,14 +103,10 @@ def do_counting(
                 color=(0, 0, 128),
                 thickness=8
             )
-            first_object = list(counters.keys())[0]
-            counters[first_object]["count"] = pulse_monitor.up_counter
-            with open(COUNTERS_FILE, 'w') as counters_file:
-                json.dump(
-                    obj=counters,
-                    fp=counters_file,
-                    indent=4
-                )
+            counters_strg.set_data(
+                data=pulse_monitor.up_counter,
+                id=0
+            )
 
 
 def show_frames_localy(

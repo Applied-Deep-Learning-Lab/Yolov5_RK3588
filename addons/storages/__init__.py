@@ -1,1 +1,1 @@
-from .storages import Storage, ImageStorage, DetectionsStorage, StoragePurpose
+from .storages import Storage, ImageStorage, DetectionsStorage

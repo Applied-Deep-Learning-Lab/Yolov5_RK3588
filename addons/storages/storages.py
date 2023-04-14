@@ -1,9 +1,9 @@
 import json
 import math
 import time
-from enum import IntEnum
 from multiprocessing import Value, shared_memory, resource_tracker
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 
@@ -11,13 +11,6 @@ import numpy as np
 CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute())+"/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
-
-
-class StoragePurpose(IntEnum):
-    """IntEnum for describing storage purpose"""
-    RAW_FRAME = 1
-    INFERENCED_FRAME = 2
-    DETECTIONS = 3
 
 
 class Storage():
@@ -66,7 +59,7 @@ class Storage():
     """
     def __init__(
             self,
-            storage_name: StoragePurpose,
+            storage_name: str,
             data_size: tuple,
             data_amount: int,
             data_type: type
@@ -104,9 +97,14 @@ class Storage():
             buffer=self._buffer.buf
         )
 
-    def set_data(self, data: np.ndarray, id: int, start_time: float):
+    def set_data(
+            self,
+            data: Union[np.ndarray, int, None],
+            id: int,
+            start_time: float = 0
+    ):
         data_index = id % self._DATA_AMOUNT # type: ignore
-        if data is not None:
+        if data is not None and type(data) == np.ndarray:
             self._storage[data_index][:len(data),:] = data
         else:
             self._storage[data_index][:] = data
@@ -137,7 +135,7 @@ class Storage():
         return(self._index_counter.value - (self._DELAY + 1)) # type: ignore
 
     def clear_buffer(self):
-        resource_tracker.unregister(f"/{self._buffer.name}", "shared_memory")
+        # resource_tracker.unregister(f"{self._buffer.name}", "shared_memory")
         self._buffer.close()
         self._buffer.unlink()
 
@@ -151,7 +149,7 @@ class ImageStorage(Storage):
         Describing storage purpose (raw or inferenced frames)
     ---------------------------------------------------------------------------
     """
-    def __init__(self, storage_name: StoragePurpose):
+    def __init__(self, storage_name: str):
         super().__init__(
             storage_name = storage_name,
             data_size = (cfg["camera"]["height"], cfg["camera"]["width"], 3),
@@ -164,7 +162,7 @@ class DetectionsStorage(Storage):
     """Child class of Storage class specifically for detections numpy array"""
     def __init__(self):
         super().__init__(
-            storage_name = StoragePurpose.DETECTIONS,
+            storage_name = "detections",
             data_size = (cfg["storages"]["dets_amount"], 6),
             data_amount = cfg["storages"]["stored_data_amount"],
             data_type = np.float32

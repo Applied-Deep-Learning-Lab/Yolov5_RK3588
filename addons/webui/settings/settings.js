@@ -83,11 +83,10 @@ async function SetSettingsValues() {
 
 async function SendSettingsValues() {
   // Get settings (json file data) for formatting
-  const response = await fetch("/settings_values", {
+  let response = await fetch("/settings_values", {
     method: "GET",
   });
-  let settings_data = await response.json(response);
-  settings_data = JSON.parse(settings_data);
+  let settings_data = await response.json();
   // Set settings values from page
   /// Base functions
   //// Inference
