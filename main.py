@@ -105,6 +105,13 @@ def main():
         except Exception as e:
             print("WebUI exception: {}".format(e))
         finally:
+            fill_thread.join()
+            if cfg["pulse_counter"]["state"]:
+                counting_thread.join() # type: ignore
+            if cfg["telegram_notifier"]["state"]:
+                notifier_process.join() # type: ignore
+                notifier_process.close() # type: ignore
+                notifier_process.kill() # type: ignore
             counters_storage.clear_buffer()
             raw_frames_storage.clear_buffer()
             inferenced_frames_storage.clear_buffer()
@@ -118,10 +125,18 @@ def main():
     except Exception as e:
         print("Main exception: {}".format(e))
     finally:
+        fill_thread.join()
+        if cfg["pulse_counter"]["state"]:
+            counting_thread.join() # type: ignore
+        if cfg["telegram_notifier"]["state"]:
+            notifier_process.join() # type: ignore
+            notifier_process.close() # type: ignore
+            notifier_process.kill() # type: ignore
         counters_storage.clear_buffer()
         raw_frames_storage.clear_buffer()
         inferenced_frames_storage.clear_buffer()
         detections_storage.clear_buffer()
+        exit()
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ import scipy
 import lap
 from scipy.spatial.distance import cdist
 
-from cython_bbox import bbox_overlaps as bbox_ious
+from cython_bbox import bbox_overlaps as bbox_ious # type: ignore
 from . import kalman_filter
 
 def merge_matches(m1, m2, shape):
@@ -121,7 +121,7 @@ def embedding_distance(tracks, detections, metric='cosine'):
         return cost_matrix
     det_features = np.asarray([track.curr_feat for track in detections], dtype=np.float32)
     track_features = np.asarray([track.smooth_feat for track in tracks], dtype=np.float32)
-    cost_matrix = np.maximum(0.0, cdist(track_features, det_features, metric))  # Nomalized features
+    cost_matrix = np.maximum(0.0, cdist(track_features, det_features, metric))  # Nomalized features # type: ignore
     return cost_matrix
 
 

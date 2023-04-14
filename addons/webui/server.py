@@ -241,7 +241,7 @@ class WebUI():
 
     async def _set_counters(self, request):
         counters = {
-            self._classes[i]: int(self._counters_strg.get_data_by_index(i))
+            self._classes[i]: int(self._counters_strg.get_data_by_index(i)) # type: ignore
             for i in range(len(self._classes))
         }
         counters = json.dumps(counters)

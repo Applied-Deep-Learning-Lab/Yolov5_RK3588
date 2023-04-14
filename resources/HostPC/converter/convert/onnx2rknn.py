@@ -1,7 +1,7 @@
 import argparse
 import os
 import sys
-from rknn.api import RKNN
+from rknn.api import RKNN # type: ignore
 
 QUANTIZE_ON = True
 

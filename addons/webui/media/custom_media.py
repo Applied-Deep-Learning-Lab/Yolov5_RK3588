@@ -98,7 +98,7 @@ def player_worker(loop, container, streams, audio_track, video_track, quit_event
         try:
             frame = next(container.decode(*streams))
         except (av.AVError, StopIteration) as exc:
-            if isinstance(exc, av.FFmpegError) and exc.errno == errno.EAGAIN:
+            if isinstance(exc, av.FFmpegError) and exc.errno == errno.EAGAIN: # type: ignore
                 time.sleep(0.01)
                 continue
             if audio_track:
@@ -179,7 +179,7 @@ class PlayerStreamTrack(MediaStreamTrack):
         if self.readyState != "live":
             raise MediaStreamError
 
-        self._player._start(self)
+        self._player._start(self) # type: ignore
         frame = await self._queue.get()
         if frame is None:
             self.stop()
@@ -274,14 +274,14 @@ class MediaPlayer:
         """
         A :class:`aiortc.MediaStreamTrack` instance if the file contains audio.
         """
-        return self.__audio
+        return self.__audio # type: ignore
 
     @property
     def video(self) -> MediaStreamTrack:
         """
         A :class:`aiortc.MediaStreamTrack` instance if the file contains video.
         """
-        return self.__video
+        return self.__video # type: ignore
 
     def _start(self, track: PlayerStreamTrack) -> None:
         self.__started.add(track)
@@ -308,7 +308,7 @@ class MediaPlayer:
 
         if not self.__started and self.__thread is not None:
             self.__log_debug("Stopping worker thread")
-            self.__thread_quit.set()
+            self.__thread_quit.set() # type: ignore
             self.__thread.join()
             self.__thread = None
 
@@ -317,7 +317,7 @@ class MediaPlayer:
             self.__container = None
 
     def __log_debug(self, msg: str, *args) -> None:
-        logger.debug(f"MediaPlayer(%s) {msg}", self.__container.name, *args)
+        logger.debug(f"MediaPlayer(%s) {msg}", self.__container.name, *args) # type: ignore
 
 
 class MediaRecorderContext:
@@ -356,19 +356,19 @@ class MediaRecorder:
         :param track: A :class:`aiortc.MediaStreamTrack`.
         """
         if track.kind == "audio":
-            if self.__container.format.name in ("wav", "alsa"):
+            if self.__container.format.name in ("wav", "alsa"): # type: ignore
                 codec_name = "pcm_s16le"
-            elif self.__container.format.name == "mp3":
+            elif self.__container.format.name == "mp3": # type: ignore
                 codec_name = "mp3"
             else:
                 codec_name = "aac"
-            stream = self.__container.add_stream(codec_name)
+            stream = self.__container.add_stream(codec_name) # type: ignore
         else:
-            if self.__container.format.name == "image2":
-                stream = self.__container.add_stream("png", rate=30)
+            if self.__container.format.name == "image2": # type: ignore
+                stream = self.__container.add_stream("png", rate=30) # type: ignore
                 stream.pix_fmt = "rgb24"
             else:
-                stream = self.__container.add_stream("libx264", rate=30)
+                stream = self.__container.add_stream("libx264", rate=30) # type: ignore
                 stream.pix_fmt = "yuv420p"
         self.__tracks[track] = MediaRecorderContext(stream)
 
@@ -404,7 +404,7 @@ class MediaRecorder:
             except MediaStreamError:
                 return
             for packet in context.stream.encode(frame):
-                self.__container.mux(packet)
+                self.__container.mux(packet) # type: ignore
 
 
 class RelayStreamTrack(MediaStreamTrack):
@@ -412,14 +412,14 @@ class RelayStreamTrack(MediaStreamTrack):
         super().__init__()
         self.kind = source.kind
         self._relay = relay
-        self._queue: asyncio.Queue[Optional[av.frame.Frame]] = asyncio.Queue()
+        self._queue: asyncio.Queue[Optional[av.frame.Frame]] = asyncio.Queue() # type: ignore
         self._source: Optional[MediaStreamTrack] = source
 
     async def recv(self):
         if self.readyState != "live":
             raise MediaStreamError
 
-        self._relay._start(self)
+        self._relay._start(self) # type: ignore
         frame = await self._queue.get()
         if frame is None:
             self.stop()

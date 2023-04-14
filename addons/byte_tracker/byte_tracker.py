@@ -19,10 +19,10 @@ class STrack(BaseTrack):
         self.tracklet_len = 0
 
     def predict(self):
-        mean_state = self.mean.copy()
+        mean_state = self.mean.copy() # type: ignore
         if self.state != TrackState.Tracked:
             mean_state[7] = 0
-        self.mean, self.covariance = self.kalman_filter.predict(mean_state, self.covariance)
+        self.mean, self.covariance = self.kalman_filter.predict(mean_state, self.covariance) # type: ignore
 
     @staticmethod
     def multi_predict(stracks):
@@ -52,7 +52,7 @@ class STrack(BaseTrack):
         self.start_frame = frame_id
 
     def re_activate(self, new_track, frame_id, new_id=False):
-        self.mean, self.covariance = self.kalman_filter.update(
+        self.mean, self.covariance = self.kalman_filter.update( # type: ignore
             self.mean, self.covariance, self.tlwh_to_xyah(new_track.tlwh)
         )
         self.tracklet_len = 0
@@ -75,7 +75,7 @@ class STrack(BaseTrack):
         self.tracklet_len += 1
 
         new_tlwh = new_track.tlwh
-        self.mean, self.covariance = self.kalman_filter.update(
+        self.mean, self.covariance = self.kalman_filter.update( # type: ignore
             self.mean, self.covariance, self.tlwh_to_xyah(new_tlwh))
         self.state = TrackState.Tracked
         self.is_activated = True
@@ -338,7 +338,7 @@ def remove_duplicate_stracks(stracksa, stracksb):
     pdist = matching.iou_distance(stracksa, stracksb)
     pairs = np.where(pdist < 0.15)
     dupa, dupb = list(), list()
-    for p, q in zip(*pairs):
+    for p, q in zip(*pairs): # type: ignore
         timep = stracksa[p].frame_id - stracksa[p].start_frame
         timeq = stracksb[q].frame_id - stracksb[q].start_frame
         if timep > timeq:
