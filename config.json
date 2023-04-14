@@ -126,5 +126,8 @@
         "tracking_classes": [
             62
         ]
+    },
+    "pulse_counter": {
+        "state": true
     }
 }

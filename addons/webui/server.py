@@ -11,6 +11,7 @@ import numpy as np
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from multidict import MultiDict
+import psutil
 
 import addons.storages as strgs
 from base.camera import Cam
@@ -31,50 +32,52 @@ class WebUI():
 
     Args
     ---------------------------------------------------------------------------
-    raw_img_strg : storages.ImageStorage
+    raw_img_strg: storages.ImageStorage
         Object of ImageStorage that stored raw frames
-    inf_img_strg : storages.ImageStorage
+    inf_img_strg: storages.ImageStorage
         Object of ImageStorage that stored inferenced frames
-    dets_strg : storages.DetectionsStorage
+    dets_strg: storages.DetectionsStorage
         Object of DetectionsStorage that stored numpy array with detections
+    camera: Cam
+        Object of Cam for release camera
     ---------------------------------------------------------------------------
 
     Attributes
     ---------------------------------------------------------------------------
-    _raw_img_strg : storages.ImageStorage
+    _raw_img_strg: storages.ImageStorage
         Object of ImageStorage that stored raw frames
-    _inf_img_strg : storages.ImageStorage
+    _inf_img_strg: storages.ImageStorage
         Object of ImageStorage that stored inferenced frames
-    _dets_strg : storages.DetectionsStorage
+    _dets_strg: storages.DetectionsStorage
         Object of DetectionsStorage that stored numpy array with detections
-    _ROOT : str
+    _ROOT: str
         Path to addon's root directory
-    _logger : Logger
-    _pcs : set
-    _relay : MediaRelay
+    _logger: Logger
+    _pcs: set
+    _relay: MediaRelay
     ---------------------------------------------------------------------------
 
     Methods
     ---------------------------------------------------------------------------
-    _index(request) : web.Response
+    _index(request): web.Response
         Response with main page HTML file on request
-    _javascript(request) : web.Response
+    _javascript(request): web.Response
         Response with main page JavaScript client on request
-    _update_model(request) : web.Response
+    _update_model(request): web.Response
         Retrieve model from request and loads it to inference
-    _show_models(request) : web.Response
+    _show_models(request): web.Response
         Send all uploaded models to show
-    _update_settings(request) : web.Response
+    _update_settings(request): web.Response
         Retrieve settings from request and loads it to inference
-    _send_inference : web.Response | web.FileResponse
+    _send_inference: web.Response | web.FileResponse
         Return path of inference.zip 
         containing number of inferenced images
         grabbed by settings in labelme format
-    _offer(request) : web.Response
+    _offer(request): web.Response
         Initialize sdp session
-    _on_shutdown(request) : web.Response
+    _on_shutdown(request): web.Response
         Close peer connections
-    start() : None
+    start(): None
         Starts Web User Interface
     ---------------------------------------------------------------------------
     """
@@ -84,12 +87,15 @@ class WebUI():
             raw_img_strg: strgs.ImageStorage,
             inf_img_strg: strgs.ImageStorage,
             dets_strg: strgs.DetectionsStorage,
+            counters_strg: strgs.Storage,
             camera: Cam
     ):
         self._raw_img_strg = raw_img_strg
         self._inf_img_strg = inf_img_strg
         self._dets_strg = dets_strg
+        self._counters_strg = counters_strg
         self._cam = camera
+        self._classes = cfg["inference"]["classes"]
         self._ROOT = os.path.dirname(__file__)
         self._logger = logging.getLogger("pc")
         self._pcs = set()
@@ -137,8 +143,9 @@ class WebUI():
         return web.Response(content_type="application/javascript", text=content)
 
     async def _send_settings(self, request):
-        content = open(CONFIG_FILE, 'r').read()
-        return web.json_response(data=content)
+        with open(CONFIG_FILE, 'r') as json_file:
+            settings = json.load(json_file)
+        return web.json_response(data=settings)
 
     async def _get_settings(self, request):
         model_form = await request.post()
@@ -151,6 +158,36 @@ class WebUI():
             )
         print("Settings loaded")
         return web.Response(content_type="text", text="OK")
+
+    async def _send_inference(self, request):
+        path = await request_inference(
+            dets_strg=self._dets_strg,
+            raw_img_strg=self._raw_img_strg
+        )
+        if path is not None:
+            return web.FileResponse(
+                path=path,
+                headers=MultiDict({'Content-Disposition': 'Attachment'})
+            )
+        return web.Response(content_type="text", text="ERR")
+
+    async def _update_settings(self, request):
+        def _load_settings(settings):
+            with open(CONFIG_FILE, "wb") as f:
+                f.write(settings)
+            print("Settings loaded")
+
+        settings_form = await request.post()
+        content = settings_form["file"].file.read()
+        _load_settings(content[:])
+        return web.Response(content_type="text", text="OK")
+
+    async def _show_models(self, request):
+        local_models = os.listdir(MODELS)
+        models = [
+            model for model in local_models if ".rknn" in model
+        ]
+        return web.Response(text=json.dumps(models))
 
     async def _update_model(self, request):
         def _load_new_model(new_model: bytes, new_model_name: str):
@@ -197,35 +234,23 @@ class WebUI():
             )
         return web.Response(content_type="text", text="OK")
 
-    async def _show_models(self, request):
-        local_models = os.listdir(MODELS)
-        models = [
-            model for model in local_models if ".rknn" in model
-        ]
-        return web.Response(text=json.dumps(models))
+    async def _set_counters_images(self, request):
+        with open(self._ROOT + "/counters/counters.json", 'r') as json_file:
+            counters_imgs = json.load(json_file)
+        return web.json_response(data=counters_imgs)
 
-    async def _update_settings(self, request):
-        def _load_settings(settings):
-            with open(CONFIG_FILE, "wb") as f:
-                f.write(settings)
-            print("Settings loaded")
+    async def _set_counters(self, request):
+        counters = {
+            self._classes[i]: int(self._counters_strg.get_data_by_index(i)) # type: ignore
+            for i in range(len(self._classes))
+        }
+        counters = json.dumps(counters)
+        counters = json.loads(counters)
+        return web.json_response(data=counters)
 
-        settings_form = await request.post()
-        content = settings_form["file"].file.read()
-        _load_settings(content[:])
-        return web.Response(content_type="text", text="OK")
-
-    async def _send_inference(self, request):
-        path = await request_inference(
-            dets_strg=self._dets_strg,
-            raw_img_strg=self._raw_img_strg
-        )
-        if path is not None:
-            return web.FileResponse(
-                path=path,
-                headers=MultiDict({'Content-Disposition': 'Attachment'})
-            )
-        return web.Response(content_type="text", text="ERR")
+    async def _set_temperature(self, request):
+        temperature = psutil.sensors_temperatures()["center_thermal"][0][1]
+        return web.Response(text=str(temperature))
 
     async def _restart_program(self, request):
         self._cam.release()
@@ -325,26 +350,30 @@ class WebUI():
         # home page
         app.router.add_get("/", self._home)
         app.router.add_get("/client.js", self._javascript)
-
         # settings page
-        app.router.add_get("/settings/", self._settings)
-        app.router.add_get("/settings/settings.js", self._settings_javascript)
+        app.router.add_get("/settings", self._settings)
+        app.router.add_get("/settings.js", self._settings_javascript)
         app.router.add_get("/settings_values", self._send_settings)
         app.router.add_post("/settings_values", self._get_settings)
-
-        app.router.add_post("/offer", self._offer)
-        # Camera/inference settings (set/update)
-        app.router.add_post("/update_settings", self._update_settings)
-        # Model updating
-        app.router.add_post("/model", self._update_model)
-        # Reboot device
-        app.router.add_post("/reboot", self._reboot_device)
-        # Restart program
-        app.router.add_post("/restart", self._restart_program)
-        # Showing local models
-        app.router.add_get("/show_models", self._show_models)
         # Getting images and json for lableme
         app.router.add_get("/request_inference", self._send_inference)
+        # Camera/inference settings (set/update)
+        app.router.add_post("/update_settings", self._update_settings)
+        # Showing local models
+        app.router.add_get("/show_models", self._show_models)
+        # Model updating
+        app.router.add_post("/model", self._update_model)
+        # get couners images and data
+        app.router.add_get("/counters_images", self._set_counters_images)
+        app.router.add_get("/counters_data", self._set_counters)
+        # get cpu temperature
+        app.router.add_get("/cpu_temperature", self._set_temperature)
+        # Restart program
+        app.router.add_post("/restart", self._restart_program)
+        # Reboot device
+        app.router.add_post("/reboot", self._reboot_device)
+        # sdp session
+        app.router.add_post("/offer", self._offer)
         web.run_app(
             app,
             access_log=None,

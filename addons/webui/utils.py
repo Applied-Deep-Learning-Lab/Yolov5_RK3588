@@ -13,7 +13,10 @@ from PIL import Image
 import addons.storages as strgs
 
 
-CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+COUNTERS = str(Path(__file__).parent.absolute()) +\
+    '/counters/'
+ROOT = str(Path(__file__).parent.parent.parent.absolute())
+CONFIG_FILE = ROOT + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 
@@ -21,7 +24,8 @@ with open(CONFIG_FILE, 'r') as config_file:
 def boxes_to_shapes(bboxes, classes):
     """Convert bounding boxes to labelme shapes
         Parameters:
-            bboxes(numpy.ndarray[[x1, y1, x2, y2, class, score]...]) - Array of bounding boxes
+            bboxes(numpy.ndarray[[x1, y1, x2, y2, class, score]...]) - Array
+                of bounding boxes
             classes(list(str)) - List of neural network class names
         Returns:
             res(list(dict)) - List of dictionaries contains labelme shapes
@@ -72,14 +76,15 @@ def img_arr_to_b64(img_arr):
     if hasattr(base64, "encodebytes"):
         img_b64 = base64.encodebytes(img_bin)
     else:
-        img_b64 = base64.encodestring(img_bin) # type: ignore
+        img_b64 = base64.encodestring(img_bin)  # type: ignore
     return img_b64
 
 
 def to_labelme(content, classes, frame_size, image_path=None):
     """Convert inference data to labelme format
         Parameters:
-            content(tuple(numpy.ndarray, numpy.ndarray)) - Frameswith corresponding bounding boxes
+            content(tuple(numpy.ndarray, numpy.ndarray)) - Frameswith
+                corresponding bounding boxes
             classes(list(str)) - List of neural network class names
             frame_size(tuple(int)) - Frame width and height
             image_path(str) - Relative image path
@@ -105,7 +110,7 @@ async def request_inference(
     raw_img_strg: strgs.ImageStorage
 ):
     """Send last frames with bboxes to client in labelme format
-    
+
     Args
     -----------------------------------
     dets_strg : storages.DetectionsStorage
@@ -125,13 +130,14 @@ async def request_inference(
             dets = dets_strg.get_data_by_index(
                 (last_index - i) % cfg["storages"]["stored_data_amount"]
             )
-            dets = dets[np.where(dets[..., 5] > 0)] # type: ignore
+            dets = dets[np.where(dets[..., 5] > 0)]  # type: ignore
             if not np.any(dets):
                 if i == 0:
                     print("No frames")
                 else:
                     print(
-                        "Amount less then %d"%(cfg["webui"]["send_data_amount"])
+                        "Amount less then %d" % (
+                            cfg["webui"]["send_data_amount"])
                     )
                 break
             name = datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')
@@ -166,3 +172,24 @@ def draw_fps(frame: np.ndarray, fps: float):
         lineType=cv2.LINE_AA
     )
     return frame
+
+
+def obj_imgs_to_str():
+    with open(COUNTERS + "counters.json", 'r') as json_file:
+        counters = json.load(json_file)
+    for counter in counters:
+        if os.path.isdir(COUNTERS + counters[counter]["img_path"]):
+            continue
+        img = Image.open(COUNTERS + counters[counter]["img_path"])
+        img = img.resize((80, 80))
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue())
+        img_str = str(img_str)[2:-1]
+        counters[counter]["img_src"] = "data:image/png;base64," + img_str
+    with open(COUNTERS + "counters.json", 'w') as json_file:
+        json.dump(
+            obj=counters,
+            fp=json_file,
+            indent=4
+        )

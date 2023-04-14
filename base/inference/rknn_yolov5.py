@@ -64,7 +64,7 @@ class Yolov5():
         #Check new model loaded
         try:
             if os.path.isfile(MODELS + cfg["inference"]["new_model"]):
-                self._load_model(
+                self._ret =self._load_model(
                     MODELS + cfg["inference"]["new_model"]
                 )
             else:

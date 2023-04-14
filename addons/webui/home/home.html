@@ -26,16 +26,6 @@
       crossorigin="anonymous"
     />
   </head>
-  <div class="modal fade show" id="HomeModal">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="HomeModalLabel">Settings</h1>
-        </div>
-        <div class="modal-body" id="HomeModalContent">Successfuly!!!</div>
-      </div>
-    </div>
-  </div>
   <div class="modal fade show" id="ResetModal">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -88,7 +78,9 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="RebootWaitingModalLabel">Rebooting</h1>
+          <h1 class="modal-title fs-5" id="RebootWaitingModalLabel">
+            Rebooting
+          </h1>
         </div>
         <div class="modal-body text-center">
           <div class="spinner-border text-danger" role="status">
@@ -100,7 +92,7 @@
   </div>
   <body>
     <header
-      class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"
+      class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom sticky-top text-bg-dark p-3"
     >
       <div class="col-md-3 mb-2 mb-md-0 px-4">
         <svg
@@ -120,32 +112,45 @@
       <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
         <li><a href="#" class="nav-link px-2 link-secondary">Video</a></li>
         <li>
-          <a href="../settings/" class="nav-link px-2" onclick="test_modal()"
+          <a href="../settings" class="nav-link px-2" onclick="test_modal()"
             >Settings</a
           >
         </li>
       </ul>
-      <div class="col-md-3 text-end mx-4 px-5">
-        <button type="button" class="btn btn-danger" onclick="ResetModalShow()">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="currentColor"
-            class="bi bi-power"
-            viewBox="0 0 16 16"
+      <div class="col-md-3 text-end">
+        <div class="btn-group mx-2 px-5" role="group">
+          <button
+            id="cpu_temperature"
+            type="button"
+            class="btn btn-outline-info mx-2 px-5"
+            disabled=""
           >
-            <path d="M7.5 1v7h1V1h-1z" />
-            <path
-              d="M3 8.812a4.999 4.999 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812z"
-            />
-          </svg>
-        </button>
+            Temp
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            onclick="ResetModalShow()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="currentColor"
+              class="bi bi-power"
+              viewBox="0 0 16 16"
+            >
+              <path d="M7.5 1v7h1V1h-1z" />
+              <path
+                d="M3 8.812a4.999 4.999 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812z"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
-    <div class="row mb-2 text-center">
-      <div class="col-md-3"></div>
-      <div class="col-md-6">
+    <div class="row d-flex justify-content-center px-4">
+      <div class="col-6">
         <div id="media" class="container text-center">
           <div class="row align-items-center mb-4">
             <audio id="audio" autoplay="true"></audio>
@@ -156,7 +161,7 @@
               playsinline="true"
             ></video>
           </div>
-          <div class="row-lg-6 align-items-center">
+          <div class="row-lg-6 mb-3 align-items-center">
             <div class="row mb-3 align-items-center">
               <div class="btn-group gap-2" role="group">
                 <button
@@ -176,66 +181,13 @@
                 </button>
               </div>
             </div>
-            <div class="row mb-3 align-items-center" id="local_model_upload">
-              <div class="input-group gap-2">
-                <select
-                  class="form-select rounded-pill"
-                  id="select_local_model"
-                  onmousedown="showModels()"
-                >
-                  <option>Select model from local...</option>
-                </select>
-                <button
-                  id="btn_local_model_upload"
-                  class="btn btn-primary rounded-pill"
-                  onclick="updateLocalModel()"
-                >
-                  Change local model
-                </button>
-              </div>
-            </div>
-            <div class="row mb-3 align-items-center">
-              <div class="input-group gap-2 align-items-center">
-                <label class="form-label-md" for="UploadNewModel"
-                  >Upload new model</label
-                >
-                <input
-                  class="form-control rounded-pill"
-                  type="file"
-                  id="new_model_file"
-                />
-                <button
-                  id="btn_new_model_upload"
-                  class="btn btn-primary rounded-pill"
-                  onclick="updateNewModel()"
-                >
-                  Upload new model
-                </button>
-              </div>
-            </div>
-            <div class="row mb-3 align-items-center">
-              <div class="input-group gap-2 align-items-center">
-                <label class="form-label-md" for="UploadNewModel"
-                  >Upload settings</label
-                >
-                <input
-                  class="form-control rounded-pill"
-                  type="file"
-                  id="settings_file"
-                />
-                <button
-                  id="btn_settings_upload"
-                  class="btn btn-primary rounded-pill"
-                  onclick="updateSettings()"
-                >
-                  Upload settings
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
-      <div class="col-md-3"></div>
+      <div class="col-6 text-center" id="CountersGrid">
+        <div class="col col-row-2">
+        </div>
+      </div>
     </div>
 
     <div style="display: none">
