@@ -1,1 +1,2 @@
 *.zip
+!counters/images/*.png
