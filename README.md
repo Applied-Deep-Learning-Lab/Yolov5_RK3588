@@ -165,11 +165,12 @@
   pip install -r install/requirements.txt
   ```
 
-  Then return to the install dir for building and installing cython_bbox
+  Then go to the install dir for building and installing cython_bbox
 
   ```
-  python3 install/cython_bbox/setup.py build
-  python3 install/cython_bbox/setup.py install
+  cd install/cython_bbox
+  python3 setup.py build
+  python3 setup.py install
   ```
 
 </details>
@@ -194,6 +195,12 @@
 
   ```
   source run.sh
+  ```
+
+  For see WebUI write to browser address bar next (localhost - device's ip):
+
+  ```
+  localhost:8080
   ```
 
   You also can set autostart for running this. For do it run:
