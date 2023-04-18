@@ -58,6 +58,7 @@
     Extract downloaded archive with Ubuntu image:
 
     ```
+    sudo apt-get update
     #Download package for extract *.7z archive
     sudo apt install p7zip-full
 
