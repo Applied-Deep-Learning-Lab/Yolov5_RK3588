@@ -18,7 +18,7 @@
 
     For installing Ubuntu on Firefly you can use their manual[[1]](https://wiki.t-firefly.com/en/ROC-RK3588S-PC/index.html)[[2]](https://en.t-firefly.com/doc/download/page/id/142.html).
 
-    For installing Ubuntu on OrangePi you can use [their manual](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/service-and-support/Orange-pi-5.htmlfi).
+    For installing Ubuntu on OrangePi you can use [their manual](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/service-and-support/Orange-pi-5.html).
 
     Or use ours **README's** for them *(select the one below)*.
 
@@ -143,21 +143,21 @@
   Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
 
   ```
-  #cd <repo-dir>/install/
+  cd Yolov5_RK3588/install/
   pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
   ```
 
   In created conda enviroment also install requirements
 
   ```
-  #cd <repo-dir>/install/
+  cd Yolov5_RK3588/install/
   pip install -r requirements.txt
   ```
 
   Then build and install cython_bbox
 
   ```
-  #cd <repo-dir>/install/cython_bbox/
+  cd Yolov5_RK3588/install/cython_bbox/
   python3 setup.py build
   python3 setup.py install
   ```
@@ -191,14 +191,14 @@
   * For Orange Pi
 
     ```
-    #cd <repo-dir>/install/autostart/
+    cd Yolov5_RK3588/install/autostart/
     source orangepi_autostart.sh
     ```
 
   * For Firefly:
 
     ```
-    #cd <repo-dir>/install/autostart/
+    cd Yolov5_RK3588/install/autostart/
     source firefly_autostart.sh
     ```
 
@@ -233,7 +233,7 @@
       Install Python dependency, such as requirements_cp38-1.4.0.txt
 
       ```
-      #cd <repo_dir>/resources/HostPC/converter/install/
+      cd Yolov5_RK3588/resources/HostPC/converter/install/
       pip install -r requirements_cp38-1.4.0.txt
       #if doesn't installing then install numpy before that
       #pip install numpy
@@ -248,7 +248,7 @@
       For convert your *.onnx* model to *.rknn* run **onnx2rknn.py** like:
 
       ```
-      #cd <repo-dir>/resources/HostPC/converter/convert/
+      cd Yolov5_RK3588/resources/HostPC/converter/convert/
       python3 onnx2rknn.py \
               --input <path-to-your-onnx-model> \
               --output <path-where-save-rknn-model> \
