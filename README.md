@@ -203,8 +203,14 @@
   localhost:8080
   ```
 
-  You also can set autostart for running this. For do it run:
+  You also can set autostart for running this.
 
+  Before it deactivate conda env:
+
+  ```
+  conda deactivate
+  ```
+    
   * For Orange Pi
 
     ```
