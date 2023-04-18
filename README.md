@@ -42,7 +42,6 @@
     sudo apt-get install -y python-dev pkg-config
 
     # Library components
-    sudo apt-get update
     sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev \
       libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
     ```
@@ -139,25 +138,30 @@
   ```
   git clone https://github.com/Applied-Deep-Learning-Lab/Yolov5_RK3588
   ```
+  
+  And got into repo-dir:
+
+  ```
+  cd Yolov5_RK3588
+  ```
 
   Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
 
   ```
-  cd Yolov5_RK3588/install/
+  cd install/
   pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
   ```
 
-  In created conda enviroment also install requirements
+  In created conda enviroment also install requirements from the same directory
 
   ```
-  cd Yolov5_RK3588/install/
   pip install -r requirements.txt
   ```
 
-  Then build and install cython_bbox
+  Then return to the install dir for building and installing cython_bbox
 
   ```
-  cd Yolov5_RK3588/install/cython_bbox/
+  cd ../cython_bbox/
   python3 setup.py build
   python3 setup.py install
   ```
@@ -191,14 +195,14 @@
   * For Orange Pi
 
     ```
-    cd Yolov5_RK3588/install/autostart/
+    cd install/autostart/
     source orangepi_autostart.sh
     ```
 
   * For Firefly:
 
     ```
-    cd Yolov5_RK3588/install/autostart/
+    cd install/autostart/
     source firefly_autostart.sh
     ```
 
@@ -233,7 +237,7 @@
       Install Python dependency, such as requirements_cp38-1.4.0.txt
 
       ```
-      cd Yolov5_RK3588/resources/HostPC/converter/install/
+      cd resources/HostPC/converter/install/
       pip install -r requirements_cp38-1.4.0.txt
       #if doesn't installing then install numpy before that
       #pip install numpy
@@ -248,7 +252,7 @@
       For convert your *.onnx* model to *.rknn* run **onnx2rknn.py** like:
 
       ```
-      cd Yolov5_RK3588/resources/HostPC/converter/convert/
+      cd resources/HostPC/converter/convert/
       python3 onnx2rknn.py \
               --input <path-to-your-onnx-model> \
               --output <path-where-save-rknn-model> \
