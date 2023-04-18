@@ -30,18 +30,20 @@
     Install ffmpeg package for WebUI:
 
     ```
+    sudo apt-get update
     sudo apt-get install -y ffmpeg
     ```
 
     And dependencies for WebUI:
     
     ```
+    sudo apt-get update
     # General dependencies
     sudo apt-get install -y python-dev pkg-config
 
     # Library components
-    sudo apt-get install -y \
-      libavformat-dev libavcodec-dev libavdevice-dev \
+    sudo apt-get update
+    sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev \
       libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
     ```
 
@@ -114,6 +116,12 @@
   bash Miniconda3-latest-Linux-aarch64.sh
   ```
 
+  Then rerun terminal session:
+
+  ```
+  source ~/.bashrc
+  ```
+
   Create conda env with python3.9
 
   ```
@@ -124,6 +132,12 @@
 
   ```
   conda activate <env-name>
+  ```
+
+  Clone repository:
+
+  ```
+  git clone https://github.com/Applied-Deep-Learning-Lab/Yolov5_RK3588
   ```
 
   Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
@@ -205,12 +219,14 @@
       Install Python3 and pip3
 
       ```
+      sudo apt-get update
       sudo apt-get install python3 python3-dev python3-pip
       ```
 
       Install dependent libraries
 
       ```
+      sudo apt-get update
       sudo apt-get install libxslt1-dev zlib1g zlib1g-dev libglib2.0-0 libsm6 libgl1-mesa-glx libprotobuf-dev gcc git
       ```
 
