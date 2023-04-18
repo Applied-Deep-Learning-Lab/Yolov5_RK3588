@@ -46,11 +46,19 @@
       libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
     ```
 
-    And add next line to your ``.bashrc``:
+    Open .bashrc  in nano text editor:
+
+    ```
+    nano ~/.bashrc
+    ```
+
+    At the end of file add next line:
 
     ```
     export LD_PRELOAD=$LD_PRELOAD:/usr/lib/aarch64-linux-gnu/libffi.so.7
     ```
+
+    Save and close nano with sortcuts ctrl-o, Enter, ctrl-x
 
   * ### Docker *(Optional)*
 
@@ -148,22 +156,20 @@
   Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
 
   ```
-  cd install/
-  pip install rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
+  pip install install/rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
   ```
 
   In created conda enviroment also install requirements from the same directory
 
   ```
-  pip install -r requirements.txt
+  pip install -r install/requirements.txt
   ```
 
   Then return to the install dir for building and installing cython_bbox
 
   ```
-  cd ../cython_bbox/
-  python3 setup.py build
-  python3 setup.py install
+  python3 install/cython_bbox/setup.py build
+  python3 install/cython_bbox/setup.py install
   ```
 
 </details>
@@ -195,15 +201,13 @@
   * For Orange Pi
 
     ```
-    cd install/autostart/
-    source orangepi_autostart.sh
+    source install/autostart/orangepi_autostart.sh
     ```
 
   * For Firefly:
 
     ```
-    cd install/autostart/
-    source firefly_autostart.sh
+    source install/autostart/firefly_autostart.sh
     ```
 
 </details>
@@ -233,20 +237,11 @@
       sudo apt-get update
       sudo apt-get install libxslt1-dev zlib1g zlib1g-dev libglib2.0-0 libsm6 libgl1-mesa-glx libprotobuf-dev gcc git
       ```
-
-      Install Python dependency, such as requirements_cp38-1.4.0.txt
-
-      ```
-      cd resources/HostPC/converter/install/
-      pip install -r requirements_cp38-1.4.0.txt
-      #if doesn't installing then install numpy before that
-      #pip install numpy
-      ```
       
       Install RKNN-Toolkit2，such as rknn_toolkit2-1.4.0_22dcfef4-cp38-cp38-linux_x86_64.whl
 
       ```
-      pip install rknn_toolkit2-1.4.0_22dcfef4-cp38-cp38-linux_x86_64.whl
+      pip install resources/HostPC/converter/install/rknn_toolkit2-1.4.0_22dcfef4-cp38-cp38-linux_x86_64.whl
       ```
 
       For convert your *.onnx* model to *.rknn* run **onnx2rknn.py** like:
