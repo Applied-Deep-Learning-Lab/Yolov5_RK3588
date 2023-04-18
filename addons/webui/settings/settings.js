@@ -161,7 +161,7 @@ async function showModels() {
 function updateNewModel() {
   let new_model_file = document.getElementById("new_model_file").files[0];
   if (typeof new_model_file === "undefined") {
-    showModal("Model", "Please, choose fole for uploading.", 5000, true);
+    showModal("Model", "Please, choose file for uploading.", 2500, true);
   } else {
     const formData = new FormData();
     formData.append("file", new_model_file);
@@ -176,7 +176,7 @@ function updateNewModel() {
 function updateLocalModel() {
   let local_model = document.getElementById("select_local_model").value;
   if (local_model === "Select model from local...") {
-    showModal("Model", "Please, choose model for changing.", 5000, true);
+    showModal("Model", "Please, choose model for changing.", 2500, true);
   } else {
     const formData = new FormData();
     formData.append("text", local_model);
@@ -243,6 +243,12 @@ function RebootDevice() {
 
 function SettingsUpdateModal() {
   let modal = document.getElementById("SettingsModal");
+  let label = document.getElementById("SettingsModalLabel");
+  let content = document.getElementById("SettingsModalContent");
+  let footer = document.getElementById("SettingsModalFooter");
+  label.innerText = "Settings";
+  content.innerText = "Successfuly updated!!!"
+  footer.className = footer.className.split(" ")[0];
   modal.style.display = "block";
 }
 

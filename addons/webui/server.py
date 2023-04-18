@@ -171,17 +171,6 @@ class WebUI():
             )
         return web.Response(content_type="text", text="ERR")
 
-    async def _update_settings(self, request):
-        def _load_settings(settings):
-            with open(CONFIG_FILE, "wb") as f:
-                f.write(settings)
-            print("Settings loaded")
-
-        settings_form = await request.post()
-        content = settings_form["file"].file.read()
-        _load_settings(content[:])
-        return web.Response(content_type="text", text="OK")
-
     async def _show_models(self, request):
         local_models = os.listdir(MODELS)
         models = [
@@ -357,8 +346,6 @@ class WebUI():
         app.router.add_post("/settings_values", self._get_settings)
         # Getting images and json for lableme
         app.router.add_get("/request_inference", self._send_inference)
-        # Camera/inference settings (set/update)
-        app.router.add_post("/update_settings", self._update_settings)
         # Showing local models
         app.router.add_get("/show_models", self._show_models)
         # Model updating

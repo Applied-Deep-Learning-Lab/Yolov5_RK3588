@@ -40,8 +40,7 @@
     sudo apt-get install -y python-dev pkg-config
 
     # Library components
-    sudo apt-get install -y \
-      libavformat-dev libavcodec-dev libavdevice-dev \
+    sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev\
       libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
     ```
 
