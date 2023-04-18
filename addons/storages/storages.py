@@ -108,7 +108,7 @@ class Storage():
             self._storage[data_index][:len(data),:] = data
         else:
             self._storage[data_index][:] = data
-        if cfg["debug"]["filled_frame_id"] and self.storage_name == 2:
+        if cfg["debug"]["filled_frame_id"] and "inf" in self.storage_name:
             with open(cfg["debug"]["filled_id_file"], 'a') as f:
                 f.write(
                     "{}\t{:.3f}\n".format(

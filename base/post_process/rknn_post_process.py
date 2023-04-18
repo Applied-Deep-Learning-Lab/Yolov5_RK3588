@@ -11,7 +11,10 @@ with open(CONFIG_FILE, 'r') as config_file:
 
 
 def sigmoid(x):
-    return x# 1 / (1 + np.exp(-x))
+    if cfg["inference"]["sigmoid"]:
+        return 1 / (1 + np.exp(-x))
+    else:
+        return x
 
 
 def xywh2xyxy(x):

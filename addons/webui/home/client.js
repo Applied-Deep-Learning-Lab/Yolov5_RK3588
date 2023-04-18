@@ -482,11 +482,34 @@ function SetCounters() {
 
 function SetInfoCpuTemperature() {
   setInterval(function () {
-    let cpu_temperature = document.getElementById("cpu_temperature");
-    fetch("/cpu_temperature", { method: "GET"})
-    .then(response=>response.json())
-    .then(repsonse=>{
-      cpu_temperature.innerText = repsonse
-    })
+    let CpuTemperature = document.getElementById("cpu_temperature");
+    let ClassName = CpuTemperature.className;
+    fetch("/cpu_temperature", { method: "GET" })
+      .then((response) => response.json())
+      .then((response) => {
+        CpuTemperature.innerText = response;
+        if (response > 60) {
+          ClassName = ClassName.replace(
+            ClassName.split(" ")[1],
+            "btn-outline-danger"
+          );
+        } else if (response > 50) {
+          ClassName = ClassName.replace(
+            ClassName.split(" ")[1],
+            "btn-outline-warning"
+          );
+        } else if (response > 40) {
+          ClassName = ClassName.replace(
+            ClassName.split(" ")[1],
+            "btn-outline-success"
+          );
+        } else {
+          ClassName = ClassName.replace(
+            ClassName.split(" ")[1],
+            "btn-outline-info"
+          );
+        }
+        CpuTemperature.className = ClassName;
+      });
   }, 1000);
 }

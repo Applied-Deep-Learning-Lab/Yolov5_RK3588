@@ -25,8 +25,9 @@
         "inf_proc": 3,
         "post_proc": 3,
         "async_mode": true,
+        "sigmoid": false,
         "default_model": "yolov5m_leaky_352x352.rknn",
-        "new_model": "test_model.rknn",
+        "new_model": "yolov5m_leaky_352x352.rknn",
         "classes": [
             "person",
             "bicycle",

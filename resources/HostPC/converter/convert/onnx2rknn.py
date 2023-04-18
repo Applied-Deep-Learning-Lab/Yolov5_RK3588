@@ -41,7 +41,11 @@ def main(opt):
 
     # pre-process config
     print('--> Config model')
-    rknn.config(mean_values=[[0, 0, 0]], std_values=[[255, 255, 255]], target_platform="rk3588")
+    rknn.config(
+        mean_values=[[0, 0, 0]],
+        std_values=[[255, 255, 255]],
+        target_platform="rk3588"
+    )
     print('done')
 
     # Load ONNX model

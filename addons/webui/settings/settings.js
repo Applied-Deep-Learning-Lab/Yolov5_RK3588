@@ -2,6 +2,7 @@
 /// Base
 //// Inference
 let async_mode = document.getElementById("async_mode_state");
+let sigmoid = document.getElementById("sigmoid");
 let net_size = document.getElementById("net_size");
 let buf_size = document.getElementById("buf_size");
 let obj_thresh = document.getElementById("obj_thresh");
@@ -47,6 +48,7 @@ async function SetSettingsValues() {
   /// Base functions
   //// Inference
   async_mode.checked = settings_data.inference.async_mode;
+  sigmoid.checked = settings_data.inference.sigmoid;
   net_size.value = settings_data.inference.net_size;
   buf_size.value = settings_data.inference.buf_size;
   obj_thresh.value = settings_data.inference.obj_thresh;
@@ -91,6 +93,7 @@ async function SendSettingsValues() {
   /// Base functions
   //// Inference
   settings_data.inference.async_mode = async_mode.checked;
+  settings_data.inference.sigmoid = sigmoid.checked;
   settings_data.inference.net_size = Number(net_size.value);
   settings_data.inference.buf_size = Number(buf_size.value);
   settings_data.inference.obj_thresh = Number(obj_thresh.value);
@@ -156,23 +159,54 @@ async function showModels() {
 }
 
 function updateNewModel() {
-  const formData = new FormData();
-  formData.append("file", document.getElementById("new_model_file").files[0]);
-  fetch("/model", {
-    method: "POST",
-    body: formData,
-  });
-  showModal("Model", "Uploading...", 5000);
+  let new_model_file = document.getElementById("new_model_file").files[0];
+  if (typeof new_model_file === "undefined") {
+    showModal("Model", "Please, choose fole for uploading.", 5000, true);
+  } else {
+    const formData = new FormData();
+    formData.append("file", new_model_file);
+    fetch("/model", {
+      method: "POST",
+      body: formData,
+    });
+    showModal("Model", "Uploading...", 5000);
+  }
 }
 
 function updateLocalModel() {
-  const formData = new FormData();
-  formData.append("text", document.getElementById("select_local_model").value);
-  fetch("/model", {
-    method: "POST",
-    body: formData,
-  });
-  showModal("Model", "Changing...", 1000);
+  let local_model = document.getElementById("select_local_model").value;
+  if (local_model === "Select model from local...") {
+    showModal("Model", "Please, choose model for changing.", 5000, true);
+  } else {
+    const formData = new FormData();
+    formData.append("text", local_model);
+    fetch("/model", {
+      method: "POST",
+      body: formData,
+    });
+    showModal("Model", "Changing...", 1000);
+  }
+}
+
+function showModal(LabelText, ContentText, LoadTime, warning = false) {
+  let modal = document.getElementById("SettingsModal");
+  let label = document.getElementById("SettingsModalLabel");
+  let content = document.getElementById("SettingsModalContent");
+  let footer = document.getElementById("SettingsModalFooter");
+  label.innerText = LabelText;
+  content.innerText = ContentText;
+  footer.className += " visually-hidden";
+  modal.style.display = "block";
+  if (warning) {
+    setTimeout(function () {
+      modal.style.display = "";
+    }, LoadTime);
+  } else {
+    setTimeout(function () {
+      footer.className = footer.className.split(" ")[0];
+      content.innerText = "Successfuly!!!"
+    }, LoadTime);
+  }
 }
 
 function RestartProgram() {
@@ -205,18 +239,6 @@ function RebootDevice() {
       location.reload(true);
     }, 50000);
   }, 100);
-}
-
-function showModal(modalLabel, modalContent, loadTime) {
-  let modal = document.getElementById("SettingsModal");
-  let label = document.getElementById("SettingsModalLabel");
-  label.innerText = modalLabel;
-  let content = document.getElementById("SettingsModalContent");
-  content.innerText = modalContent;
-  modal.style.display = "block";
-  setTimeout(function () {
-    content.innerText = "Successfuly!!!";
-  }, loadTime);
 }
 
 function SettingsUpdateModal() {

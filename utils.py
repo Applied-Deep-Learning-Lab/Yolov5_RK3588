@@ -13,6 +13,7 @@ from base import Rk3588
 CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
+FRAMERATE = cfg["camera"]["fps"]
 
 
 def fill_storages(
@@ -163,9 +164,9 @@ def show_frames_localy(
         if last_index > cur_index:
             counter += 1
             cur_index = last_index
-        if counter % 60 == 0 and not calculated:
+        if counter % FRAMERATE == 0 and not calculated:
             calculated = True
-            fps = 60/(time.time() - begin_time)
+            fps = FRAMERATE/(time.time() - begin_time)
             begin_time = time.time()
-        if counter % 60 != 0:
+        if counter % FRAMERATE != 0:
             calculated = False
