@@ -42,10 +42,14 @@
     You can download installer from [here](https://www.balena.io/etcher) or run in Linux terminal:
 
     ```
+    curl -1sLf \
+      'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+      | sudo -E bash
+    sudo apt-get update
     sudo apt-get install balena-etcher
     ```
 
-  * ### Install Ubuntu image [[Install]](https://drive.google.com/drive/folders/1i5zQOg1GIA4_VNGikFl2nPM0Y2MBw2M0)
+  * ### Download Ubuntu image [[Install]](https://drive.google.com/drive/folders/1i5zQOg1GIA4_VNGikFl2nPM0Y2MBw2M0)
 
     Tested **Orangepi5_1.1.0_ubuntu_focal_desktop_xfce_linux5.10.110.7z**.
 
@@ -54,6 +58,7 @@
     Extract downloaded archive with Ubuntu image:
 
     ```
+    sudo apt-get update
     #Download package for extract *.7z archive
     sudo apt install p7zip-full
 
@@ -61,6 +66,10 @@
     ```
 
     Then run **Balena Etcher**.
+
+    ```
+    balena-etcher
+    ```
 
     <img src="images/BalenaEtcher.png" width="50%">
     
