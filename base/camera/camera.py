@@ -21,8 +21,8 @@ class Cam():
 
     Args
     ---------------------------------------------------------------------------
-    source : int
-        Camera index
+    source : int | str
+        Camera index | path to a video
     q_in : multiprocessing.Queue
         Queue that data reads from
     q_out : multiprocessing.Queue
@@ -35,8 +35,8 @@ class Cam():
         Queue that data sends to
     _q_in : multiprocessing.Queue
         Queue that data reads from
-    _cap : cv2.VideoCapture
-        Object of VideoCapture class
+    _source : str
+        Path to a video
     _last_frame_id : int
         Index of last showed frame
     _frame_id : int
@@ -63,24 +63,8 @@ class Cam():
         self._q_out = q_out
         self._q_in = q_in
         self._stop_record = Value('i', 0)
-        self._cap = cv2.VideoCapture(source)
+        self._source = source
         self._last_frame_id = 0
-        self._cap.set(
-            cv2.CAP_PROP_FOURCC,
-            cv2.VideoWriter.fourcc(*cfg["camera"]["pixel_format"])
-        )
-        self._cap.set(
-            cv2.CAP_PROP_FRAME_WIDTH,
-            cfg["camera"]["width"]
-        )
-        self._cap.set(
-            cv2.CAP_PROP_FRAME_HEIGHT,
-            cfg["camera"]["height"]
-        )
-        self._cap.set(
-            cv2.CAP_PROP_FPS,
-            cfg["camera"]["fps"]
-        )
         self._frame_id = 0
         self._fps = 0
         self._max_fps = 0
@@ -96,12 +80,29 @@ class Cam():
         return frame
 
     def record(self):
-        if(not self._cap.isOpened()):
+        cap = cv2.VideoCapture(self._source)
+        cap.set(
+            cv2.CAP_PROP_FOURCC,
+            cv2.VideoWriter.fourcc(*cfg["camera"]["pixel_format"])
+        )
+        cap.set(
+            cv2.CAP_PROP_FRAME_WIDTH,
+            cfg["camera"]["width"]
+        )
+        cap.set(
+            cv2.CAP_PROP_FRAME_HEIGHT,
+            cfg["camera"]["height"]
+        )
+        cap.set(
+            cv2.CAP_PROP_FPS,
+            cfg["camera"]["fps"]
+        )
+        if(not cap.isOpened()):
             print("Bad source")
             raise SystemExit
         try:
             while not bool(self._stop_record.value): # type: ignore
-                ret, frame = self._cap.read()
+                ret, frame = cap.read()
                 if not ret:
                     print("Camera stopped!")
                     raise SystemExit
@@ -109,7 +110,7 @@ class Cam():
                 frame = self._pre_process(frame)
                 self._q_out.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
-            self._cap.release()
+            cap.release()
         except Exception as e:
             print("Stop recording loop. Exception {}".format(e))
         finally:
@@ -118,7 +119,7 @@ class Cam():
                     datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f') + "\n"
                 with open(ROOT + cfg["debug"]["camera_release_file"], "a") as f:
                     f.write(message)
-            self._cap.release()
+            cap.release()
             raise SystemExit
 
     def show(self, start_time):
