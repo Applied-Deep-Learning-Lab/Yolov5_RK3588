@@ -20,11 +20,27 @@ from .media import InferenceTrack, MediaBlackhole, MediaRelay
 from .utils import request_inference
 
 # Getting config
-ROOT = Path(__file__).parent.parent.parent.absolute()
-CONFIG_FILE = str(ROOT) + "/config.json"
-MODELS = str(ROOT) + "/models/"
+ROOT = str(Path(__file__).parent.parent.parent.absolute())
+CONFIG_FILE = ROOT + "/config.json"
+MODELS = ROOT + "/models/"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
+
+# Create the server's logger
+server_logger = logging.getLogger("server")
+server_logger.setLevel(logging.DEBUG)
+server_handler = logging.FileHandler(
+    os.path.join(
+        ROOT,
+        "log/server.log"
+    )
+)
+server_formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+server_handler.setFormatter(server_formatter)
+server_logger.addHandler(server_handler)
 
 
 class WebUI():
@@ -52,7 +68,6 @@ class WebUI():
         Object of DetectionsStorage that stored numpy array with detections
     _ROOT: str
         Path to addon's root directory
-    _logger: Logger
     _pcs: set
     _relay: MediaRelay
     ---------------------------------------------------------------------------
@@ -97,7 +112,6 @@ class WebUI():
         self._cam = camera
         self._classes = cfg["inference"]["classes"]
         self._ROOT = os.path.dirname(__file__)
-        self._logger = logging.getLogger("pc")
         self._pcs = set()
         self._relay = MediaRelay()
         self._blank_frame = np.zeros(
@@ -156,7 +170,7 @@ class WebUI():
                 fp=json_file,
                 indent=4
             )
-        print("Settings loaded")
+        server_logger.info("Settings loaded")
         return web.Response(content_type="text", text="OK")
 
     async def _send_inference(self, request):
@@ -196,7 +210,7 @@ class WebUI():
                 )
             with open(MODELS + new_model_name, "wb") as f:
                 f.write(new_model)
-            print("Model loaded")
+            server_logger.info("Model loaded")
 
         def _load_local_model(local_model):
             """Rewrite path to running model"""
@@ -209,7 +223,7 @@ class WebUI():
                     fp=json_file,
                     indent=4
                 )
-            print("Model changed")
+            server_logger.info("Model changed")
 
         model_form = await request.post()
         if "file" in model_form.keys():
@@ -242,11 +256,13 @@ class WebUI():
         return web.Response(text=str(temperature))
 
     async def _restart_program(self, request):
+        server_logger.info("Restartung program.")
         self._cam.release()
         args = [sys.executable] + sys.argv
         os.execv(sys.executable, args)
 
     async def _reboot_device(self, request):
+        server_logger.info("Rebooting device.")
         os.system("reboot")
         return web.Response(content_type="text", text="OK")
 
@@ -254,15 +270,15 @@ class WebUI():
         params = await request.json()
         offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
         pc = RTCPeerConnection()
-        pc_id = "PeerConnection(%s)" % uuid.uuid4()
         self._pcs.add(pc)
 
         videoTrackProducer = None
 
         def log_info(msg, *args):
-            pass  # logger.info(pc_id + " " + msg, *args)
+            pass
 
         log_info("Created for %s", request.remote)
+        server_logger.info(f"Created for {request.remote}")
 
         recorder = MediaBlackhole()  # MediaRecorder("/root/sample.mp4")
 
@@ -271,6 +287,7 @@ class WebUI():
             @channel.on("message")
             def on_message(message):
                 log_info('on_message ' + message)
+                server_logger.info(f'on_message {message}')
                 if isinstance(message, str):
                     if message.startswith("ping"):
                         channel.send("pong" + message[4:])
@@ -278,6 +295,7 @@ class WebUI():
         @pc.on("connectionstatechange")
         async def on_connectionstatechange():
             log_info("Connection state is %s", pc.connectionState)
+            server_logger.info(f"Connection state is {pc.connectionState}")
             if pc.connectionState == "failed":
                 await pc.close()
                 self._pcs.discard(pc)
@@ -290,6 +308,7 @@ class WebUI():
         @pc.on("track")
         def on_track(track):
             log_info("Track %s received", track.kind)
+            server_logger.info(f"Track {track.kind} received")
 
             nonlocal videoTrackProducer
             videoTrackProducer = InferenceTrack(
@@ -302,6 +321,7 @@ class WebUI():
             @track.on("ended")
             async def on_ended():
                 log_info("Track %s ended", track.kind)
+                server_logger.info(f"Track {track.kind} ended")
                 await recorder.stop()
 
         # handle offer
@@ -329,7 +349,6 @@ class WebUI():
         self._pcs.clear()
 
     def start(self):
-        logging.basicConfig(level=logging.ERROR)
         ssl_context = None
         # Creating Application instance
         app = web.Application()
@@ -361,6 +380,7 @@ class WebUI():
         app.router.add_post("/reboot", self._reboot_device)
         # sdp session
         app.router.add_post("/offer", self._offer)
+        server_logger.info("Starting WebUI server")
         web.run_app(
             app,
             access_log=None,

@@ -6,7 +6,7 @@ __pycache__
 *.txt
 !install/requirements.txt
 
-#cython_bbox
+# cython_bbox
 install/cython_bbox/.eggs
 install/cython_bbox/build
 install/cython_bbox/cython_bbox.egg-info
@@ -18,3 +18,6 @@ install/cython_bbox/dist
 !models/yolov5m_leaky_352x352.rknn
 !models/yolov5s-640-640.rknn
 !models/yolov5m_leaky.rknn
+
+# logs
+log/*.log

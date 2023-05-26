@@ -1,16 +1,32 @@
 import json
+import logging
 import os
 from multiprocessing import Queue
 from pathlib import Path
 
 from rknnlite.api import RKNNLite
 
-
-ROOT = Path(__file__).parent.parent.parent.absolute()
-MODELS = str(ROOT) + "/models/"
-CONFIG_FILE = str(ROOT) + "/config.json"
+ROOT = str(Path(__file__).parent.parent.parent.absolute())
+MODELS = ROOT + "/models/"
+CONFIG_FILE = ROOT + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
+
+# Create the inference's logger
+inference_logger = logging.getLogger("inference")
+inference_logger.setLevel(logging.DEBUG)
+inference_handler = logging.FileHandler(
+    os.path.join(
+        ROOT,
+        "log/inference.log"
+    )
+)
+inference_formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+inference_handler.setFormatter(inference_formatter)
+inference_logger.addHandler(inference_handler)
 
 
 class Yolov5():
@@ -72,29 +88,31 @@ class Yolov5():
                     MODELS + cfg["inference"]["default_model"]
                 )
         except Exception as e:
-            print("Cannot load model. Exception {}".format(e))
+            inference_logger.error(f"Cannot load model. Exception {e}")
             raise SystemExit
 
     def _load_model(self, model: str):
-        print("proc: ", self._proc)
+        inference_logger.info(f"proc: {self._proc}")
         self._rknnlite = RKNNLite(
             verbose=cfg["debug"]["verbose"],
-            verbose_file=str(ROOT) + "/" + cfg["debug"]["verbose_file"]
+            verbose_file=ROOT + '/' + cfg["debug"]["verbose_file"]
         )
-        print("%d. Export rknn model"%(self._proc))
+        inference_logger.info(f"{self._proc}. Export rknn model")
         ret = self._rknnlite.load_rknn(model)
         if ret != 0:
-            print('%d. Export rknn model failed!'%(self._proc))
+            inference_logger.error(f"{self._proc}. Export rknn model failed!")
             return ret
-        print('%d. Init runtime environment'%(self._proc))
+        inference_logger.info(f"{self._proc}. Init runtime environment")
         ret = self._rknnlite.init_runtime(
             async_mode=cfg["inference"]["async_mode"],
             core_mask = self._core
         )
         if ret != 0:
-            print('%d. Init runtime environment failed!'%(self._proc))
+            inference_logger.error(
+                f"{self._proc}. Init runtime environment failed!"
+            )
             return ret
-        print('%d. %s model loaded'%(self._proc, model))
+        inference_logger.info(f"{self._proc}. {model} model loaded")
         return ret
 
     def inference(self):

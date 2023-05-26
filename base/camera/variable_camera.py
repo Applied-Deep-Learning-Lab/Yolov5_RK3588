@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 from multiprocessing import Queue
 from pathlib import Path
 
@@ -6,10 +8,26 @@ import cv2
 
 from base.camera import Cam
 
-
-CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
+ROOT = str(Path(__file__).parent.parent.parent.absolute())
+CONFIG_FILE = ROOT + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
+
+# Create the camera's logger
+camera_logger = logging.getLogger("camera")
+camera_logger.setLevel(logging.DEBUG)
+camera_handler = logging.FileHandler(
+    os.path.join(
+        ROOT,
+        "log/camera.log"
+    )
+)
+camera_formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+camera_handler.setFormatter(camera_formatter)
+camera_logger.addHandler(camera_handler)
 
 
 class VariableCamera(Cam):
@@ -56,7 +74,7 @@ class VariableCamera(Cam):
 
     def record(self):
         if not self._cap.isOpened():
-            print("Bad source")
+            camera_logger.error("Bad source")
         try:
             while True:
                 if not self._q_settings.empty():
@@ -72,7 +90,7 @@ class VariableCamera(Cam):
                             )
                             continue
                         self._cap.set(int(setting), settings[setting])
-                    print("Settings updated!")
+                    camera_logger.info("Settings updated!")
                 ret, frame = self._cap.read()
                 raw_frame = frame.copy()
                 if self._q_out.full():

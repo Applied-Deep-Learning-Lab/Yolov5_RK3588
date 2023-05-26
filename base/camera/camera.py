@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 import time
 from datetime import datetime
 from multiprocessing import Queue, Value
@@ -7,12 +9,27 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-
-ROOT = str(Path(__file__).parent.parent.parent.absolute()) + '/'
-CONFIG_FILE = ROOT + "config.json"
+ROOT = str(Path(__file__).parent.parent.parent.absolute())
+CONFIG_FILE = ROOT + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 Mat = np.ndarray[int, np.dtype[np.generic]]
+
+# Create the camera's logger
+camera_logger = logging.getLogger("camera")
+camera_logger.setLevel(logging.DEBUG)
+camera_handler = logging.FileHandler(
+    os.path.join(
+        ROOT,
+        "log/camera.log"
+    )
+)
+camera_formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+camera_handler.setFormatter(camera_formatter)
+camera_logger.addHandler(camera_handler)
 
 
 class Cam():
@@ -98,13 +115,13 @@ class Cam():
             cfg["camera"]["fps"]
         )
         if(not cap.isOpened()):
-            print("Bad source")
+            camera_logger.error("Bad source")
             raise SystemExit
         try:
             while not bool(self._stop_record.value): # type: ignore
                 ret, frame = cap.read()
                 if not ret:
-                    print("Camera stopped!")
+                    camera_logger.error("Camera stopped!")
                     raise SystemExit
                 raw_frame = frame.copy()
                 frame = self._pre_process(frame)
@@ -112,12 +129,14 @@ class Cam():
                 self._frame_id+=1
             cap.release()
         except Exception as e:
-            print("Stop recording loop. Exception {}".format(e))
+            camera_logger.error(f"Stop recording loop. Exception {e}")
         finally:
             if cfg["debug"]["print_camera_release"]:
                 message = "camera released - " +\
                     datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f') + "\n"
-                with open(ROOT + cfg["debug"]["camera_release_file"], "a") as f:
+                with open(
+                    ROOT + '/' + cfg["debug"]["camera_release_file"], 'a'
+                ) as f:
                     f.write(message)
             cap.release()
             raise SystemExit

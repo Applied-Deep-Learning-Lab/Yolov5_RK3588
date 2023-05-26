@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 import time
 from multiprocessing import Process
 from pathlib import Path
@@ -17,6 +19,22 @@ CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
 
+# Create the main's logger
+main_logger = logging.getLogger("main")
+main_logger.setLevel(logging.DEBUG)
+main_handler = logging.FileHandler(
+    os.path.join(
+        os.path.dirname(__file__),
+        "log/main.log"
+    )
+)
+main_formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+main_handler.setFormatter(main_formatter)
+main_logger.addHandler(main_handler)
+
 
 def main():
     """Runs inference and addons (if mentions)
@@ -30,7 +48,7 @@ def main():
             while True:
                 rk3588.show(start_time)
         except Exception as e:
-            print("Main exception: {}".format(e))
+            main_logger.error(f"Main exception: {e}")
             exit()
     raw_frames_storage = strgs.ImageStorage(
         "raw frames"
@@ -90,7 +108,7 @@ def main():
         try:
             notifier_process.start()
         except Exception as e:
-            print("Bot exception: {}".format(e))
+            main_logger.error(f"Bot exception: {e}")
     if cfg["webui"]["state"]:
         ui = WebUI(
             raw_img_strg=raw_frames_storage,
@@ -103,7 +121,7 @@ def main():
             obj_imgs_to_str()
             ui.start()
         except Exception as e:
-            print("WebUI exception: {}".format(e))
+            main_logger.error(f"WebUI exception: {e}")
         finally:
             fill_thread.join()
             if cfg["pulse_counter"]["state"]:
@@ -123,7 +141,7 @@ def main():
             start_time=start_time
         )
     except Exception as e:
-        print("Main exception: {}".format(e))
+        main_logger.error(f"Main exception: {e}")
     finally:
         fill_thread.join()
         if cfg["pulse_counter"]["state"]:

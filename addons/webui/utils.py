@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import logging
 import os
 from datetime import datetime
 from pathlib import Path
@@ -12,13 +13,28 @@ from PIL import Image
 
 import addons.storages as strgs
 
-
 COUNTERS = str(Path(__file__).parent.absolute()) +\
     '/counters/'
 ROOT = str(Path(__file__).parent.parent.parent.absolute())
 CONFIG_FILE = ROOT + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
+
+# Create the server's logger
+server_logger = logging.getLogger("server")
+server_logger.setLevel(logging.DEBUG)
+server_handler = logging.FileHandler(
+    os.path.join(
+        ROOT,
+        "log/server.log"
+    )
+)
+server_formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+server_handler.setFormatter(server_formatter)
+server_logger.addHandler(server_handler)
 
 
 def boxes_to_shapes(bboxes, classes):
@@ -133,11 +149,10 @@ async def request_inference(
             dets = dets[np.where(dets[..., 5] > 0)]  # type: ignore
             if not np.any(dets):
                 if i == 0:
-                    print("No frames")
+                    server_logger.warning("No frames")
                 else:
-                    print(
-                        "Amount less then %d" % (
-                            cfg["webui"]["send_data_amount"])
+                    server_logger.warning(
+                        f'Amount less then {cfg["webui"]["send_data_amount"]}.'
                     )
                 break
             name = datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')

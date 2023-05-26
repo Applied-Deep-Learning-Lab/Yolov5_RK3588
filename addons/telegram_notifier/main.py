@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import time
 import traceback
@@ -16,6 +17,22 @@ CONFIG_FILE = str(
     Path(__file__).parent.parent.parent.absolute()) + "/config.json"
 with open(CONFIG_FILE, 'r') as config_file:
     cfg = json.load(config_file)
+
+# Create the tg_bot's logger
+tg_bot_logger = logging.getLogger("tg_bot")
+tg_bot_logger.setLevel(logging.DEBUG)
+tg_bot_handler = logging.FileHandler(
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "log/tg_bot.log"
+    )
+)
+tg_bot_formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+tg_bot_handler.setFormatter(tg_bot_formatter)
+tg_bot_logger.addHandler(tg_bot_handler)
 
 
 class TelegramNotifier():
@@ -67,7 +84,7 @@ class TelegramNotifier():
             self._bot = Bot(token=self._TOKEN)
             self._start = datetime.now().strftime('%H:%M:%S %d.%m.%Y')
         except Exception as e:
-            print("Can't start bot: {}".format(e))
+            tg_bot_logger.error(f"Can't start bot: {e}")
             return
         self._counters_strg = counters_strg
         self._hostname = os.uname()[1]
@@ -85,7 +102,7 @@ class TelegramNotifier():
         self._inf_img_strg = inf_img_strg
         self._time_period = cfg["telegram_notifier"]["time_period"]
         self._last_counters = [0] * len(self._classes)
-        print("Bot is ready")
+        tg_bot_logger.info("Bot is ready")
 
     def start(self):
         notificate_loop = asyncio.get_event_loop()
@@ -110,6 +127,7 @@ class TelegramNotifier():
                     self._last_counters[i] =\
                         int(self._counters_strg.get_data_by_index(i))
             except:
+                tg_bot_logger.warning("Counting troubles.")
                 self._caption["count"] = "counting troubles"
             caption = json.dumps(
                 obj=self._caption,
@@ -125,19 +143,19 @@ class TelegramNotifier():
                         chat_id=self._CHAT_ID,
                         photo=img.tobytes(),
                         caption=caption
-                    )
+                    ) # type: ignore
                     sent = True
                 except BadRequest:
                     await self._bot.send_photo(
                         chat_id=self._CHAT_ID,
                         photo=img.tobytes()
-                    )
+                    ) # type: ignore
                     await self._bot.send_message(
                         chat_id=self._CHAT_ID,
                         text=caption
-                    )
+                    ) # type: ignore
                     sent = True
                 except:
                     retries_left -= 1
                     time.sleep(1)
-                    print(traceback.format_exc())
+                    tg_bot_logger.warning(traceback.format_exc())
