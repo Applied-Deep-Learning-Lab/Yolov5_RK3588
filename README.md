@@ -64,6 +64,16 @@
 
     For installing docker on RK3588 device you can use [official docker docs](https://docs.docker.com/desktop/install/linux-install/) or check our [README_DOCKER.md](README_DOCKER.md)
 
+  * ### Camera that supports 120 fps *(Optional)*
+
+    We tested a camera that supports 120 frames per second and it crashed when trying to read frames. As a solution to this problem, we removed the automatic exposure and set it to an absolute value. 
+
+    ```
+    v4l2-ctl -d /dev/videoX -c exposure_auto=1 -c exposure_absolute=<value>
+    ```
+
+    This command sets the exposure_auto control to manual mode (value 1) and adjusts the exposure_absolute control to the specified value. You can replace <value> with an appropriate exposure value (in units of 1/10,000th of a second). Replace /dev/videoX with the device ID of your camera.
+
 </details>  
 
 <details>

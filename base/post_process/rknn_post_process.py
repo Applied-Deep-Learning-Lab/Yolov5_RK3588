@@ -134,7 +134,7 @@ def yolov5_post_process(input_data):
                [59, 119], [116, 90], [156, 198], [373, 326]]
 
     boxes, classes, scores = [], [], []
-    for input, mask in zip(input_data, masks):
+    for input, mask in zip(input_data, masks): # type: ignore
         b, c, s = process(input, mask, anchors)
         b, c, s = filter_boxes(b, c, s)
         boxes.append(b)
@@ -179,7 +179,7 @@ def draw(image, boxes, scores, classes):
         scores: ndarray, scores of objects.
         all_classes: all classes name.
     """
-    for box, score, cl in zip(boxes, scores, classes):
+    for box, score, cl in zip(boxes, scores, classes): # type: ignore
         width = cfg["camera"]["width"]
         height = cfg["camera"]["height"]
         net_size = cfg["inference"]["net_size"]
