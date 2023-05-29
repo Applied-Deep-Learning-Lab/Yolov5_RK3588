@@ -21,18 +21,28 @@ with open(CONFIG_FILE, 'r') as config_file:
 # Create the tg_bot's logger
 tg_bot_logger = logging.getLogger("tg_bot")
 tg_bot_logger.setLevel(logging.DEBUG)
-tg_bot_handler = logging.FileHandler(
+# Create handler that output all info to the console
+tg_bot_console_handler = logging.StreamHandler()
+tg_bot_console_handler.setLevel(logging.DEBUG)
+# Create handler that output errors, warnings to the file
+tg_bot_file_handler = logging.FileHandler(
     os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
         "log/tg_bot.log"
     )
 )
+tg_bot_file_handler.setLevel(logging.ERROR)
+# Create formatter for handlers
 tg_bot_formatter = logging.Formatter(
     fmt="%(levelname)s - %(asctime)s: %(message)s.",
     datefmt="%d-%m-%Y %H:%M:%S"
 )
-tg_bot_handler.setFormatter(tg_bot_formatter)
-tg_bot_logger.addHandler(tg_bot_handler)
+tg_bot_console_handler.setFormatter(tg_bot_formatter)
+tg_bot_file_handler.setFormatter(tg_bot_formatter)
+# Add handlers to the logger
+tg_bot_logger.addHandler(tg_bot_console_handler)
+tg_bot_logger.addHandler(tg_bot_file_handler)
+
 
 
 class TelegramNotifier():

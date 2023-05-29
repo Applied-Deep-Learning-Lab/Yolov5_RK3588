@@ -29,18 +29,27 @@ with open(CONFIG_FILE, 'r') as config_file:
 # Create the server's logger
 server_logger = logging.getLogger("server")
 server_logger.setLevel(logging.DEBUG)
-server_handler = logging.FileHandler(
+# Create handler that output all info to the console
+server_console_handler = logging.StreamHandler()
+server_console_handler.setLevel(logging.DEBUG)
+# Create handler that output errors, warnings to the file
+server_file_handler = logging.FileHandler(
     os.path.join(
         ROOT,
         "log/server.log"
     )
 )
+server_file_handler.setLevel(logging.ERROR)
+# Create formatter for handlers
 server_formatter = logging.Formatter(
     fmt="%(levelname)s - %(asctime)s: %(message)s.",
     datefmt="%d-%m-%Y %H:%M:%S"
 )
-server_handler.setFormatter(server_formatter)
-server_logger.addHandler(server_handler)
+server_console_handler.setFormatter(server_formatter)
+server_file_handler.setFormatter(server_formatter)
+# Add handlers to the logger
+server_logger.addHandler(server_console_handler)
+server_logger.addHandler(server_file_handler)
 
 
 class WebUI():

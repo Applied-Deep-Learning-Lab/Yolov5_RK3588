@@ -15,18 +15,27 @@ with open(CONFIG_FILE, 'r') as config_file:
 # Create the inference's logger
 inference_logger = logging.getLogger("inference")
 inference_logger.setLevel(logging.DEBUG)
-inference_handler = logging.FileHandler(
+# Create handler that output all info to the console
+inference_console_handler = logging.StreamHandler()
+inference_console_handler.setLevel(logging.DEBUG)
+# Create handler that output errors, warnings to the file
+inference_file_handler = logging.FileHandler(
     os.path.join(
         ROOT,
         "log/inference.log"
     )
 )
+inference_file_handler.setLevel(logging.ERROR)
+# Create formatter for handlers
 inference_formatter = logging.Formatter(
     fmt="%(levelname)s - %(asctime)s: %(message)s.",
     datefmt="%d-%m-%Y %H:%M:%S"
 )
-inference_handler.setFormatter(inference_formatter)
-inference_logger.addHandler(inference_handler)
+inference_console_handler.setFormatter(inference_formatter)
+inference_file_handler.setFormatter(inference_formatter)
+# Add handlers to the logger
+inference_logger.addHandler(inference_console_handler)
+inference_logger.addHandler(inference_file_handler)
 
 
 class Yolov5():
