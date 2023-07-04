@@ -124,5 +124,4 @@ class NeuralNetwork():
         while True:
             frame, raw_frame, frame_id = self._q_in.get()
             outputs = self._rknnlite.inference(inputs=[frame])
-            if self._name=="pidnet": print(outputs) 
             self._q_out.put((outputs, raw_frame, frame_id))
