@@ -6,7 +6,7 @@ import base.post_process as rknn_pp
 from base.utils import format_dets
 
 
-def post_process(q_in: Queue, q_out: Queue):
+def common_post_process(q_in: Queue, q_out: Queue):
     """Overlays bboxes on frames
 
     Args

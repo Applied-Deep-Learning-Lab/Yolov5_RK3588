@@ -191,8 +191,8 @@ def draw(image, boxes, scores, classes):
 
         cv2.rectangle(
             img=image,
-            pt1=(top, left),
-            pt2=(right, bottom),
+            pt1=(top, left), # type: ignore
+            pt2=(right, bottom), # type: ignore
             color=(255, 0, 0),
             thickness=2
         )

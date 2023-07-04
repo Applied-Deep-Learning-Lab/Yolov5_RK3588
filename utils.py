@@ -66,8 +66,8 @@ def fill_storages(
             )
             cv2.rectangle(
                 img=inferenced_frame,
-                pt1=(316, 50),
-                pt2=(324, 58),
+                pt1=(316, 50), # type: ignore
+                pt2=(324, 58), # type: ignore
                 color=(128, 0, 0),
                 thickness=4
             )
@@ -99,8 +99,8 @@ def do_counting(
         if pulse_monitor.signal:
             cv2.rectangle(
                 img=img,
-                pt1=(316, 50),
-                pt2=(324, 58),
+                pt1=(316, 50), # type: ignore
+                pt2=(324, 58), # type: ignore
                 color=(0, 0, 128),
                 thickness=8
             )
