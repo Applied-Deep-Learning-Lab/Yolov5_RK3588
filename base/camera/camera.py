@@ -147,34 +147,34 @@ class Cam():
     def show(self, start_time):
         for i in range(len(self._q_in)):
             frame, raw_frame, frame_id = self._q_in[i].get()
-            # self._count+=1
-            # if frame_id < self._last_frame_id[i]:
-            #     return
-            # if self._count % 30 == 0:
-            #     self._fps = 30/(time.time() - self._begin)
-            #     if self._fps > self._max_fps:
-            #         self._max_fps = self._fps
-            #     self._begin = time.time()
-            # frame = cv2.putText(
-            #     img = frame,
-            #     text = "fps: {:.2f}".format(self._fps),
-            #     org = (5, 30),
-            #     fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-            #     fontScale = 1,
-            #     color = (0,255,0),
-            #     thickness = 1,
-            #     lineType = cv2.LINE_AA
-            # )
-            # frame = cv2.putText(
-            #     img = frame,
-            #     text = "max_fps: {:.2f}".format(self._max_fps),
-            #     org = (5, 60),
-            #     fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-            #     fontScale = 1,
-            #     color = (0,255,0),
-            #     thickness = 1,
-            #     lineType = cv2.LINE_AA
-            # )
+            self._count+=1
+            if frame_id < self._last_frame_id[i]:
+                return
+            if self._count % 30 == 0:
+                self._fps = 30/(time.time() - self._begin)
+                if self._fps > self._max_fps:
+                    self._max_fps = self._fps
+                self._begin = time.time()
+            frame = cv2.putText(
+                img = frame,
+                text = "fps: {:.2f}".format(self._fps),
+                org = (5, 30),
+                fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale = 1,
+                color = (0,255,0),
+                thickness = 1,
+                lineType = cv2.LINE_AA
+            )
+            frame = cv2.putText(
+                img = frame,
+                text = "max_fps: {:.2f}".format(self._max_fps),
+                org = (5, 60),
+                fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale = 1,
+                color = (0,255,0),
+                thickness = 1,
+                lineType = cv2.LINE_AA
+            )
             cv2.imshow(f'frame_{i}', frame)
             self._last_frame_id[i] = frame_id
             cv2.waitKey(1)

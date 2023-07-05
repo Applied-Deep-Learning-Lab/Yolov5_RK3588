@@ -1,7 +1,17 @@
 import numpy as np
 from itertools import product
-from math import sqrt
+import math
 import cv2
+
+rknn_postprocess_cfg = {'img_size' : 544,
+                        'scales' : [24, 48, 96, 192, 384],
+                        'aspect_ratios': [1, 0.5, 2],
+                        'top_k' : 200,
+                        'max_detections' : 100,
+                        'nms_score_thre' : 0.5,
+                        'nms_iou_thre' : 0.5,
+                        'visual_thre' : 0.3,
+                    }
 
 COLORS = np.array([[0, 0, 0], [244, 67, 54], [233, 30, 99], [156, 39, 176], [103, 58, 183], [100, 30, 60],
                    [63, 81, 181], [33, 150, 243], [3, 169, 244], [0, 188, 212], [20, 55, 200],
@@ -45,7 +55,7 @@ def make_anchors(cfg, conv_h, conv_w, scale):
         y = (j + 0.5) / conv_h
 
         for ar in cfg['aspect_ratios']:
-            ar = sqrt(ar)
+            ar = math.sqrt(ar)
             w = scale * ar / cfg['img_size']
             h = scale / ar / cfg['img_size']
 
@@ -81,12 +91,12 @@ def box_iou_numpy(box_a, box_b):
     return inter_area / (area_a + area_b - inter_area) # type: ignore
 
 
-def fast_nms_numpy(box_thre, coef_thre, class_thre, cfg):
+def fast_nms_numpy(box_thre, coef_thre, class_thre):
     # descending sort
     idx = np.argsort(-class_thre, axis=1)
     class_thre = np.sort(class_thre, axis=1)[:, ::-1]
-    idx = idx[:, :cfg['top_k']]
-    class_thre = class_thre[:, :cfg['top_k']]
+    idx = idx[:, :rknn_postprocess_cfg['top_k']]
+    class_thre = class_thre[:, :rknn_postprocess_cfg['top_k']]
     num_classes, num_dets = idx.shape
     box_thre = box_thre[idx.reshape(-1), :].reshape(num_classes, num_dets, 4)
     coef_thre = coef_thre[idx.reshape(-1), :].reshape(num_classes, num_dets, -1)
@@ -94,7 +104,7 @@ def fast_nms_numpy(box_thre, coef_thre, class_thre, cfg):
     iou = np.triu(iou, k=1)
     iou_max = np.max(iou, axis=1)
     # Now just filter out the ones higher than the threshold
-    keep = (iou_max <= cfg['nms_iou_thre'])
+    keep = (iou_max <= rknn_postprocess_cfg['nms_iou_thre'])
     # Assign each kept detection to its corresponding class
     class_ids = np.tile(np.arange(num_classes)[:, None], (1, keep.shape[1]))
     class_ids, box_nms, coef_nms, class_nms = class_ids[keep], box_thre[keep], coef_thre[keep], class_thre[keep]
@@ -102,8 +112,8 @@ def fast_nms_numpy(box_thre, coef_thre, class_thre, cfg):
     idx = np.argsort(-class_nms, axis=0)
     class_nms = np.sort(class_nms, axis=0)[::-1]
 
-    idx = idx[:cfg['max_detections']]
-    class_nms = class_nms[:cfg['max_detections']]
+    idx = idx[:rknn_postprocess_cfg['max_detections']]
+    class_nms = class_nms[:rknn_postprocess_cfg['max_detections']]
 
     class_ids = class_ids[idx]
     box_nms = box_nms[idx]
@@ -112,7 +122,7 @@ def fast_nms_numpy(box_thre, coef_thre, class_thre, cfg):
     return box_nms, coef_nms, class_ids, class_nms
 
 
-def nms_numpy(class_pred, box_pred, coef_pred, proto_out, anchors, cfg):
+def nms_numpy(class_pred, box_pred, coef_pred, proto_out, anchors):
     class_p = class_pred.squeeze()  # [19248, 81]
     box_p = box_pred.squeeze()  # [19248, 4]
     coef_p = coef_pred.squeeze()  # [19248, 32]
@@ -125,7 +135,7 @@ def nms_numpy(class_pred, box_pred, coef_pred, proto_out, anchors, cfg):
     # get the max score class of 19248 predicted boxes
     class_p_max = np.max(class_p, axis=0)  # [19248]
     # filter predicted boxes according the class score
-    keep = (class_p_max > cfg['nms_score_thre'])
+    keep = (class_p_max > rknn_postprocess_cfg['nms_score_thre'])
     class_thre = class_p[:, keep]
     box_thre, anchor_thre, coef_thre = box_p[keep, :], anchors[keep, :], coef_p[keep, :]
     # decode boxes
@@ -137,7 +147,7 @@ def nms_numpy(class_pred, box_pred, coef_pred, proto_out, anchors, cfg):
     if class_thre.shape[1] == 0:
         return None, None, None, None, None
     else:
-        box_thre, coef_thre, class_ids, class_thre = fast_nms_numpy(box_thre, coef_thre, class_thre, cfg)
+        box_thre, coef_thre, class_ids, class_thre = fast_nms_numpy(box_thre, coef_thre, class_thre)
         return class_ids, class_thre, box_thre, coef_thre, proto_p
 
 
@@ -171,15 +181,15 @@ def crop_numpy(masks, boxes, padding=1):
     return masks * crop_mask
 
 
-def after_nms_numpy(ids_p, class_p, box_p, coef_p, proto_p, img_h, img_w, cfg=None):
+def after_nms_numpy(ids_p, class_p, box_p, coef_p, proto_p, img_h, img_w):
     def np_sigmoid(x):
         return 1 / (1 + np.exp(-x))
 
     if ids_p is None:
         return None, None, None, None
 
-    if cfg and cfg['visual_thre'] > 0:
-        keep = class_p >= cfg['visual_thre']
+    if rknn_postprocess_cfg and rknn_postprocess_cfg['visual_thre'] > 0:
+        keep = class_p >= rknn_postprocess_cfg['visual_thre']
         if not keep.any():
             return None, None, None, None
 
@@ -207,7 +217,7 @@ def after_nms_numpy(ids_p, class_p, box_p, coef_p, proto_p, img_h, img_w, cfg=No
     return ids_p, class_p, box_p, masks
 
 
-def rknn_draw(img_origin, ids_p, class_p, box_p, mask_p, cfg=None, fps=None):
+def rknn_draw(img_origin, ids_p, class_p, box_p, mask_p):
         real_time = False
         hide_score = False
         if ids_p is None:
@@ -240,3 +250,27 @@ def rknn_draw(img_origin, ids_p, class_p, box_p, mask_p, cfg=None, fps=None):
             cv2.putText(img_fused, text_str, (x1, y1 + 15), font, scale, (255, 255, 255), thickness, cv2.LINE_AA)
 
         return img_fused
+
+
+def permute(net_outputs):
+    class_p, box_p, coef_p, proto_p = net_outputs
+    class_p = class_p[0]
+    box_p = box_p[0]
+    coef_p = coef_p[0]
+    class_p = np_softmax(class_p)
+    return class_p, box_p, coef_p, proto_p
+
+
+def get_anchors():
+    anchors = []
+    fpn_fm_shape = [
+        math.ceil(544 / stride) for stride in (8, 16, 32, 64, 128)
+    ]
+    for i, size in enumerate(fpn_fm_shape):
+        anchors += make_anchors(
+            rknn_postprocess_cfg,
+            size,
+            size,
+            rknn_postprocess_cfg['scales'][i]
+        )
+    return anchors

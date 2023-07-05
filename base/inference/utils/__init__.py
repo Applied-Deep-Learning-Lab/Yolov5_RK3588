@@ -1,1 +1,1 @@
-from .box_utils import np_softmax, nms_numpy, after_nms_numpy, make_anchors, rknn_draw
+from .box_utils import permute, nms_numpy, after_nms_numpy, get_anchors, rknn_draw
