@@ -3,28 +3,25 @@ import json
 import logging
 import os
 import sys
-import uuid
-from pathlib import Path
 
 import cv2
 import numpy as np
+import psutil
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from multidict import MultiDict
-import psutil
 
 import addons.storages as strgs
 from base.camera import Cam
+from config import RK3588_CFG, YOLOV5_CFG
 
 from .media import InferenceTrack, MediaBlackhole, MediaRelay
 from .utils import request_inference
 
-# Getting config
-ROOT = str(Path(__file__).parent.parent.parent.absolute())
-CONFIG_FILE = ROOT + "/config.json"
-MODELS = ROOT + "/models/"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
+MODELS = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "/models/"
+)
 
 # Create the server's logger
 server_logger = logging.getLogger("server")
@@ -35,7 +32,7 @@ server_console_handler.setLevel(logging.DEBUG)
 # Create handler that output errors, warnings to the file
 server_file_handler = logging.FileHandler(
     os.path.join(
-        ROOT,
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
         "log/server.log"
     )
 )
@@ -119,12 +116,16 @@ class WebUI():
         self._dets_strg = dets_strg
         self._counters_strg = counters_strg
         self._cam = camera
-        self._classes = cfg["inference"]["classes"]
+        self._classes = YOLOV5_CFG["inference"]["classes"]
         self._ROOT = os.path.dirname(__file__)
         self._pcs = set()
         self._relay = MediaRelay()
         self._blank_frame = np.zeros(
-            shape=(cfg["camera"]["height"], cfg["camera"]["width"], 3),
+            shape=(
+                RK3588_CFG["camera"]["height"],
+                RK3588_CFG["camera"]["width"],
+                3
+            ),
             dtype=np.uint8
         )
         cv2.putText(
@@ -166,19 +167,13 @@ class WebUI():
         return web.Response(content_type="application/javascript", text=content)
 
     async def _send_settings(self, request):
-        with open(CONFIG_FILE, 'r') as json_file:
-            settings = json.load(json_file)
-        return web.json_response(data=settings)
+        return web.json_response(data=RK3588_CFG)
 
     async def _get_settings(self, request):
         model_form = await request.post()
         settings_values = json.loads(model_form["text"])
-        with open(CONFIG_FILE, "w") as json_file:
-            json.dump(
-                obj=settings_values,
-                fp=json_file,
-                indent=4
-            )
+        RK3588_CFG[:] = settings_values[:]
+        RK3588_CFG.update()
         server_logger.info("Settings loaded")
         return web.Response(content_type="text", text="OK")
 
@@ -204,34 +199,20 @@ class WebUI():
     async def _update_model(self, request):
         def _load_new_model(new_model: bytes, new_model_name: str):
             """Create file for new model and rewrite path"""
-            with open(CONFIG_FILE, "r") as json_file:
-                data = json.load(json_file)
             if "640" in new_model_name:
-                data["inference"]["net_size"] = 640
+                YOLOV5_CFG["net_size"] = 640
             elif "352" in new_model_name:
-                data["inference"]["net_size"] = 352
-            data["inference"]["new_model"] = new_model_name
-            with open(CONFIG_FILE, "w") as json_file:
-                json.dump(
-                    obj=data,
-                    fp=json_file,
-                    indent=4
-                )
-            with open(MODELS + new_model_name, "wb") as f:
+                YOLOV5_CFG["net_size"] = 352
+            YOLOV5_CFG["new_model"] = new_model_name
+            YOLOV5_CFG.update()
+            with open(os.path.join(MODELS, new_model_name), "wb") as f:
                 f.write(new_model)
             server_logger.info("Model loaded")
 
         def _load_local_model(local_model):
             """Rewrite path to running model"""
-            with open(CONFIG_FILE, "r") as json_file:
-                data = json.load(json_file)
-            data["inference"]["new_model"] = local_model
-            with open(CONFIG_FILE, "w") as json_file:
-                json.dump(
-                    obj=data,
-                    fp=json_file,
-                    indent=4
-                )
+            YOLOV5_CFG["new_model"] = local_model
+            YOLOV5_CFG.update()
             server_logger.info("Model changed")
 
         model_form = await request.post()

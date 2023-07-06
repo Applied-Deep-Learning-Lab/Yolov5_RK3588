@@ -1,14 +1,8 @@
-import json
 import logging
 import os
 import time
-from pathlib import Path
 
 from base import Rk3588
-
-CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
 
 # Create the main's logger
 main_logger = logging.getLogger("main")

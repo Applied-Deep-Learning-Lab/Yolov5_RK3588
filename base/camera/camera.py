@@ -1,18 +1,13 @@
-import json
 import logging
 import os
 import time
-from datetime import datetime
 from multiprocessing import Queue, Value
-from pathlib import Path
 
 import cv2
 import numpy as np
 
-ROOT = str(Path(__file__).parent.parent.parent.absolute())
-CONFIG_FILE = ROOT + "/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
+from config import RK3588_CFG
+
 Mat = np.ndarray[int, np.dtype[np.generic]]
 
 # Create the camera's logger
@@ -20,7 +15,7 @@ camera_logger = logging.getLogger("camera")
 camera_logger.setLevel(logging.DEBUG)
 camera_handler = logging.FileHandler(
     os.path.join(
-        ROOT,
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
         "log/camera.log"
     )
 )
@@ -107,19 +102,19 @@ class Cam():
         cap = cv2.VideoCapture(self._source)
         cap.set(
             cv2.CAP_PROP_FOURCC,
-            cv2.VideoWriter.fourcc(*cfg["camera"]["pixel_format"])
+            cv2.VideoWriter.fourcc(*RK3588_CFG["camera"]["pixel_format"])
         )
         cap.set(
             cv2.CAP_PROP_FRAME_WIDTH,
-            cfg["camera"]["width"]
+            RK3588_CFG["camera"]["width"]
         )
         cap.set(
             cv2.CAP_PROP_FRAME_HEIGHT,
-            cfg["camera"]["height"]
+            RK3588_CFG["camera"]["height"]
         )
         cap.set(
             cv2.CAP_PROP_FPS,
-            cfg["camera"]["fps"]
+            RK3588_CFG["camera"]["fps"]
         )
         if(not cap.isOpened()):
             camera_logger.error("Bad source")
@@ -178,7 +173,8 @@ class Cam():
             cv2.imshow(f'frame_{i}', frame)
             self._last_frame_id[i] = frame_id
             cv2.waitKey(1)
-            # camera_logger.debug(f"{frame_id}\t{time.time() - start_time}")
+            if RK3588_CFG["debug"]:
+                camera_logger.debug(f"{frame_id}\t{time.time() - start_time}")
 
     def release(self):
         self._stop_record.value = 1 # type: ignore

@@ -1,13 +1,8 @@
-import json
-from pathlib import Path
-
 import cv2
 import numpy as np
 
+from config import YOLOV5_CFG
 
-CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute()) + "/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
 Mat = np.ndarray[int, np.dtype[np.generic]]
 
 
@@ -23,6 +18,6 @@ def pre_process(frame: Mat):
     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     frame = cv2.resize(
         frame,
-        (cfg["inference"]["net_size"], cfg["inference"]["net_size"])
+        (YOLOV5_CFG["net_size"], YOLOV5_CFG["net_size"])
     )
     return frame

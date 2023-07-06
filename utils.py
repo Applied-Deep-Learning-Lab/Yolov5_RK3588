@@ -1,6 +1,6 @@
-import json
+import logging
+import os
 import time
-from pathlib import Path
 from typing import Union
 
 import cv2
@@ -9,11 +9,26 @@ import addons.storages as strgs
 from addons.byte_tracker import BYTETracker, draw_info, tracking
 from addons.pulse_counter import Monitor
 from base import Rk3588
+from config import RK3588_CFG
 
-CONFIG_FILE = str(Path(__file__).parent.absolute()) + "/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
-FRAMERATE = cfg["camera"]["fps"]
+# Create logger
+logger = logging.getLogger("camera")
+logger.setLevel(logging.DEBUG)
+# Create handler
+handler = logging.FileHandler(
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "log/camera.log"
+    )
+)
+# Create formatter
+formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+# Add handler and formatter to the logger
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def fill_storages(
@@ -46,7 +61,7 @@ def fill_storages(
     while True:
         output = rk3588.get_data()
         if output is not None:
-            raw_frame, inferenced_frame, detections, frame_id = output
+            raw_frame, inferenced_frame, detections, frame_id = output # type: ignore WIP
             # Bytetracker
             if tracker is not None and detections is not None:
                 detections = tracking(
@@ -89,7 +104,7 @@ def do_counting(
         counters_strg: strgs.Storage,
         pulse_monitor: Monitor
 ):
-    stored_data_amount = cfg["storages"]["stored_data_amount"]
+    stored_data_amount = RK3588_CFG["storages"]["stored_data_amount"]
     while True:
         last_index = dets_strg.get_last_index()
         dets = dets_strg.get_data_by_index(last_index % stored_data_amount)
@@ -129,17 +144,16 @@ def show_frames_localy(
     calculated = False
     begin_time = time.time()
     fps = 0
-    stored_data_amount = cfg["storages"]["stored_data_amount"]
+    stored_data_amount = RK3588_CFG["storages"]["stored_data_amount"]
     while True:
         last_index = inf_img_strg.get_last_index()
-        if cfg["debug"]["showed_frame_id"] and cur_index != last_index:
-            with open(cfg["debug"]["showed_id_file"], 'a') as f:
-                f.write(
-                    "{}\t{:.3f}\n".format(
-                        cur_index,
-                        time.time() - start_time
-                    )
+        if RK3588_CFG["debug"] and cur_index != last_index:
+            logger.debug(
+                "{}\t{:.3f}\n".format(
+                    cur_index,
+                    time.time() - start_time
                 )
+            )
         print(
             "cur - {} last - {}".format(
                 cur_index,
@@ -148,7 +162,7 @@ def show_frames_localy(
             end='\r'
         )
         frame = inf_img_strg.get_data_by_index(last_index % stored_data_amount)
-        if cfg["camera"]["show"]:
+        if RK3588_CFG["camera"]["show"]:
             cv2.putText(
                 img=frame,
                 text="{:.2f}".format(fps),
@@ -164,9 +178,9 @@ def show_frames_localy(
         if last_index > cur_index:
             counter += 1
             cur_index = last_index
-        if counter % FRAMERATE == 0 and not calculated:
+        if counter % RK3588_CFG["camera"]["fps"] == 0 and not calculated:
             calculated = True
-            fps = FRAMERATE/(time.time() - begin_time)
+            fps = RK3588_CFG["camera"]["fps"]/(time.time() - begin_time)
             begin_time = time.time()
-        if counter % FRAMERATE != 0:
+        if counter % RK3588_CFG["camera"]["fps"] != 0:
             calculated = False

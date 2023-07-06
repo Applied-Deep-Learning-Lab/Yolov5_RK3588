@@ -1,12 +1,6 @@
-import json
-from pathlib import Path
-
 import numpy as np
 
-
-CONFIG_FILE = str(Path(__file__).parent.parent.absolute()) + "/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
+from config import RK3588_CFG, YOLOV5_CFG
 
 
 def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
@@ -25,9 +19,9 @@ def format_dets(boxes: np.ndarray, classes: np.ndarray, scores: np.ndarray):
     """
     dets=np.zeros([len(boxes), 6], dtype=np.float32)
     count=0
-    width = cfg["camera"]["width"]
-    height = cfg["camera"]["height"]
-    net_size = cfg["inference"]["net_size"]
+    width = RK3588_CFG["camera"]["width"]
+    height = RK3588_CFG["camera"]["height"]
+    net_size = YOLOV5_CFG["net_size"]
     for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
         top = int(top*(width / net_size))

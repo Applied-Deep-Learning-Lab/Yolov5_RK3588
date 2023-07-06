@@ -1,0 +1,45 @@
+{
+    "debug": false,
+    "verbose": false,
+    "verbose_file": "verbose.txt",
+    "camera": {
+        "show": true,
+        "source": 0,
+        "pixel_format": "MJPG",
+        "width": 640,
+        "height": 480,
+        "fps": 60
+    },
+    "inference": {
+        "buf_size": 3,
+        "inf_proc": 3,
+        "post_proc": 3,
+        "async_mode": true
+    },
+    "storages": {
+        "state": true,
+        "stored_data_amount": 300,
+        "dets_amount": 100,
+        "frames_delay": 10
+    },
+    "webui": {
+        "state": true,
+        "send_data_amount": 10
+    },
+    "bytetrack": {
+        "state": false,
+        "fps": 60,
+        "tracking_classes": [
+            62
+        ]
+    },
+    "pulse_counter": {
+        "state": true
+    },
+    "telegram_notifier": {
+        "state": false,
+        "time_period": 10,
+        "chat_id": "",
+        "token": ""
+    }
+}

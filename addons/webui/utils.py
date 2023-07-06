@@ -4,7 +4,6 @@ import json
 import logging
 import os
 from datetime import datetime
-from pathlib import Path
 from zipfile import ZipFile
 
 import cv2
@@ -12,20 +11,16 @@ import numpy as np
 from PIL import Image
 
 import addons.storages as strgs
+from config import RK3588_CFG
 
-COUNTERS = str(Path(__file__).parent.absolute()) +\
-    '/counters/'
-ROOT = str(Path(__file__).parent.parent.parent.absolute())
-CONFIG_FILE = ROOT + "/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
+COUNTERS = os.path.join(os.path.dirname(__file__), "counters")
 
 # Create the server's logger
 server_logger = logging.getLogger("server")
 server_logger.setLevel(logging.DEBUG)
 server_handler = logging.FileHandler(
     os.path.join(
-        ROOT,
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
         "log/server.log"
     )
 )
@@ -139,12 +134,12 @@ async def request_inference(
     zip_path = file_path + "/inference.zip"
     last_index = dets_strg.get_last_index()
     with ZipFile(zip_path, 'w') as zip_file:
-        for i in range(cfg["webui"]["send_data_amount"]):
+        for i in range(RK3588_CFG["webui"]["send_data_amount"]):
             raw_img = raw_img_strg.get_data_by_index(
-                (last_index - i) % cfg["storages"]["stored_data_amount"]
+                (last_index - i) % RK3588_CFG["storages"]["stored_data_amount"]
             )
             dets = dets_strg.get_data_by_index(
-                (last_index - i) % cfg["storages"]["stored_data_amount"]
+                (last_index - i) % RK3588_CFG["storages"]["stored_data_amount"]
             )
             dets = dets[np.where(dets[..., 5] > 0)]  # type: ignore
             if not np.any(dets):
@@ -152,7 +147,9 @@ async def request_inference(
                     server_logger.warning("No frames")
                 else:
                     server_logger.warning(
-                        f'Amount less then {cfg["webui"]["send_data_amount"]}.'
+                        'Amount less then {}'.format(
+                            RK3588_CFG["webui"]["send_data_amount"]
+                        )
                     )
                 break
             name = datetime.now().strftime('%Y-%m-%d.%H-%M-%S.%f')
@@ -164,10 +161,10 @@ async def request_inference(
                 f'{name}.json',
                 to_labelme(
                     content=(raw_img, dets),
-                    classes=cfg["bytetrack"]["tracking_classes"],
+                    classes=RK3588_CFG["bytetrack"]["tracking_classes"],
                     frame_size=(
-                        cfg["camera"]["width"],
-                        cfg["camera"]["height"]
+                        RK3588_CFG["camera"]["width"],
+                        RK3588_CFG["camera"]["height"]
                     ),
                     image_path=name
                 )
@@ -190,19 +187,19 @@ def draw_fps(frame: np.ndarray, fps: float):
 
 
 def obj_imgs_to_str():
-    with open(COUNTERS + "counters.json", 'r') as json_file:
+    with open(os.path.join(COUNTERS, "counters.json"), 'r') as json_file:
         counters = json.load(json_file)
     for counter in counters:
-        if os.path.isdir(COUNTERS + counters[counter]["img_path"]):
+        if os.path.isdir(os.path.join(COUNTERS, counters[counter]["img_path"])):
             continue
-        img = Image.open(COUNTERS + counters[counter]["img_path"])
+        img = Image.open(os.path.join(COUNTERS, counters[counter]["img_path"]))
         img = img.resize((80, 80))
         buffered = io.BytesIO()
         img.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue())
         img_str = str(img_str)[2:-1]
         counters[counter]["img_src"] = "data:image/png;base64," + img_str
-    with open(COUNTERS + "counters.json", 'w') as json_file:
+    with open(os.path.join(COUNTERS, "counters.json"), 'w') as json_file:
         json.dump(
             obj=counters,
             fp=json_file,

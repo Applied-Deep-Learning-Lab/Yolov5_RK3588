@@ -5,18 +5,13 @@ import os
 import time
 import traceback
 from datetime import datetime
-from pathlib import Path
 
 import cv2
 from telegram import Bot
 from telegram.error import BadRequest
 
 import addons.storages as strgs
-
-CONFIG_FILE = str(
-    Path(__file__).parent.parent.parent.absolute()) + "/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
+from config import RK3588_CFG, YOLOV5_CFG
 
 # Create the tg_bot's logger
 tg_bot_logger = logging.getLogger("tg_bot")
@@ -88,8 +83,8 @@ class TelegramNotifier():
             inf_img_strg: strgs.ImageStorage,
             counters_strg: strgs.Storage
         ):
-        self._TOKEN = cfg["telegram_notifier"]["token"]
-        self._CHAT_ID = cfg["telegram_notifier"]["chat_id"]
+        self._TOKEN = RK3588_CFG["telegram_notifier"]["token"]
+        self._CHAT_ID = RK3588_CFG["telegram_notifier"]["chat_id"]
         try:
             self._bot = Bot(token=self._TOKEN)
             self._start = datetime.now().strftime('%H:%M:%S %d.%m.%Y')
@@ -98,7 +93,7 @@ class TelegramNotifier():
             return
         self._counters_strg = counters_strg
         self._hostname = os.uname()[1]
-        self._classes = cfg["inference"]["classes"]
+        self._classes = YOLOV5_CFG["classes"]
         self._caption = {
             "hostname": self._hostname,
             "start_time": self._start,
@@ -110,7 +105,7 @@ class TelegramNotifier():
             }
         }
         self._inf_img_strg = inf_img_strg
-        self._time_period = cfg["telegram_notifier"]["time_period"]
+        self._time_period = RK3588_CFG["telegram_notifier"]["time_period"]
         self._last_counters = [0] * len(self._classes)
         tg_bot_logger.info("Bot is ready")
 

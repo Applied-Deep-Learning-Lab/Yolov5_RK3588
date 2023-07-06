@@ -1,16 +1,32 @@
-import json
+import logging
 import math
+import os
 import time
-from multiprocessing import Value, shared_memory, resource_tracker
-from pathlib import Path
+from multiprocessing import Value, shared_memory
 from typing import Union
 
 import numpy as np
 
+from config import RK3588_CFG
 
-CONFIG_FILE = str(Path(__file__).parent.parent.parent.absolute())+"/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
+# Create logger
+logger = logging.getLogger("storages")
+logger.setLevel(logging.DEBUG)
+# Create handler
+handler = logging.FileHandler(
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "log/storages.log"
+    )
+)
+# Create formatter
+formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+# Add handler and formatter to the logger
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 class Storage():
@@ -65,7 +81,7 @@ class Storage():
             data_type: type
     ):
         self._DATA_AMOUNT=data_amount
-        self._DELAY = cfg["storages"]["frames_delay"]
+        self._DELAY = RK3588_CFG["storages"]["frames_delay"]
         self._index_counter = Value('i', 0)
         def _create_buffer(size, name):
             try:
@@ -108,14 +124,13 @@ class Storage():
             self._storage[data_index][:len(data),:] = data
         else:
             self._storage[data_index][:] = data
-        if cfg["debug"]["filled_frame_id"] and "inf" in self.storage_name:
-            with open(cfg["debug"]["filled_id_file"], 'a') as f:
-                f.write(
-                    "{}\t{:.3f}\n".format(
-                        data_index,
-                        time.time() - start_time
-                    )
+        if RK3588_CFG["debug"] and "inf" in self.storage_name:
+            logger.debug(
+                "{}\t{:.3f}\n".format(
+                    data_index,
+                    time.time() - start_time
                 )
+            )
         self._index_counter.value += 1 # type: ignore
 
     def get_data_by_index(self, index: int):
@@ -150,10 +165,12 @@ class ImageStorage(Storage):
     ---------------------------------------------------------------------------
     """
     def __init__(self, storage_name: str):
+        height = RK3588_CFG["camera"]["height"]
+        width = RK3588_CFG["camera"]["width"]
         super().__init__(
             storage_name = storage_name,
-            data_size = (cfg["camera"]["height"], cfg["camera"]["width"], 3),
-            data_amount = cfg["storages"]["stored_data_amount"],
+            data_size = (height, width, 3),
+            data_amount = RK3588_CFG["storages"]["stored_data_amount"],
             data_type = np.uint8
         )
 
@@ -163,7 +180,7 @@ class DetectionsStorage(Storage):
     def __init__(self):
         super().__init__(
             storage_name = "detections",
-            data_size = (cfg["storages"]["dets_amount"], 6),
-            data_amount = cfg["storages"]["stored_data_amount"],
+            data_size = (RK3588_CFG["storages"]["dets_amount"], 6),
+            data_amount = RK3588_CFG["storages"]["stored_data_amount"],
             data_type = np.float32
         )

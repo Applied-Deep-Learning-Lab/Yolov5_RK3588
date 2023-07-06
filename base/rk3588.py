@@ -1,17 +1,11 @@
-import json
 from multiprocessing import Process, Queue
-from pathlib import Path
 
 from rknnlite.api import RKNNLite
 
 from base.camera import Cam
 from base.inference import NeuralNetwork
 from base.post_process import pidnet_post_process, yolact_post_process
-
-
-CONFIG_FILE = str(Path(__file__).parent.parent.absolute()) + "/config.json"
-with open(CONFIG_FILE, 'r') as config_file:
-    cfg = json.load(config_file)
+from config import RK3588_CFG
 
 
 class Rk3588():
@@ -72,16 +66,16 @@ class Rk3588():
     """
     def __init__(self):
         # Create queues for pre process
-        self._yolact_q_pre = Queue(maxsize=cfg["inference"]["buf_size"])
-        self._pidnet_q_pre = Queue(maxsize=cfg["inference"]["buf_size"])
+        self._yolact_q_pre = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
+        self._pidnet_q_pre = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
         # Create queues for inference
-        self._yolact_q_outs = Queue(maxsize=cfg["inference"]["buf_size"])
-        self._pidnet_q_outs = Queue(maxsize=cfg["inference"]["buf_size"])
+        self._yolact_q_outs = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
+        self._pidnet_q_outs = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
         # Create queues for post process
-        self._yolact_q_post = Queue(maxsize=cfg["inference"]["buf_size"])
-        self._pidnet_q_post = Queue(maxsize=cfg["inference"]["buf_size"])
+        self._yolact_q_post = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
+        self._pidnet_q_post = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
         self._cam = Cam(
-            source=cfg["camera"]["source"],
+            source=RK3588_CFG["camera"]["source"],
             nn_sizes=(544, 768),
             q_in=(self._yolact_q_post, self._pidnet_q_post),
             q_out=(self._yolact_q_pre, self._pidnet_q_pre)
@@ -138,3 +132,11 @@ class Rk3588():
 
     def show(self, start_time):
         self._cam.show(start_time)
+
+    def get_data(self):
+        # WIP
+        return None
+        # if self._q_post.empty():
+        #     return None
+        # raw_frame, inferenced_frame, detections, frame_id = self._q_post.get()
+        # return(raw_frame, inferenced_frame, detections, frame_id)

@@ -1,10 +1,8 @@
 from multiprocessing import Queue
 
-import numpy as np
-
 import cv2
 
-from base.inference.utils import (after_nms_numpy, get_anchors, nms_numpy,
+from base.post_process.utils import (after_nms_numpy, get_anchors, nms_numpy,
                                   permute, rknn_draw)
 
 

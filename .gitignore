@@ -18,6 +18,11 @@ install/cython_bbox/dist
 !models/yolov5m_leaky_352x352.rknn
 !models/yolov5s-640-640.rknn
 !models/yolov5m_leaky.rknn
+!models/yolact_544.rknn
+!models/pidnet_drone_int8-s.rknn
 
 # logs
 log/*.log
+
+# tests
+test/
