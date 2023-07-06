@@ -3,6 +3,7 @@ import os
 import time
 
 from base import Rk3588
+from config import PIDNET_CFG, RK3588_CFG, YOLACT_CFG
 
 # Create the main's logger
 main_logger = logging.getLogger("main")
@@ -22,15 +23,23 @@ main_logger.addHandler(main_handler)
 
 
 def main():
-    rk3588 = Rk3588()
+    rk3588 = Rk3588(
+        first_net_cfg=YOLACT_CFG,
+        second_net_cfg=PIDNET_CFG
+    )
     start_time = time.time()
     rk3588.start()
-    try:
-        while True:
-            rk3588.show(start_time)
-    except Exception as e:
-        main_logger.error(f"Main exception: {e}")
-        exit()
+    if RK3588_CFG["mode"] == "dual":
+        try:
+            while True:
+                rk3588.show(start_time)
+        except Exception as e:
+            main_logger.error(f"Main exception: {e}")
+            exit()
+    elif RK3588_CFG["mode"] in ["pidnet", "yolact", "yolov5"]:
+        pass
+    else:
+        main_logger.error("Unknow mode for run.")
 
 
 if __name__ == "__main__":

@@ -74,7 +74,6 @@ class NeuralNetwork():
     """
     def __init__(
             self,
-            name: str,
             model: str,
             q_in: Queue,
             q_out: Queue,
@@ -83,7 +82,7 @@ class NeuralNetwork():
         self._q_in = q_in
         self._q_out = q_out
         self._core = core
-        self._name = name
+        self._name = model.split('.')[0]
         #Check new model loaded
         try:
             self._ret =self._load_model(
@@ -114,11 +113,7 @@ class NeuralNetwork():
                 f"{self._name}: Init runtime environment failed!"
             )
             return ret
-        inference_logger.info(
-            "{}: {} model loaded".format(
-                self._name, path_to_model.split('/')[-1].split('.')[0]
-            )
-        )
+        inference_logger.info(f"{self._name}: Model loaded")
         return ret
 
     def inference(self):

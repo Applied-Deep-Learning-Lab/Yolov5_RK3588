@@ -1,7 +1,13 @@
 import json
 import logging
 import os
-from typing import Union
+import sys
+from multiprocessing import Queue
+from typing import Callable, NoReturn
+
+# Add the proj dir to the PYTHONPATH
+proj_dir = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, proj_dir)
 
 # Create logger
 logger = logging.getLogger("config")
@@ -36,7 +42,10 @@ YOLOV5_CFG_FILE = os.path.join(os.path.dirname(__file__), "yolov5_config.json")
 
 
 class Config(dict):
-    def __init__(self, path_to_cfg: str) -> None:
+    def __init__(
+            self,
+            path_to_cfg: str
+    ) -> None:
         self._path = path_to_cfg
         data = []
         try:
@@ -67,9 +76,22 @@ class Config(dict):
                 )
             )
             return False
+        
+    def add_post_proc_func(
+            self,
+            post_proc_func: Callable[[Queue, Queue], NoReturn]
+    ):
+        self.post_proc_func = post_proc_func
 
 
 RK3588_CFG = Config(RK3588_CFG_FILE)
 YOLACT_CFG = Config(YOLACT_CFG_FILE)
 PIDNET_CFG = Config(PIDNET_CFG_FILE)
 YOLOV5_CFG = Config(YOLOV5_CFG_FILE)
+
+from base.post_process import (pidnet_post_process, yolact_post_process,
+                               yolov5_post_process)
+
+YOLACT_CFG.add_post_proc_func(yolact_post_process)
+PIDNET_CFG.add_post_proc_func(pidnet_post_process)
+YOLOV5_CFG.add_post_proc_func(yolov5_post_process)

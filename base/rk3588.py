@@ -1,11 +1,11 @@
 from multiprocessing import Process, Queue
+from typing import Union
 
 from rknnlite.api import RKNNLite
 
 from base.camera import Cam
 from base.inference import NeuralNetwork
-from base.post_process import pidnet_post_process, yolact_post_process
-from config import RK3588_CFG
+from config import RK3588_CFG, Config
 
 
 class Rk3588():
@@ -64,71 +64,96 @@ class Rk3588():
         and frames ids
     ---------------------------------------------------------------------------
     """
-    def __init__(self):
-        # Create queues for pre process
-        self._yolact_q_pre = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
-        self._pidnet_q_pre = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
-        # Create queues for inference
-        self._yolact_q_outs = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
-        self._pidnet_q_outs = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
-        # Create queues for post process
-        self._yolact_q_post = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
-        self._pidnet_q_post = Queue(maxsize=RK3588_CFG["inference"]["buf_size"])
+    def __init__(
+            self,
+            first_net_cfg: Config,
+            second_net_cfg: Union[Config, None] = None
+    ):
+        self._first_net_cfg = first_net_cfg
+        self._second_net_cfg = second_net_cfg
+        # Create queues
+        self._first_net_q_pre = Queue(
+            maxsize=RK3588_CFG["inference"]["buf_size"]
+        )
+        self._first_net_q_outs = Queue(
+            maxsize=RK3588_CFG["inference"]["buf_size"]
+        )
+        self._first_net_q_post = Queue(
+            maxsize=RK3588_CFG["inference"]["buf_size"]
+        )
+        # Create obj for a neural network
+        self._first_net = NeuralNetwork(
+            model=self._first_net_cfg["default_model"],
+            q_in=self._first_net_q_pre,
+            q_out=self._first_net_q_outs,
+            core=RKNNLite.NPU_CORE_0_1
+        )
+        # Create inference process for a neural network
+        self._first_net_inf = Process(
+            target = self._first_net.inference,
+            daemon = True
+        )
+        # Create post process process for a neural network
+        self._first_net_post = Process(
+            target = self._first_net_cfg.post_proc_func,
+            kwargs = {
+                "q_in" : self._first_net_q_outs,
+                "q_out" : self._first_net_q_post
+            },
+            daemon=True
+        )
+        if self._second_net_cfg is not None:
+            # Create queues for a second neural network
+            self._second_net_q_pre = Queue(
+                maxsize=RK3588_CFG["inference"]["buf_size"]
+            )
+            self._second_net_q_outs = Queue(
+                maxsize=RK3588_CFG["inference"]["buf_size"]
+            )
+            self._second_net_q_post = Queue(
+                maxsize=RK3588_CFG["inference"]["buf_size"]
+            )
+            # Create obj for a second neural network
+            self._second_net = NeuralNetwork(
+                model=self._second_net_cfg["default_model"],
+                q_in=self._second_net_q_pre,
+                q_out=self._second_net_q_outs,
+                core=RKNNLite.NPU_CORE_2
+            )
+            # Create inference process for a second neural network
+            self._second_net_inf = Process(
+                target = self._second_net.inference,
+                daemon = True
+            )
+            # Create post process process for a second neural network
+            self._second_net_post = Process(
+                target = self._second_net_cfg.post_proc_func,
+                kwargs = {
+                    "q_in" : self._second_net_q_outs,
+                    "q_out" : self._second_net_q_post
+                },
+                daemon=True
+            )
+        # Create camera obj
         self._cam = Cam(
             source=RK3588_CFG["camera"]["source"],
             nn_sizes=(544, 768),
-            q_in=(self._yolact_q_post, self._pidnet_q_post),
-            q_out=(self._yolact_q_pre, self._pidnet_q_pre)
+            q_in=(self._first_net_q_post, self._second_net_q_post),
+            q_out=(self._first_net_q_pre, self._second_net_q_pre)
         )
-        self._yolact = NeuralNetwork(
-            name="yolact",
-            model="yolact_544.rknn",
-            q_in=self._yolact_q_pre,
-            q_out=self._yolact_q_outs,
-            core=RKNNLite.NPU_CORE_0_1
-        )
-        self._pidnet = NeuralNetwork(
-            name="pidnet",
-            model="pidnet_drone_int8-s.rknn",
-            q_in=self._pidnet_q_pre,
-            q_out=self._pidnet_q_outs,
-            core=RKNNLite.NPU_CORE_2
-        )
+        # Create recording process
         self._rec = Process(
             target = self._cam.record,
-            daemon=True
-        )
-        self._yolact_inf = Process(
-            target = self._yolact.inference,
-            daemon = True
-        )
-        self._pidnet_inf = Process(
-            target = self._pidnet.inference,
-            daemon = True
-        )
-        self._yolact_post = Process(
-            target = yolact_post_process,
-            kwargs = {
-                "q_in" : self._yolact_q_outs,
-                "q_out" : self._yolact_q_post
-            },
-            daemon=True
-        )
-        self._pidnet_post = Process(
-            target = pidnet_post_process,
-            kwargs = {
-                "q_in" : self._pidnet_q_outs,
-                "q_out" : self._pidnet_q_post
-            },
             daemon=True
         )
 
     def start(self):
         self._rec.start()
-        self._yolact_inf.start()
-        self._pidnet_inf.start()
-        self._yolact_post.start()
-        self._pidnet_post.start()
+        self._first_net_inf.start()
+        self._first_net_post.start()
+        if self._second_net_cfg is not None:
+            self._second_net_inf.start()
+            self._second_net_post.start()
 
     def show(self, start_time):
         self._cam.show(start_time)

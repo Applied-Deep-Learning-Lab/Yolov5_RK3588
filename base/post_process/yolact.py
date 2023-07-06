@@ -1,4 +1,5 @@
 from multiprocessing import Queue
+from typing import NoReturn
 
 import cv2
 
@@ -6,7 +7,7 @@ from base.post_process.utils import (after_nms_numpy, get_anchors, nms_numpy,
                                   permute, rknn_draw)
 
 
-def yolact_post_process(q_in: Queue, q_out: Queue):
+def yolact_post_process(q_in: Queue, q_out: Queue) -> NoReturn:
     while True:
         outputs, raw_frame, frame_id = q_in.get()
         # dets = None
