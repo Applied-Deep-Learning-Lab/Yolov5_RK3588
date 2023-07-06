@@ -29,17 +29,12 @@ def main():
     )
     start_time = time.time()
     rk3588.start()
-    if RK3588_CFG["mode"] == "dual":
-        try:
-            while True:
-                rk3588.show(start_time)
-        except Exception as e:
-            main_logger.error(f"Main exception: {e}")
-            exit()
-    elif RK3588_CFG["mode"] in ["pidnet", "yolact", "yolov5"]:
-        pass
-    else:
-        main_logger.error("Unknow mode for run.")
+    try:
+        while True:
+            rk3588.show(start_time)
+    except Exception as e:
+        main_logger.error(f"Main exception: {e}")
+        exit()
 
 
 if __name__ == "__main__":

@@ -1,10 +1,5 @@
 {
     "debug": false,
-    "mode": "dual",
-    "dual_net": [
-        "yolact",
-        "pidnet"
-    ],
     "verbose": false,
     "verbose_file": "verbose.txt",
     "camera": {
