@@ -9,7 +9,7 @@ from config import PIDNET_CFG
 def pidnet_post_process(q_in: Queue, q_out: Queue):
     while True:
         outputs, raw_frame, frame_id = q_in.get()
-        # dets = None
+        dets = None
         # Prepare np.arrday for the cv2 manipulations
         result = np.swapaxes(outputs[0][0],0,2)
         result = np.swapaxes(result,0,1)
@@ -21,4 +21,4 @@ def pidnet_post_process(q_in: Queue, q_out: Queue):
             (PIDNET_CFG["net_size"], PIDNET_CFG["net_size"])
         )
         frame = cv2.addWeighted(frame, 0.5, mask_colors, 0.5, 0.0)
-        q_out.put((frame, raw_frame, frame_id))
+        q_out.put((frame, raw_frame, dets, frame_id))

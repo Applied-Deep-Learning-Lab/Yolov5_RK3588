@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from multiprocessing import Queue, Value
+from multiprocessing import Value
 
 import cv2
 import numpy as np
@@ -74,16 +74,16 @@ class Cam():
     def __init__(
             self,
             source: int,
-            nn_sizes: tuple[int, int],
-            q_in: tuple[Queue, Queue],
-            q_out: tuple[Queue, Queue]
+            nn_size: tuple,
+            q_in: tuple,
+            q_out: tuple
     ):
-        self._nn_sizes = nn_sizes
+        self._nn_size = nn_size
         self._q_out = q_out
         self._q_in = q_in
         self._stop_record = Value('i', 0)
         self._source = source
-        self._last_frame_id = [0, 0]
+        self._last_frame_id = [0]*len(self._nn_size)
         self._frame_id = 0
         self._fps = 0
         self._max_fps = 0
@@ -127,9 +127,9 @@ class Cam():
                     raise SystemExit
                 raw_frame = frame.copy()
                 # Pre process for each nn
-                for i in range(len(self._q_out)):
-                    frame = self._pre_process(frame, self._nn_sizes[i])
-                    self._q_out[i].put((frame, raw_frame, self._frame_id))
+                for q, size in zip(self._q_out, self._nn_size):
+                    frame = self._pre_process(frame, size)
+                    q.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
             cap.release()
         except Exception as e:
@@ -140,8 +140,8 @@ class Cam():
             raise SystemExit
 
     def show(self, start_time):
-        for i in range(len(self._q_in)):
-            frame, raw_frame, frame_id = self._q_in[i].get()
+        for q, i in zip(self._q_in, range(len(self._last_frame_id))):
+            frame, raw_frame, dets, frame_id = q.get()
             self._count+=1
             if frame_id < self._last_frame_id[i]:
                 return

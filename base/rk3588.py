@@ -102,6 +102,7 @@ class Rk3588():
             },
             daemon=True
         )
+        # Create the same things for a second neural network if it exists
         if self._second_net_cfg is not None:
             # Create queues for a second neural network
             self._second_net_q_pre = Queue(
@@ -134,13 +135,24 @@ class Rk3588():
                 },
                 daemon=True
             )
-        # Create camera obj
-        self._cam = Cam(
-            source=RK3588_CFG["camera"]["source"],
-            nn_sizes=(544, 768),
-            q_in=(self._first_net_q_post, self._second_net_q_post),
-            q_out=(self._first_net_q_pre, self._second_net_q_pre)
-        )
+            # Create camera obj
+            self._cam = Cam(
+                source=RK3588_CFG["camera"]["source"],
+                nn_size=(
+                    self._first_net_cfg["net_size"],
+                    self._second_net_cfg["net_size"]
+                ),
+                q_in=(self._first_net_q_post, self._second_net_q_post),
+                q_out=(self._first_net_q_pre, self._second_net_q_pre)
+            )
+        else:
+            # Create camera obj
+            self._cam = Cam(
+                source=RK3588_CFG["camera"]["source"],
+                nn_size=(self._first_net_cfg["net_size"],),
+                q_in=(self._first_net_q_post,),
+                q_out=(self._first_net_q_pre,)
+            )
         # Create recording process
         self._rec = Process(
             target = self._cam.record,

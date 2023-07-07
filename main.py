@@ -3,7 +3,7 @@ import os
 import time
 
 from base import Rk3588
-from config import PIDNET_CFG, RK3588_CFG, YOLACT_CFG
+from config import PIDNET_CFG, RK3588_CFG, YOLACT_CFG, YOLOV5_CFG
 
 # Create the main's logger
 main_logger = logging.getLogger("main")
@@ -24,8 +24,8 @@ main_logger.addHandler(main_handler)
 
 def main():
     rk3588 = Rk3588(
-        first_net_cfg=YOLACT_CFG,
-        second_net_cfg=PIDNET_CFG
+        first_net_cfg=PIDNET_CFG,
+        # second_net_cfg=PIDNET_CFG
     )
     start_time = time.time()
     rk3588.start()

@@ -33,4 +33,4 @@ def yolov5_post_process(q_in: Queue, q_out: Queue):
                 classes = classes, # type: ignore
                 scores = scores # type: ignore
             )
-        q_out.put((raw_frame, frame, dets, frame_id))
+        q_out.put((frame, raw_frame, dets, frame_id))
