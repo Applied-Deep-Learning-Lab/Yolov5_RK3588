@@ -1,10 +1,11 @@
+from genericpath import isfile
 import logging
 import os
 from multiprocessing import Queue
 
 from rknnlite.api import RKNNLite
 
-from config import RK3588_CFG
+from config import RK3588_CFG, Config
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 MODELS = os.path.join(ROOT, "models")
@@ -74,7 +75,7 @@ class NeuralNetwork():
     """
     def __init__(
             self,
-            model: str,
+            net_cfg: Config,
             q_in: Queue,
             q_out: Queue,
             core: int = RKNNLite.NPU_CORE_AUTO
@@ -82,12 +83,15 @@ class NeuralNetwork():
         self._q_in = q_in
         self._q_out = q_out
         self._core = core
-        self._name = model.split('.')[0]
+        self._name = net_cfg["default_model"].split('.')[0]
+        self._default_model = os.path.join(MODELS, net_cfg["default_model"])
+        self._new_model = os.path.join(MODELS, net_cfg["new_model"])
         #Check new model loaded
         try:
-            self._ret =self._load_model(
-                os.path.join(MODELS, model)
-            )
+            if os.path.isfile(self._new_model):
+                self._ret = self._load_model(self._new_model)
+            else:
+                self._ret = self._load_model(self._default_model)
         except Exception as e:
             inference_logger.error(f"Cannot load model. Exception {e}")
             raise SystemExit

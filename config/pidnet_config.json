@@ -1,5 +1,5 @@
 {
     "net_size": 768,
     "default_model": "pidnet_drone_int8-s.rknn",
-    "new_model": "yolov5m_leaky_352x352.rknn"
+    "new_model": "pidnet_drone_int8-s.rknn"
 }

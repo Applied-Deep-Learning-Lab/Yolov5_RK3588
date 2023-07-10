@@ -1,3 +1,5 @@
+import logging
+import os
 from multiprocessing import Process, Queue
 from typing import Union
 
@@ -6,6 +8,22 @@ from rknnlite.api import RKNNLite
 from base.camera import Cam
 from base.inference import NeuralNetwork
 from config import RK3588_CFG, Config
+
+# Create the base's logger
+logger = logging.getLogger("base")
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(
+    os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "log/base.log"
+    )
+)
+formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 class Rk3588():
@@ -67,8 +85,19 @@ class Rk3588():
     def __init__(
             self,
             first_net_cfg: Config,
-            second_net_cfg: Union[Config, None] = None
+            first_net_core: int = RKNNLite.NPU_CORE_0_1,
+            second_net_cfg: Union[Config, None] = None,
+            second_net_core: int = RKNNLite.NPU_CORE_2
     ):
+        # Values for single neural network mode
+        self._inf_proc = RK3588_CFG["inference"]["inf_proc"]
+        self._post_proc = RK3588_CFG["inference"]["post_proc"]
+        self._cores = [
+            RKNNLite.NPU_CORE_0,
+            RKNNLite.NPU_CORE_1,
+            RKNNLite.NPU_CORE_2
+        ]
+        # Get neural network's configs
         self._first_net_cfg = first_net_cfg
         self._second_net_cfg = second_net_cfg
         # Create queues
@@ -81,29 +110,14 @@ class Rk3588():
         self._first_net_q_post = Queue(
             maxsize=RK3588_CFG["inference"]["buf_size"]
         )
-        # Create obj for a neural network
-        self._first_net = NeuralNetwork(
-            model=self._first_net_cfg["default_model"],
-            q_in=self._first_net_q_pre,
-            q_out=self._first_net_q_outs,
-            core=RKNNLite.NPU_CORE_0_1
-        )
-        # Create inference process for a neural network
-        self._first_net_inf = Process(
-            target = self._first_net.inference,
-            daemon = True
-        )
-        # Create post process process for a neural network
-        self._first_net_post = Process(
-            target = self._first_net_cfg.post_proc_func,
-            kwargs = {
-                "q_in" : self._first_net_q_outs,
-                "q_out" : self._first_net_q_post
-            },
-            daemon=True
-        )
-        # Create the same things for a second neural network if it exists
+        # Create inference and postprocess processes for a second neural network
+        # if it exists
         if self._second_net_cfg is not None:
+            logger.debug("Dual mode")
+            # Set values for single mode to dual mode
+            self._inf_proc = 1
+            self._post_proc = 1
+            self._cores = [first_net_core]
             # Create queues for a second neural network
             self._second_net_q_pre = Queue(
                 maxsize=RK3588_CFG["inference"]["buf_size"]
@@ -116,10 +130,10 @@ class Rk3588():
             )
             # Create obj for a second neural network
             self._second_net = NeuralNetwork(
-                model=self._second_net_cfg["default_model"],
+                net_cfg=self._second_net_cfg,
                 q_in=self._second_net_q_pre,
                 q_out=self._second_net_q_outs,
-                core=RKNNLite.NPU_CORE_2
+                core=second_net_core
             )
             # Create inference process for a second neural network
             self._second_net_inf = Process(
@@ -146,6 +160,7 @@ class Rk3588():
                 q_out=(self._first_net_q_pre, self._second_net_q_pre)
             )
         else:
+            logger.debug("Single mode")
             # Create camera obj
             self._cam = Cam(
                 source=RK3588_CFG["camera"]["source"],
@@ -153,16 +168,43 @@ class Rk3588():
                 q_in=(self._first_net_q_post,),
                 q_out=(self._first_net_q_pre,)
             )
+        # Create obj for a neural network
+        self._first_net = [
+            NeuralNetwork(
+                net_cfg=self._first_net_cfg,
+                q_in=self._first_net_q_pre,
+                q_out=self._first_net_q_outs,
+                core=self._cores[i%3]
+            ) for i in range(self._inf_proc)
+        ]
         # Create recording process
         self._rec = Process(
             target = self._cam.record,
             daemon=True
         )
+        # Create inference process for a neural network
+        self._first_net_inf = [
+            Process(
+                target = self._first_net[i].inference,
+                daemon = True
+            ) for i in range(len(self._first_net))
+        ]
+        # Create post process process for a neural network
+        self._first_net_post = [
+            Process(
+                target = self._first_net_cfg.post_proc_func,
+                kwargs = {
+                    "q_in" : self._first_net_q_outs,
+                    "q_out" : self._first_net_q_post
+                },
+                daemon=True
+            ) for i in range(self._post_proc)
+        ]
 
     def start(self):
         self._rec.start()
-        self._first_net_inf.start()
-        self._first_net_post.start()
+        for inference in self._first_net_inf: inference.start()
+        for post_process in self._first_net_post: post_process.start()
         if self._second_net_cfg is not None:
             self._second_net_inf.start()
             self._second_net_post.start()

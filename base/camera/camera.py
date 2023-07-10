@@ -174,7 +174,11 @@ class Cam():
             self._last_frame_id[i] = frame_id
             cv2.waitKey(1)
             if RK3588_CFG["debug"]:
-                camera_logger.debug(f"{frame_id}\t{time.time() - start_time}")
+                camera_logger.debug(
+                    "{}:\t{}\t{}".format(
+                        i, frame_id, time.time() - start_time
+                    )
+                )
 
     def release(self):
         self._stop_record.value = 1 # type: ignore
