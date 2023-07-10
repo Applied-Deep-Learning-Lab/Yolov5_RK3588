@@ -110,10 +110,12 @@ class Rk3588():
         self._first_net_q_post = Queue(
             maxsize=RK3588_CFG["inference"]["buf_size"]
         )
+        self.dual_mode = False
         # Create inference and postprocess processes for a second neural network
         # if it exists
         if self._second_net_cfg is not None:
             logger.debug("Dual mode")
+            self.dual_mode = True
             # Set values for single mode to dual mode
             self._inf_proc = 1
             self._post_proc = 1
@@ -213,9 +215,9 @@ class Rk3588():
         self._cam.show(start_time)
 
     def get_data(self):
-        # WIP
-        return None
-        # if self._q_post.empty():
-        #     return None
-        # raw_frame, inferenced_frame, detections, frame_id = self._q_post.get()
-        # return(raw_frame, inferenced_frame, detections, frame_id)
+        if self._second_net_cfg is not None:
+            return None
+        if self._first_net_q_post.empty():
+            return None
+        raw_frame, inf_frame, dets, frame_id = self._first_net_q_post.get()
+        return(raw_frame, inf_frame, dets, frame_id)

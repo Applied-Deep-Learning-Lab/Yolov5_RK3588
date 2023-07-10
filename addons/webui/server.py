@@ -116,7 +116,7 @@ class WebUI():
         self._dets_strg = dets_strg
         self._counters_strg = counters_strg
         self._cam = camera
-        self._classes = YOLOV5_CFG["inference"]["classes"]
+        self._classes = YOLOV5_CFG["classes"]
         self._ROOT = os.path.dirname(__file__)
         self._pcs = set()
         self._relay = MediaRelay()
