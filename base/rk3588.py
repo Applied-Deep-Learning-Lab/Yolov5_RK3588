@@ -219,5 +219,5 @@ class Rk3588():
             return None
         if self._first_net_q_post.empty():
             return None
-        raw_frame, inf_frame, dets, frame_id = self._first_net_q_post.get()
-        return(raw_frame, inf_frame, dets, frame_id)
+        inf_frame, raw_frame, dets, frame_id = self._first_net_q_post.get()
+        return(inf_frame, raw_frame, dets, frame_id)

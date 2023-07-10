@@ -61,7 +61,7 @@ def fill_storages(
     while True:
         output = rk3588.get_data()
         if output is not None:
-            raw_frame, inferenced_frame, detections, frame_id = output # type: ignore WIP
+            inferenced_frame, raw_frame, detections, frame_id = output # type: ignore
             # Bytetracker
             if tracker is not None and detections is not None:
                 detections = tracking(
