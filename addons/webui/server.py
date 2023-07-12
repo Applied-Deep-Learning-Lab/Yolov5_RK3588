@@ -167,13 +167,20 @@ class WebUI():
         return web.Response(content_type="application/javascript", text=content)
 
     async def _send_settings(self, request):
-        return web.json_response(data=RK3588_CFG)
+        return web.json_response(
+            data={
+                "base" : RK3588_CFG,
+                "neural_network" : YOLOV5_CFG
+            }
+        )
 
     async def _get_settings(self, request):
         model_form = await request.post()
         settings_values = json.loads(model_form["text"])
-        RK3588_CFG[:] = settings_values[:]
-        RK3588_CFG.update()
+        RK3588_CFG.update(settings_values["base"])
+        YOLOV5_CFG.update(settings_values["neural_network"])
+        RK3588_CFG.upload()
+        YOLOV5_CFG.upload()
         server_logger.info("Settings loaded")
         return web.Response(content_type="text", text="OK")
 
@@ -204,7 +211,7 @@ class WebUI():
             elif "352" in new_model_name:
                 YOLOV5_CFG["net_size"] = 352
             YOLOV5_CFG["new_model"] = new_model_name
-            YOLOV5_CFG.update()
+            YOLOV5_CFG.upload()
             with open(os.path.join(MODELS, new_model_name), "wb") as f:
                 f.write(new_model)
             server_logger.info("Model loaded")
@@ -212,7 +219,7 @@ class WebUI():
         def _load_local_model(local_model):
             """Rewrite path to running model"""
             YOLOV5_CFG["new_model"] = local_model
-            YOLOV5_CFG.update()
+            YOLOV5_CFG.upload()
             server_logger.info("Model changed")
 
         model_form = await request.post()

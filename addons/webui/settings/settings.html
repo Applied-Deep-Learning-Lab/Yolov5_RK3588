@@ -119,6 +119,27 @@
     </div>
   </div>
   <body>
+    <button
+      type="button"
+      class="btn btn-outline-primary rounded-pill position-fixed bottom-0 end-0 mb-3 me-3"
+      id="btn-to-top"
+      onclick="window.scrollTo(0,0)"
+      style="width: 3.5rem; height: 3.5rem;"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        class="bi bi-arrow-up"
+        viewBox="0 0 16 16"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"
+        />
+      </svg>
+    </button>
     <header
       class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom sticky-top text-bg-dark p-3"
     >
@@ -220,11 +241,39 @@
       <div class="col">
         <h2>Base functions</h2>
         <div class="row mt-4 d-flex align-items-center justify-content-center">
-          <div class="card" style="width: 20rem; height: 42rem">
+          <div class="card" style="width: 20rem; height: 38rem;">
             <div class="card-body">
-              <h3 class="card-title">Inference</h3>
+              <h3 class="card-title">RK3588</h3>
               <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
               <div class="d-flex flex-column gap-2">
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="debug_state"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >debug</label
+                    >
+                  </div>
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="verbose_state"
+                      checked=""
+                    />
+                    <label class="form-check-label" for="flexSwitchCheckChecked"
+                      >verbose</label
+                    >
+                  </div>
+                </div>
                 <div class="row-md-3 d-flex flex-column align-items-start">
                   <div class="form-check form-switch">
                     <input
@@ -240,56 +289,9 @@
                   </div>
                 </div>
                 <div class="row-md-3 d-flex flex-column align-items-start">
-                  <div class="form-check form-switch">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      role="switch"
-                      id="sigmoid"
-                      checked=""
-                    />
-                    <label class="form-check-label" for="flexSwitchCheckChecked"
-                      >sigmoid</label
-                    >
-                  </div>
-                </div>
-                <div class="row-md-3 d-flex flex-column align-items-start">
-                  <label class="form-label">net size</label>
-                  <input
-                    id="net_size"
-                    type="text"
-                    class="form-control-sm rounded-pill"
-                    placeholder=""
-                    value=""
-                    required=""
-                  />
-                </div>
-                <div class="row-md-3 d-flex flex-column align-items-start">
                   <label class="form-label">buffer size</label>
                   <input
                     id="buf_size"
-                    type="text"
-                    class="form-control-sm rounded-pill"
-                    placeholder=""
-                    value=""
-                    required=""
-                  />
-                </div>
-                <div class="row-md-3 d-flex flex-column align-items-start">
-                  <label class="form-label">object thresh</label>
-                  <input
-                    id="obj_thresh"
-                    type="text"
-                    class="form-control-sm rounded-pill"
-                    placeholder=""
-                    value=""
-                    required=""
-                  />
-                </div>
-                <div class="row-md-3 d-flex flex-column align-items-start">
-                  <label class="form-label">nms thresh</label>
-                  <input
-                    id="nms_thresh"
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
@@ -319,10 +321,21 @@
                     required=""
                   />
                 </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">send data amount</label>
+                  <input
+                    id="send_data_amount"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
               </div>
             </div>
           </div>
-          <div class="card" style="width: 20rem; height: 42rem">
+          <div class="card" style="width: 20rem; height: 38rem;">
             <div class="card-body">
               <h3 class="card-title">Camera</h3>
               <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
@@ -407,60 +420,51 @@
               </div>
             </div>
           </div>
-          <div class="card" style="width: 20rem; height: 42rem">
+          <div class="card" style="width: 20rem; height: 38rem;">
             <div class="card-body">
-              <h3 class="card-title">Debug</h3>
+              <h3 class="card-title">Neural Network</h3>
               <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
               <div class="d-flex flex-column gap-2 mb-3">
                 <div class="row-md-3 d-flex flex-column align-items-start">
                   <div class="form-check form-switch">
                     <input
-                      id="print_camera_release"
                       class="form-check-input"
                       type="checkbox"
                       role="switch"
-                      id="flexSwitchCheckChecked"
+                      id="sigmoid"
                       checked=""
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
-                      >print camera release</label
+                      >sigmoid</label
                     >
                   </div>
                 </div>
                 <div class="row-md-3 d-flex flex-column align-items-start">
-                  <div class="form-check form-switch">
-                    <input
-                      id="showed_frame_id"
-                      class="form-check-input"
-                      type="checkbox"
-                      role="switch"
-                      id="flexSwitchCheckChecked"
-                      checked=""
-                    />
-                    <label class="form-check-label" for="flexSwitchCheckChecked"
-                      >showed frame id</label
-                    >
-                  </div>
-                </div>
-                <div class="row-md-3 d-flex flex-column align-items-start">
-                  <div class="form-check form-switch">
-                    <input
-                      id="filled_frame_id"
-                      class="form-check-input"
-                      type="checkbox"
-                      role="switch"
-                      id="flexSwitchCheckChecked"
-                      checked=""
-                    />
-                    <label class="form-check-label" for="flexSwitchCheckChecked"
-                      >filled frame id</label
-                    >
-                  </div>
-                </div>
-                <div class="row-md-3 d-flex flex-column align-items-start">
-                  <label class="form-label">send data amount</label>
+                  <label class="form-label">net size</label>
                   <input
-                    id="send_data_amount"
+                    id="net_size"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">object thresh</label>
+                  <input
+                    id="obj_thresh"
+                    type="text"
+                    class="form-control-sm rounded-pill"
+                    placeholder=""
+                    value=""
+                    required=""
+                  />
+                </div>
+                <div class="row-md-3 d-flex flex-column align-items-start">
+                  <label class="form-label">nms thresh</label>
+                  <input
+                    id="nms_thresh"
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
@@ -478,7 +482,7 @@
       <div class="col align-items-center mb-5 mt-5">
         <h2>Addons functions</h2>
         <div class="row mt-4 d-flex align-items-center justify-content-center">
-          <div class="card" style="width: 20rem; height: 42rem">
+          <div class="card" style="width: 20rem; height: 38rem;">
             <div class="card-body">
               <h3 class="card-title">Storages</h3>
               <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
@@ -534,7 +538,7 @@
               </div>
             </div>
           </div>
-          <div class="card" style="width: 20rem; height: 42rem">
+          <div class="card" style="width: 20rem; height: 38rem;">
             <div class="card-body">
               <h3 class="card-title">BYTEtrack</h3>
               <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>
@@ -572,7 +576,7 @@
               </div>
             </div>
           </div>
-          <div class="card" style="width: 20rem; height: 42rem">
+          <div class="card" style="width: 20rem; height: 38rem;">
             <div class="card-body">
               <h3 class="card-title">Telegram notifier</h3>
               <h4 class="card-subtitle mb-5 text-body-secondary">Params</h4>

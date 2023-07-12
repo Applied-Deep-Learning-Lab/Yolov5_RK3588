@@ -1,35 +1,40 @@
 // Get settings elements
+
 /// Base
-//// Inference
+let debug_state = document.getElementById("debug_state");
+let verbose_state = document.getElementById("verbose_state");
 let async_mode = document.getElementById("async_mode_state");
-let sigmoid = document.getElementById("sigmoid");
-let net_size = document.getElementById("net_size");
 let buf_size = document.getElementById("buf_size");
-let obj_thresh = document.getElementById("obj_thresh");
-let nms_thresh = document.getElementById("nms_thresh");
 let inf_proc = document.getElementById("inf_proc");
 let post_proc = document.getElementById("post_proc");
-//// Camera
+
+/// Camera
 let show_state = document.getElementById("show_state");
 let source = document.getElementById("source");
 let width = document.getElementById("width");
 let height = document.getElementById("height");
 let pixel_format = document.getElementById("pixel_format");
 let camera_fps = document.getElementById("camera_framerate");
-//// Debug
-let print_camera_release = document.getElementById("print_camera_release");
-let showed_frame_id = document.getElementById("showed_frame_id");
-let filled_frame_id = document.getElementById("filled_frame_id");
+
+/// Neural Network
+let sigmoid = document.getElementById("sigmoid");
+let net_size = document.getElementById("net_size");
+let obj_thresh = document.getElementById("obj_thresh");
+let nms_thresh = document.getElementById("nms_thresh");
 let send_data_amount = document.getElementById("send_data_amount");
+
 /// Addons
+
 ////Storages
 let storages_state = document.getElementById("storages_state");
 let stored_data_amount = document.getElementById("stored_data_amount");
 let dets_amount = document.getElementById("dets_amount");
 let frames_delay = document.getElementById("frames_delay");
+
 //// BYTEtrack
 let bytetrack_state = document.getElementById("bytetrack_state");
 let bytetrack_fps = document.getElementById("bytetrack_framerate");
+
 //// Telegram notifier
 let telegram_notifier = document.getElementById("telegram_notifier_state");
 let time_period = document.getElementById("time_period");
@@ -45,42 +50,46 @@ async function SetSettingsValues() {
     method: "GET",
   });
   let settings_data = await response.json(response);
-  /// Base functions
-  //// Inference
-  async_mode.checked = settings_data.inference.async_mode;
-  sigmoid.checked = settings_data.inference.sigmoid;
-  net_size.value = settings_data.inference.net_size;
-  buf_size.value = settings_data.inference.buf_size;
-  obj_thresh.value = settings_data.inference.obj_thresh;
-  nms_thresh.value = settings_data.inference.nms_thresh;
-  inf_proc.value = settings_data.inference.inf_proc;
-  post_proc.value = settings_data.inference.post_proc;
-  //// Camera
-  show_state.checked = settings_data.camera.show;
-  source.value = settings_data.camera.source;
-  width.value = settings_data.camera.width;
-  height.value = settings_data.camera.height;
-  pixel_format.value = settings_data.camera.pixel_format;
-  camera_fps.value = settings_data.camera.fps;
-  //// Debug
-  print_camera_release.checked = settings_data.debug.print_camera_release;
-  showed_frame_id.checked = settings_data.debug.showed_frame_id;
-  filled_frame_id.checked = settings_data.debug.filled_frame_id;
-  send_data_amount.value = settings_data.webui.send_data_amount;
-  /// Addons functions
+
+  /// Base
+  debug_state.checked = settings_data.base.debug;
+  verbose_state.checked = settings_data.base.verbose;
+  async_mode.checked = settings_data.base.inference.async_mode;
+  buf_size.value = settings_data.base.inference.buf_size;
+  inf_proc.value = settings_data.base.inference.inf_proc;
+  post_proc.value = settings_data.base.inference.post_proc;
+  send_data_amount.value = settings_data.base.webui.send_data_amount;
+
+  /// Camera
+  show_state.checked = settings_data.base.camera.show;
+  source.value = settings_data.base.camera.source;
+  width.value = settings_data.base.camera.width;
+  height.value = settings_data.base.camera.height;
+  pixel_format.value = settings_data.base.camera.pixel_format;
+  camera_fps.value = settings_data.base.camera.fps;
+
+  /// Neural Network
+  sigmoid.checked = settings_data.neural_network.sigmoid;
+  net_size.value = settings_data.neural_network.net_size;
+  obj_thresh.value = settings_data.neural_network.obj_thresh;
+  nms_thresh.value = settings_data.neural_network.nms_thresh;
+
+  /// Addons
   //// Storages
-  storages_state.checked = settings_data.storages.state;
-  stored_data_amount.value = settings_data.storages.stored_data_amount;
-  dets_amount.value = settings_data.storages.dets_amount;
-  frames_delay.value = settings_data.storages.frames_delay;
+  storages_state.checked = settings_data.base.storages.state;
+  stored_data_amount.value = settings_data.base.storages.stored_data_amount;
+  dets_amount.value = settings_data.base.storages.dets_amount;
+  frames_delay.value = settings_data.base.storages.frames_delay;
+
   //// BYTEtrack
-  bytetrack_state.checked = settings_data.bytetrack.state;
-  bytetrack_fps.value = settings_data.bytetrack.fps;
+  bytetrack_state.checked = settings_data.base.bytetrack.state;
+  bytetrack_fps.value = settings_data.base.bytetrack.fps;
+
   //// Telegram notifier
-  telegram_notifier.checked = settings_data.telegram_notifier.state;
-  time_period.value = settings_data.telegram_notifier.time_period;
-  bot_token.value = settings_data.telegram_notifier.token;
-  chat_id.value = settings_data.telegram_notifier.chat_id;
+  telegram_notifier.checked = settings_data.base.telegram_notifier.state;
+  time_period.value = settings_data.base.telegram_notifier.time_period;
+  bot_token.value = settings_data.base.telegram_notifier.token;
+  chat_id.value = settings_data.base.telegram_notifier.chat_id;
 }
 
 async function SendSettingsValues() {
@@ -90,42 +99,48 @@ async function SendSettingsValues() {
   });
   let settings_data = await response.json();
   // Set settings values from page
-  /// Base functions
-  //// Inference
-  settings_data.inference.async_mode = async_mode.checked;
-  settings_data.inference.sigmoid = sigmoid.checked;
-  settings_data.inference.net_size = Number(net_size.value);
-  settings_data.inference.buf_size = Number(buf_size.value);
-  settings_data.inference.obj_thresh = Number(obj_thresh.value);
-  settings_data.inference.nms_thresh = Number(nms_thresh.value);
-  settings_data.inference.inf_proc = Number(inf_proc.value);
-  settings_data.inference.post_proc = Number(post_proc.value);
-  //// Camera
-  settings_data.camera.show = show_state.checked;
-  settings_data.camera.source = Number(source.value);
-  settings_data.camera.width = Number(width.value);
-  settings_data.camera.height = Number(height.value);
-  settings_data.camera.pixel_format = pixel_format.value;
-  settings_data.camera.fps = Number(camera_fps.value);
-  //// Debug
-  settings_data.debug.print_camera_release = print_camera_release.checked;
-  settings_data.debug.showed_frame_id = showed_frame_id.checked;
-  settings_data.debug.filled_frame_id = filled_frame_id.checked;
-  settings_data.webui.send_data_amount = Number(send_data_amount.value);
-  /// Addons functions
+  /// Base
+  settings_data.base.debug = debug_state.checked;
+  settings_data.base.verbose = verbose_state.checked;
+  settings_data.base.inference.async_mode = async_mode.checked;
+  settings_data.base.inference.buf_size = Number(buf_size.value);
+  settings_data.base.inference.inf_proc = Number(inf_proc.value);
+  settings_data.base.inference.post_proc = Number(post_proc.value);
+  settings_data.base.webui.send_data_amount = Number(send_data_amount.value);
+
+  /// Camera
+  settings_data.base.camera.show = show_state.checked;
+  settings_data.base.camera.source = Number(source.value);
+  settings_data.base.camera.width = Number(width.value);
+  settings_data.base.camera.height = Number(height.value);
+  settings_data.base.camera.pixel_format = pixel_format.value;
+  settings_data.base.camera.fps = Number(camera_fps.value);
+
+  /// Neural Network
+  settings_data.neural_network.sigmoid = sigmoid.checked;
+  settings_data.neural_network.net_size = Number(net_size.value);
+  settings_data.neural_network.obj_thresh = Number(obj_thresh.value);
+  settings_data.neural_network.nms_thresh = Number(nms_thresh.value);
+
+  /// Addons
   //// Storages
-  settings_data.storages.state = storages_state.checked;
-  settings_data.storages.stored_data_amount = Number(stored_data_amount.value);
-  settings_data.storages.dets_amount = Number(dets_amount.value);
-  settings_data.storages.frames_delay = Number(frames_delay.value);
+  settings_data.base.storages.state = storages_state.checked;
+  settings_data.base.storages.stored_data_amount = Number(
+    stored_data_amount.value
+  );
+  settings_data.base.storages.dets_amount = Number(dets_amount.value);
+  settings_data.base.storages.frames_delay = Number(frames_delay.value);
+
   //// BYTEtrack
-  settings_data.bytetrack.state = bytetrack_state.checked;
-  settings_data.bytetrack.fps = Number(bytetrack_fps.value);
+  settings_data.base.bytetrack.state = bytetrack_state.checked;
+  settings_data.base.bytetrack.fps = Number(bytetrack_fps.value);
+
   //// Telegram notifier
-  settings_data.telegram_notifier.state = telegram_notifier.checked;
-  settings_data.telegram_notifier.time_period = Number(time_period.value);
-  settings_data.telegram_notifier.token = bot_token.value;
-  settings_data.telegram_notifier.chat_id = chat_id.value;
+  settings_data.base.telegram_notifier.state = telegram_notifier.checked;
+  settings_data.base.telegram_notifier.time_period = Number(time_period.value);
+  settings_data.base.telegram_notifier.token = bot_token.value;
+  settings_data.base.telegram_notifier.chat_id = chat_id.value;
+
   // Convert values to string for sending
   settings_data = JSON.stringify(settings_data);
   // Sending values to the device's config file
@@ -204,7 +219,7 @@ function showModal(LabelText, ContentText, LoadTime, warning = false) {
   } else {
     setTimeout(function () {
       footer.className = footer.className.split(" ")[0];
-      content.innerText = "Successfuly!!!"
+      content.innerText = "Successfuly!!!";
     }, LoadTime);
   }
 }
@@ -247,7 +262,7 @@ function SettingsUpdateModal() {
   let content = document.getElementById("SettingsModalContent");
   let footer = document.getElementById("SettingsModalFooter");
   label.innerText = "Settings";
-  content.innerText = "Successfuly updated!!!"
+  content.innerText = "Successfuly updated!!!";
   footer.className = footer.className.split(" ")[0];
   modal.style.display = "block";
 }

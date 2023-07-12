@@ -32,9 +32,11 @@ logger.addHandler(handler)
 
 
 def main():
+    first_net_cfg = YOLOV5_CFG
+    # second_net_cfg = PIDNET_CFG
     rk3588 = Rk3588(
-        first_net_cfg=YOLOV5_CFG,
-        # second_net_cfg=PIDNET_CFG
+        first_net_cfg=first_net_cfg,
+        # second_net_cfg=second_net_cfg
     )
     start_time = time.time()
     rk3588.start()
@@ -63,7 +65,7 @@ def main():
         counters_storage = strgs.Storage(
             storage_name="counters",
             data_size=(1,),
-            data_amount=len(YOLOV5_CFG["classes"]), # CHANGE
+            data_amount=len(first_net_cfg["classes"]),
             data_type=int
         )
         tracker = None
@@ -86,23 +88,23 @@ def main():
             daemon=True
         )
         fill_thread.start()
-        if RK3588_CFG["pulse_counter"]["state"]: # WIP
+        if RK3588_CFG["pulse_counter"]["state"]:
             pulse_monitor = Monitor()
             counting_thread = Thread(
                 target=do_counting,
                 kwargs={
                     "inf_img_strg": inferenced_frames_storage,
                     "dets_strg": detections_storage,
-                    "counters_strg": counters_storage, # WIP
+                    "counters_strg": counters_storage,
                     "pulse_monitor": pulse_monitor
                 },
                 daemon=True
             )
             counting_thread.start()
-        if RK3588_CFG["telegram_notifier"]["state"]: # WIP
+        if RK3588_CFG["telegram_notifier"]["state"]:
             telegram_notifier = TelegramNotifier(
                 inf_img_strg=inferenced_frames_storage,
-                counters_strg=counters_storage # WIP
+                counters_strg=counters_storage
             )
             notifier_process = Process(
                 target=telegram_notifier.start,
@@ -117,7 +119,7 @@ def main():
                 raw_img_strg=raw_frames_storage,
                 inf_img_strg=inferenced_frames_storage,
                 dets_strg=detections_storage,
-                counters_strg=counters_storage, # WIP
+                counters_strg=counters_storage,
                 camera=rk3588._cam
             )
             try:
@@ -127,9 +129,9 @@ def main():
                 logger.error(f"WebUI exception: {e}")
             finally:
                 fill_thread.join()
-                if RK3588_CFG["pulse_counter"]["state"]: # WIP
+                if RK3588_CFG["pulse_counter"]["state"]:
                     counting_thread.join() # type: ignore
-                if RK3588_CFG["telegram_notifier"]["state"]: # WIP
+                if RK3588_CFG["telegram_notifier"]["state"]:
                     notifier_process.join() # type: ignore
                     notifier_process.close() # type: ignore
                     notifier_process.kill() # type: ignore
@@ -153,7 +155,7 @@ def main():
                 notifier_process.join() # type: ignore
                 notifier_process.close() # type: ignore
                 notifier_process.kill() # type: ignore
-            counters_storage.clear_buffer() # WIP
+            counters_storage.clear_buffer()
             raw_frames_storage.clear_buffer()
             inferenced_frames_storage.clear_buffer()
             detections_storage.clear_buffer()

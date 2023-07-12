@@ -60,7 +60,7 @@ class Config(dict):
         finally:
             super().__init__(data)
 
-    def update(self) -> bool:
+    def upload(self) -> bool:
         try:
             with open(self._path, 'w') as cfg_file:
                 json.dump(
@@ -76,7 +76,7 @@ class Config(dict):
                 )
             )
             return False
-        
+
     def add_post_proc_func(
             self,
             post_proc_func: Callable[[Queue, Queue], NoReturn]
