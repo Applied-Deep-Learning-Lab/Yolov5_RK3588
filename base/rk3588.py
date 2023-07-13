@@ -69,18 +69,6 @@ class Rk3588():
         equal inference processes)
     -----------------------------------
     ---------------------------------------------------------------------------
-    
-    Methods
-    ---------------------------------------------------------------------------
-    start() : None
-        Starts all processes (recording process, inference process(es),
-        post_process process(es))
-    show() : None
-        Create cv2 window with inferenced frames (frames with bboxes on them)
-    get_data() : tuple(np.ndarray, np.ndarray, np.ndarray, int) | None
-        Returns raw frames, frames with bboxes, numpy array with detections
-        and frames ids
-    ---------------------------------------------------------------------------
     """
     def __init__(
             self,
@@ -204,6 +192,10 @@ class Rk3588():
         ]
 
     def start(self):
+        """
+        Starts all processes (recording process, inference process(es),
+        post_process process(es))
+        """
         self._rec.start()
         for inference in self._first_net_inf: inference.start()
         for post_process in self._first_net_post: post_process.start()
@@ -212,9 +204,16 @@ class Rk3588():
             self._second_net_post.start()
 
     def show(self, start_time):
+        """
+        Create cv2 window with inferenced frames (frames with bboxes on them)
+        """
         self._cam.show(start_time)
 
     def get_data(self):
+        """
+        Returns raw frames, frames with bboxes, numpy array with detections
+        and frames ids
+        """
         if self._second_net_cfg is not None:
             return None
         if self._first_net_q_post.empty():

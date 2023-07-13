@@ -1,8 +1,11 @@
 import logging
 import os
+import signal
 import time
 from multiprocessing import Process
 from threading import Thread
+
+from werkzeug.serving import make_server
 
 import addons.storages as strgs
 from addons.byte_tracker import BTArgs, BYTETracker
@@ -10,6 +13,7 @@ from addons.pulse_counter import Monitor
 from addons.telegram_notifier import TelegramNotifier
 from addons.webui import WebUI
 from addons.webui.utils import obj_imgs_to_str
+from addons.webui_flask import webUI_flask
 from base import Rk3588
 from config import PIDNET_CFG, RK3588_CFG, YOLACT_CFG, YOLOV5_CFG
 from utils import do_counting, fill_storages, show_frames_localy
@@ -31,7 +35,15 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
+def signal_handler(signal, frame):
+    logger.warning("Closing program.")
+    exit()
+
+
 def main():
+    # server = make_server("0.0.0.0", 5000, app)
+    # server.serve_forever()
+    
     first_net_cfg = YOLOV5_CFG
     # second_net_cfg = PIDNET_CFG
     rk3588 = Rk3588(
@@ -115,31 +127,34 @@ def main():
             except Exception as e:
                 logger.error(f"Bot exception: {e}")
         if RK3588_CFG["webui"]["state"]:
-            ui = WebUI(
-                raw_img_strg=raw_frames_storage,
-                inf_img_strg=inferenced_frames_storage,
-                dets_strg=detections_storage,
-                counters_strg=counters_storage,
-                camera=rk3588._cam
-            )
-            try:
-                obj_imgs_to_str()
-                ui.start()
-            except Exception as e:
-                logger.error(f"WebUI exception: {e}")
-            finally:
-                fill_thread.join()
-                if RK3588_CFG["pulse_counter"]["state"]:
-                    counting_thread.join() # type: ignore
-                if RK3588_CFG["telegram_notifier"]["state"]:
-                    notifier_process.join() # type: ignore
-                    notifier_process.close() # type: ignore
-                    notifier_process.kill() # type: ignore
-                counters_storage.clear_buffer()
-                raw_frames_storage.clear_buffer()
-                inferenced_frames_storage.clear_buffer()
-                detections_storage.clear_buffer()
-                exit()
+            webUI = webUI_flask(inferenced_frames_storage)
+            server = make_server("0.0.0.0", 5000, webUI.app)
+            server.serve_forever()
+            # ui = WebUI(
+            #     raw_img_strg=raw_frames_storage,
+            #     inf_img_strg=inferenced_frames_storage,
+            #     dets_strg=detections_storage,
+            #     counters_strg=counters_storage,
+            #     camera=rk3588._cam
+            # )
+            # try:
+            #     obj_imgs_to_str()
+            #     ui.start()
+            # except Exception as e:
+            #     logger.error(f"WebUI exception: {e}")
+            # finally:
+            #     fill_thread.join()
+            #     if RK3588_CFG["pulse_counter"]["state"]:
+            #         counting_thread.join() # type: ignore
+            #     if RK3588_CFG["telegram_notifier"]["state"]:
+            #         notifier_process.join() # type: ignore
+            #         notifier_process.close() # type: ignore
+            #         notifier_process.kill() # type: ignore
+            #     counters_storage.clear_buffer()
+            #     raw_frames_storage.clear_buffer()
+            #     inferenced_frames_storage.clear_buffer()
+            #     detections_storage.clear_buffer()
+            #     exit()
         try:
             show_frames_localy(
                 inf_img_strg=inferenced_frames_storage,
