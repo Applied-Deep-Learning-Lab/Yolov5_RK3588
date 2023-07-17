@@ -253,7 +253,7 @@
                       type="checkbox"
                       role="switch"
                       id="debug_state"
-                      checked=""
+                      {% if base_cfg.debug %}checked{% endif %}
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
                       >debug</label
@@ -267,7 +267,7 @@
                       type="checkbox"
                       role="switch"
                       id="verbose_state"
-                      checked=""
+                      {% if base_cfg.verbose %}checked{% endif %}
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
                       >verbose</label
@@ -281,7 +281,7 @@
                       type="checkbox"
                       role="switch"
                       id="async_mode_state"
-                      checked=""
+                      {% if base_cfg.inference.async_mode %}checked{% endif %}
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
                       >async mode</label
@@ -295,7 +295,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.inference.buf_size}}"
                     required=""
                   />
                 </div>
@@ -306,7 +306,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.inference.inf_proc}}"
                     required=""
                   />
                 </div>
@@ -317,7 +317,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.inference.post_proc}}"
                     required=""
                   />
                 </div>
@@ -328,7 +328,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.webui.send_data_amount}}"
                     required=""
                   />
                 </div>
@@ -350,7 +350,7 @@
                       type="checkbox"
                       role="switch"
                       id="flexSwitchCheckChecked"
-                      checked=""
+                      {% if base_cfg.camera.show %}checked{% endif %}
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
                       >show state</label
@@ -364,7 +364,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.camera.source}}"
                     required=""
                   />
                 </div>
@@ -375,7 +375,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.camera.width}}"
                     required=""
                   />
                 </div>
@@ -386,7 +386,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.camera.height}}"
                     required=""
                   />
                 </div>
@@ -432,7 +432,7 @@
                       type="checkbox"
                       role="switch"
                       id="sigmoid"
-                      checked=""
+                      {% if net_cfg.sigmoid %}checked{% endif %}
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
                       >sigmoid</label
@@ -446,7 +446,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{net_cfg.net_size}}"
                     required=""
                   />
                 </div>
@@ -457,7 +457,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{net_cfg.obj_thresh}}"
                     required=""
                   />
                 </div>
@@ -468,7 +468,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{net_cfg.nms_thresh}}"
                     required=""
                   />
                 </div>
@@ -495,7 +495,7 @@
                       type="checkbox"
                       role="switch"
                       id="flexSwitchCheckChecked"
-                      checked=""
+                      {% if base_cfg.storages.state %}checked{% endif %}
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
                       >storages state</label
@@ -509,7 +509,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.storages.stored_data_amount}}"
                     required=""
                   />
                 </div>
@@ -520,7 +520,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.storages.dets_amount}}"
                     required=""
                   />
                 </div>
@@ -531,7 +531,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.storages.frames_delay}}"
                     required=""
                   />
                 </div>
@@ -553,7 +553,7 @@
                       type="checkbox"
                       role="switch"
                       id="flexSwitchCheckChecked"
-                      checked=""
+                      {% if base_cfg.bytetrack.state %}checked{% endif %}
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
                       >BYTEtrack state</label
@@ -589,7 +589,7 @@
                       type="checkbox"
                       role="switch"
                       id="flexSwitchCheckChecked"
-                      checked=""
+                      {% if base_cfg.telegram_notifier.state %}checked{% endif %}
                     />
                     <label class="form-check-label" for="flexSwitchCheckChecked"
                       >telegram notifier state</label
@@ -605,7 +605,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder="seconds"
-                    value=""
+                    value="{{base_cfg.telegram_notifier.time_period}}"
                     required=""
                   />
                 </div>
@@ -616,7 +616,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.telegram_notifier.token}}"
                     required=""
                   />
                 </div>
@@ -627,7 +627,7 @@
                     type="text"
                     class="form-control-sm rounded-pill"
                     placeholder=""
-                    value=""
+                    value="{{base_cfg.telegram_notifier.chat_id}}"
                     required=""
                   />
                 </div>
@@ -638,5 +638,5 @@
       </div>
     </div>
   </body>
-  <script type="text/javascript" src="../static/js/home.js"></script>
+  <script type="text/javascript" src="../static/js/settings.js"></script>
 </html>

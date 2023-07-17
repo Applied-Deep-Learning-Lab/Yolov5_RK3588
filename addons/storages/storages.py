@@ -164,9 +164,15 @@ class ImageStorage(Storage):
         Describing storage purpose (raw or inferenced frames)
     ---------------------------------------------------------------------------
     """
-    def __init__(self, storage_name: str):
-        height = RK3588_CFG["camera"]["height"]
-        width = RK3588_CFG["camera"]["width"]
+    def __init__(
+            self,
+            storage_name: str,
+            size: Union[tuple[int, int], None] = None
+    ):
+        if size is None:
+            height, width = RK3588_CFG["camera"]["height"], RK3588_CFG["camera"]["width"]
+        else:
+            height, width = size
         super().__init__(
             storage_name = storage_name,
             data_size = (height, width, 3),

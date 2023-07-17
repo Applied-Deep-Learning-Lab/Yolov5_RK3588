@@ -75,22 +75,6 @@ function negotiate() {
       return pc.setLocalDescription(offer);
     })
     .then(function () {
-      // wait for ICE gathering to complete
-      return new Promise(function (resolve) {
-        if (pc.iceGatheringState === "complete") {
-          resolve();
-        } else {
-          function checkState() {
-            if (pc.iceGatheringState === "complete") {
-              pc.removeEventListener("icegatheringstatechange", checkState);
-              resolve();
-            }
-          }
-          pc.addEventListener("icegatheringstatechange", checkState);
-        }
-      });
-    })
-    .then(function () {
       var offer = pc.localDescription;
       var codec;
 

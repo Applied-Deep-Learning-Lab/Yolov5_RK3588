@@ -8,7 +8,7 @@
         "pixel_format": "MJPG",
         "width": 640,
         "height": 480,
-        "fps": 60
+        "fps": 120
     },
     "inference": {
         "buf_size": 3,

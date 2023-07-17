@@ -2,7 +2,7 @@
     "net_size": 544,
     "default_model": "yolact_544.rknn",
     "new_model": "yolact_544.rknn",
-    "classes": [],
+    "classes": [""],
     "img_size" : 544,
     "scales" : [24, 48, 96, 192, 384],
     "aspect_ratios": [1, 0.5, 2],

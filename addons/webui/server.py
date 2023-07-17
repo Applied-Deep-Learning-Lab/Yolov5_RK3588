@@ -13,7 +13,7 @@ from multidict import MultiDict
 
 import addons.storages as strgs
 from base.camera import Cam
-from config import RK3588_CFG, YOLOV5_CFG
+from config import RK3588_CFG, Config
 
 from .media import InferenceTrack, MediaBlackhole, MediaRelay
 from .utils import request_inference
@@ -109,14 +109,16 @@ class WebUI():
             inf_img_strg: strgs.ImageStorage,
             dets_strg: strgs.DetectionsStorage,
             counters_strg: strgs.Storage,
-            camera: Cam
+            camera: Cam,
+            net_cfg: Config
     ):
         self._raw_img_strg = raw_img_strg
         self._inf_img_strg = inf_img_strg
         self._dets_strg = dets_strg
         self._counters_strg = counters_strg
         self._cam = camera
-        self._classes = YOLOV5_CFG["classes"]
+        self._net_cfg = net_cfg
+        self._classes = net_cfg["classes"]
         self._ROOT = os.path.dirname(__file__)
         self._pcs = set()
         self._relay = MediaRelay()
@@ -170,7 +172,7 @@ class WebUI():
         return web.json_response(
             data={
                 "base" : RK3588_CFG,
-                "neural_network" : YOLOV5_CFG
+                "neural_network" : self._net_cfg
             }
         )
 
@@ -178,9 +180,9 @@ class WebUI():
         model_form = await request.post()
         settings_values = json.loads(model_form["text"])
         RK3588_CFG.update(settings_values["base"])
-        YOLOV5_CFG.update(settings_values["neural_network"])
+        self._net_cfg.update(settings_values["neural_network"])
         RK3588_CFG.upload()
-        YOLOV5_CFG.upload()
+        self._net_cfg.upload()
         server_logger.info("Settings loaded")
         return web.Response(content_type="text", text="OK")
 
@@ -207,19 +209,19 @@ class WebUI():
         def _load_new_model(new_model: bytes, new_model_name: str):
             """Create file for new model and rewrite path"""
             if "640" in new_model_name:
-                YOLOV5_CFG["net_size"] = 640
+                self._net_cfg["net_size"] = 640
             elif "352" in new_model_name:
-                YOLOV5_CFG["net_size"] = 352
-            YOLOV5_CFG["new_model"] = new_model_name
-            YOLOV5_CFG.upload()
+                self._net_cfg["net_size"] = 352
+            self._net_cfg["new_model"] = new_model_name
+            self._net_cfg.upload()
             with open(os.path.join(MODELS, new_model_name), "wb") as f:
                 f.write(new_model)
             server_logger.info("Model loaded")
 
         def _load_local_model(local_model):
             """Rewrite path to running model"""
-            YOLOV5_CFG["new_model"] = local_model
-            YOLOV5_CFG.upload()
+            self._net_cfg["new_model"] = local_model
+            self._net_cfg.upload()
             server_logger.info("Model changed")
 
         model_form = await request.post()

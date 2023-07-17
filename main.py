@@ -11,9 +11,13 @@ import addons.storages as strgs
 from addons.byte_tracker import BTArgs, BYTETracker
 from addons.pulse_counter import Monitor
 from addons.telegram_notifier import TelegramNotifier
-from addons.webui import WebUI
-from addons.webui.utils import obj_imgs_to_str
+
+# from addons.webui import WebUI
+# from addons.webui.utils import obj_imgs_to_str
+
 from addons.webui_flask import webUI_flask
+from addons.webui_flask.utils import obj_imgs_to_str
+
 from base import Rk3588
 from config import PIDNET_CFG, RK3588_CFG, YOLACT_CFG, YOLOV5_CFG
 from utils import do_counting, fill_storages, show_frames_localy
@@ -21,18 +25,23 @@ from utils import do_counting, fill_storages, show_frames_localy
 # Create the main's logger
 logger = logging.getLogger("main")
 logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler(
     os.path.join(
         os.path.dirname(__file__),
         "log/main.log"
     )
 )
+file_handler.setLevel(logging.ERROR)
 formatter = logging.Formatter(
     fmt="%(levelname)s - %(asctime)s: %(message)s.",
     datefmt="%d-%m-%Y %H:%M:%S"
 )
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+console_handler.setFormatter(formatter)
+file_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
 
 
 def signal_handler(signal, frame):
@@ -41,9 +50,6 @@ def signal_handler(signal, frame):
 
 
 def main():
-    # server = make_server("0.0.0.0", 5000, app)
-    # server.serve_forever()
-    
     first_net_cfg = YOLOV5_CFG
     # second_net_cfg = PIDNET_CFG
     rk3588 = Rk3588(
@@ -127,15 +133,41 @@ def main():
             except Exception as e:
                 logger.error(f"Bot exception: {e}")
         if RK3588_CFG["webui"]["state"]:
-            webUI = webUI_flask(inferenced_frames_storage)
-            server = make_server("0.0.0.0", 5000, webUI.app)
-            server.serve_forever()
+
+            webUI = webUI_flask(
+                net_cfg=first_net_cfg,
+                inf_img_strg=inferenced_frames_storage,
+                counters_strg=counters_storage
+            )
+            logger.info("Reading images for counter")
+            obj_imgs_to_str()
+            try:
+                logger.info("Starting WebUI")
+                server = make_server("0.0.0.0", 5000, webUI.app)
+                server.serve_forever()
+            except Exception as e:
+                logger.error(f"WebUI exception: {e}")
+            finally:
+                fill_thread.join()
+                if RK3588_CFG["pulse_counter"]["state"]:
+                    counting_thread.join() # type: ignore
+                if RK3588_CFG["telegram_notifier"]["state"]:
+                    notifier_process.join() # type: ignore
+                    notifier_process.close() # type: ignore
+                    notifier_process.kill() # type: ignore
+                counters_storage.clear_buffer()
+                raw_frames_storage.clear_buffer()
+                inferenced_frames_storage.clear_buffer()
+                detections_storage.clear_buffer()
+                exit()
+
             # ui = WebUI(
             #     raw_img_strg=raw_frames_storage,
             #     inf_img_strg=inferenced_frames_storage,
             #     dets_strg=detections_storage,
             #     counters_strg=counters_storage,
-            #     camera=rk3588._cam
+            #     camera=rk3588._cam,
+            #     net_cfg=first_net_cfg
             # )
             # try:
             #     obj_imgs_to_str()
@@ -155,6 +187,7 @@ def main():
             #     inferenced_frames_storage.clear_buffer()
             #     detections_storage.clear_buffer()
             #     exit()
+
         try:
             show_frames_localy(
                 inf_img_strg=inferenced_frames_storage,

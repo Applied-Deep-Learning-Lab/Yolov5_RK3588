@@ -143,12 +143,12 @@ async function SendSettingsValues() {
 
   // Convert values to string for sending
   settings_data = JSON.stringify(settings_data);
-  // Sending values to the device's config file
-  let formData = new FormData();
-  formData.append("text", settings_data);
   fetch("/settings_values", {
     method: "POST",
-    body: formData,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: settings_data,
   });
   SettingsUpdateModal();
 }

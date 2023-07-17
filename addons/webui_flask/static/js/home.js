@@ -1,3 +1,18 @@
+function updateFrame() {
+  try {
+    setInterval(function () {
+      fetch("/video_feed")
+        .then((response) => response.blob())
+        .then((blob) => {
+          var img = document.getElementById("frame");
+          img.src = URL.createObjectURL(blob);
+        });
+    }, 10);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 function requestInference() {
   fetch("/request_inference", {
     method: "GET",
@@ -69,10 +84,6 @@ function ShowRebootWaitingModal() {
   modal.style.display = "block";
 }
 
-CreateCounters();
-SetCounters();
-SetInfoCpuTemperature();
-
 async function CreateCounters() {
   // Getting counters (json file data)
   const response = await fetch("/counters_images", {
@@ -126,8 +137,9 @@ function SetCounters() {
           // Getting grid for change counters value
           let counters_grid = document.getElementById("CountersGrid");
           // Getting elements of grid for change their labels (counters values)
-          let counters_elems =
-            counters_grid.getElementsByClassName("col col-row-3");
+          let counters_elems = counters_grid.getElementsByClassName(
+            "col col-row-3"
+          );
           // Changng counters values
           let obj_index = 0;
           for (let obj in response) {
@@ -142,35 +154,44 @@ function SetCounters() {
 }
 
 function SetInfoCpuTemperature() {
-  setInterval(function () {
-    let CpuTemperature = document.getElementById("cpu_temperature");
-    let ClassName = CpuTemperature.className;
-    fetch("/cpu_temperature", { method: "GET" })
-      .then((response) => response.json())
-      .then((response) => {
-        CpuTemperature.innerText = response;
-        if (response > 60) {
-          ClassName = ClassName.replace(
-            ClassName.split(" ")[1],
-            "btn-outline-danger"
-          );
-        } else if (response > 50) {
-          ClassName = ClassName.replace(
-            ClassName.split(" ")[1],
-            "btn-outline-warning"
-          );
-        } else if (response > 40) {
-          ClassName = ClassName.replace(
-            ClassName.split(" ")[1],
-            "btn-outline-success"
-          );
-        } else {
-          ClassName = ClassName.replace(
-            ClassName.split(" ")[1],
-            "btn-outline-info"
-          );
-        }
-        CpuTemperature.className = ClassName;
-      });
-  }, 1000);
+  try {
+    setInterval(function () {
+      let CpuTemperature = document.getElementById("cpu_temperature");
+      let ClassName = CpuTemperature.className;
+      fetch("/cpu_temperature", { method: "GET" })
+        .then((response) => response.json())
+        .then((response) => {
+          CpuTemperature.innerText = response;
+          if (response > 60) {
+            ClassName = ClassName.replace(
+              ClassName.split(" ")[1],
+              "btn-outline-danger"
+            );
+          } else if (response > 50) {
+            ClassName = ClassName.replace(
+              ClassName.split(" ")[1],
+              "btn-outline-warning"
+            );
+          } else if (response > 40) {
+            ClassName = ClassName.replace(
+              ClassName.split(" ")[1],
+              "btn-outline-success"
+            );
+          } else {
+            ClassName = ClassName.replace(
+              ClassName.split(" ")[1],
+              "btn-outline-info"
+            );
+          }
+          CpuTemperature.className = ClassName;
+        });
+    }, 1000);
+  } catch (error) {
+    console.log(error);
+  }
 }
+
+CreateCounters();
+SetCounters();
+SetInfoCpuTemperature();
+updateFrame();
