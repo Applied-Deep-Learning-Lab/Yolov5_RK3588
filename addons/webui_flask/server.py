@@ -177,12 +177,12 @@ class webUI_flask():
             else:
                 return jsonify({"message": "No file or text data provided."})
 
-        @self.app.route('/restart')
+        @self.app.route('/restart', methods=["POST"])
         def restart_program():
             args = [sys.executable] + sys.argv
             os.execv(sys.executable, args)
 
-        @self.app.route('/reboot')
+        @self.app.route('/reboot', methods=["POST"])
         def reboot_device():
             logger.info("Rebooting device")
             os.system("reboot")
