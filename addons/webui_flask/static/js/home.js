@@ -16,21 +16,7 @@ function updateFrame() {
 function requestInference() {
   fetch("/request_inference", {
     method: "GET",
-  })
-    .then((response) => response.blob())
-    .then((data) => {
-      const d = new Date();
-      name = new String(d.getTime() + ".zip");
-      download(data, name, "multipart/mixed");
-    });
-}
-
-function download(response, fileName, contentType) {
-  var a = document.createElement("a");
-  var file = response;
-  a.href = URL.createObjectURL(file);
-  a.download = fileName;
-  a.click();
+  });
 }
 
 function ResetModalShow() {

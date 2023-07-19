@@ -1,1 +1,1 @@
-from .utils import gen_frame, obj_imgs_to_str
+from .utils import gen_frame, obj_imgs_to_str, request_inference

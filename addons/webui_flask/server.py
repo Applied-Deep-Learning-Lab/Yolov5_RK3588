@@ -1,12 +1,14 @@
 import json
 import logging
 import os
+import sys
 
 import psutil
-from flask import Flask, Response, jsonify, render_template, request
+from flask import Flask, Response, jsonify, render_template, request, send_file
+from werkzeug.datastructures import FileStorage
 
-from addons.storages import ImageStorage, Storage
-from addons.webui_flask.utils import gen_frame
+from addons.storages import DetectionsStorage, ImageStorage, Storage
+from addons.webui_flask.utils import gen_frame, request_inference
 from config import RK3588_CFG, Config
 
 logger = logging.getLogger("server")
@@ -29,10 +31,18 @@ class webUI_flask():
     def __init__(
             self,
             net_cfg: Config,
+            raw_img_strg: ImageStorage,
+            dets_strg: DetectionsStorage,
             inf_img_strg: ImageStorage,
             counters_strg: Storage
     ):
         self._ROOT = os.path.dirname(__file__)
+        self._MODELS = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "models"
+        )
+        self._raw_img_strg = raw_img_strg
+        self._dets_strg = dets_strg
         self._inf_img_strg = inf_img_strg
         self._counters_strg = counters_strg
         self._net_cfg = net_cfg
@@ -108,8 +118,72 @@ class webUI_flask():
         @self.app.route('/counters_images')
         def set_counters_images():
             counters_file = os.path.join(
-                self._ROOT, "static", "counters", "counters.json"
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                "resources", "counters", "counters.json"
             )
             with open(counters_file, 'r') as json_file:
                 counters_imgs = json.load(json_file)
             return jsonify(counters_imgs)
+        
+        @self.app.route('/request_inference')
+        def send_inference() -> Response:
+            zip_file = request_inference(
+                dets_strg=self._dets_strg,
+                raw_img_strg=self._raw_img_strg
+            )
+            return send_file(zip_file, as_attachment=True)
+        
+        @self.app.route('/show_models')
+        def show_models() -> Response:
+            local_models = os.listdir(self._MODELS)
+            models = [
+                model for model in local_models if ".rknn" in model
+            ]
+            return jsonify(models)
+        
+        @self.app.route('/model', methods=["POST"])
+        def update_model() -> Response:
+            def _load_new_model(new_model: FileStorage):
+                """Create file for new model and rewrite path"""
+                model_name = new_model.filename
+                new_model.save(
+                    os.path.join(self._MODELS, model_name) # type: ignore
+                )
+                if "640" in model_name: # type: ignore
+                    self._net_cfg["net_size"] = 640
+                elif "352" in model_name: # type: ignore
+                    self._net_cfg["net_size"] = 352
+                self._net_cfg["new_model"] = model_name
+                self._net_cfg.upload()
+                logger.info("Model loaded")
+
+            def _load_local_model(local_model):
+                """Rewrite path to running model"""
+                self._net_cfg["new_model"] = local_model
+                self._net_cfg.upload()
+                logger.info("Model changed")
+            
+            if 'file' in request.files:
+                model = request.files["file"]
+                _load_new_model(
+                    new_model=model
+                )
+                return jsonify({"message": "Model loaded."})
+            elif 'text' in request.form:
+                _load_local_model(
+                    local_model=request.form["text"]
+                )
+                return jsonify({"message": "Model changed."})
+            else:
+                return jsonify({"message": "No file or text data provided."})
+
+        @self.app.route('/restart')
+        def restart_program():
+            args = [sys.executable] + sys.argv
+            os.execv(sys.executable, args)
+
+        @self.app.route('/reboot')
+        def reboot_device():
+            logger.info("Rebooting device")
+            os.system("reboot")
+            return jsonify({"message": "Rebooting device."})

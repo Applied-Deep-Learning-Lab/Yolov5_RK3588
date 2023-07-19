@@ -7,6 +7,7 @@ import traceback
 from datetime import datetime
 
 import cv2
+import httpx
 from telegram import Bot
 from telegram.error import BadRequest
 
@@ -160,6 +161,10 @@ class TelegramNotifier():
                         text=caption
                     ) # type: ignore
                     sent = True
+                except httpx.ReadTimeout:
+                    retries_left -= 1
+                    time.sleep(1)
+                    print("Connection pool timeout. Retrying...")
                 except:
                     retries_left -= 1
                     time.sleep(1)

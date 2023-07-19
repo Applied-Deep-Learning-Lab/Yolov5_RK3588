@@ -4,6 +4,7 @@ __pycache__
 *.jpg
 *.png
 *.txt
+*.zip
 !install/requirements.txt
 
 # cython_bbox
@@ -23,6 +24,9 @@ install/cython_bbox/dist
 
 # logs
 log/*.log
+
+# images for counters
+!resources/counters/images/*.png
 
 # tests
 test/

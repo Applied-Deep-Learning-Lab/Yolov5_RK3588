@@ -136,6 +136,8 @@ def main():
 
             webUI = webUI_flask(
                 net_cfg=first_net_cfg,
+                raw_img_strg=raw_frames_storage,
+                dets_strg=detections_storage,
                 inf_img_strg=inferenced_frames_storage,
                 counters_strg=counters_storage
             )

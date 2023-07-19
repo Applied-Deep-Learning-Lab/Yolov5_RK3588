@@ -18,10 +18,8 @@ from config import RK3588_CFG, Config
 from .media import InferenceTrack, MediaBlackhole, MediaRelay
 from .utils import request_inference
 
-MODELS = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "/models/"
-)
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+MODELS = os.path.join(ROOT, "models")
 
 # Create the server's logger
 server_logger = logging.getLogger("server")
@@ -237,7 +235,11 @@ class WebUI():
         return web.Response(content_type="text", text="OK")
 
     async def _set_counters_images(self, request):
-        with open(self._ROOT + "/counters/counters.json", 'r') as json_file:
+        counters_file = os.path.join(
+            ROOT,
+            "resources", "counters", "counters.json"
+        )
+        with open(counters_file, 'r') as json_file:
             counters_imgs = json.load(json_file)
         return web.json_response(data=counters_imgs)
 

@@ -13,7 +13,10 @@ from PIL import Image
 import addons.storages as strgs
 from config import RK3588_CFG
 
-COUNTERS = os.path.join(os.path.dirname(__file__), "counters")
+COUNTERS = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "resources", "counters"
+)
 
 # Create the server's logger
 server_logger = logging.getLogger("server")

@@ -41,57 +41,6 @@ let time_period = document.getElementById("time_period");
 let bot_token = document.getElementById("bot_token");
 let chat_id = document.getElementById("chat_id");
 
-// Set settings values from local json file
-SetSettingsValues();
-
-async function SetSettingsValues() {
-  // Get settings (json file data)
-  const response = await fetch("/settings_values", {
-    method: "GET",
-  });
-  let settings_data = await response.json(response);
-
-  /// Base
-  debug_state.checked = settings_data.base.debug;
-  verbose_state.checked = settings_data.base.verbose;
-  async_mode.checked = settings_data.base.inference.async_mode;
-  buf_size.value = settings_data.base.inference.buf_size;
-  inf_proc.value = settings_data.base.inference.inf_proc;
-  post_proc.value = settings_data.base.inference.post_proc;
-  send_data_amount.value = settings_data.base.webui.send_data_amount;
-
-  /// Camera
-  show_state.checked = settings_data.base.camera.show;
-  source.value = settings_data.base.camera.source;
-  width.value = settings_data.base.camera.width;
-  height.value = settings_data.base.camera.height;
-  pixel_format.value = settings_data.base.camera.pixel_format;
-  camera_fps.value = settings_data.base.camera.fps;
-
-  /// Neural Network
-  sigmoid.checked = settings_data.neural_network.sigmoid;
-  net_size.value = settings_data.neural_network.net_size;
-  obj_thresh.value = settings_data.neural_network.obj_thresh;
-  nms_thresh.value = settings_data.neural_network.nms_thresh;
-
-  /// Addons
-  //// Storages
-  storages_state.checked = settings_data.base.storages.state;
-  stored_data_amount.value = settings_data.base.storages.stored_data_amount;
-  dets_amount.value = settings_data.base.storages.dets_amount;
-  frames_delay.value = settings_data.base.storages.frames_delay;
-
-  //// BYTEtrack
-  bytetrack_state.checked = settings_data.base.bytetrack.state;
-  bytetrack_fps.value = settings_data.base.bytetrack.fps;
-
-  //// Telegram notifier
-  telegram_notifier.checked = settings_data.base.telegram_notifier.state;
-  time_period.value = settings_data.base.telegram_notifier.time_period;
-  bot_token.value = settings_data.base.telegram_notifier.token;
-  chat_id.value = settings_data.base.telegram_notifier.chat_id;
-}
-
 async function SendSettingsValues() {
   // Get settings (json file data) for formatting
   let response = await fetch("/settings_values", {
@@ -183,8 +132,11 @@ function updateNewModel() {
     fetch("/model", {
       method: "POST",
       body: formData,
-    });
-    showModal("Model", "Uploading...", 5000);
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        showModal("Model", response.message, 1000);
+      });
   }
 }
 
@@ -198,8 +150,11 @@ function updateLocalModel() {
     fetch("/model", {
       method: "POST",
       body: formData,
-    });
-    showModal("Model", "Changing...", 1000);
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        showModal("Model", response.message, 1000);
+      });
   }
 }
 
