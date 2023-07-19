@@ -9,24 +9,34 @@ import numpy as np
 
 from config import RK3588_CFG
 
-# Create logger
-logger = logging.getLogger("storages")
-logger.setLevel(logging.DEBUG)
-# Create handler
-handler = logging.FileHandler(
+# Create loggers
+set_logger = logging.getLogger("set_storages")
+get_logger = logging.getLogger("get_storages")
+set_logger.setLevel(logging.DEBUG)
+get_logger.setLevel(logging.DEBUG)
+# Create handlers
+set_handler = logging.FileHandler(
     os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "log/storages.log"
+        "log/set_storages.log"
+    )
+)
+get_handler = logging.FileHandler(
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "log/get_storages.log"
     )
 )
 # Create formatter
 formatter = logging.Formatter(
-    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    fmt="%(levelname)s - %(asctime)s: %(message)s",
     datefmt="%d-%m-%Y %H:%M:%S"
 )
-# Add handler and formatter to the logger
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+# Add handlers and formatter to the loggers
+set_handler.setFormatter(formatter)
+set_logger.addHandler(set_handler)
+get_handler.setFormatter(formatter)
+get_logger.addHandler(get_handler)
 
 
 class Storage():
@@ -78,8 +88,10 @@ class Storage():
             storage_name: str,
             data_size: tuple,
             data_amount: int,
-            data_type: type
+            data_type: type,
+            start_time: float = time.time()
     ):
+        self._start_time = start_time
         self._DATA_AMOUNT=data_amount
         self._DELAY = RK3588_CFG["storages"]["frames_delay"]
         self._index_counter = Value('i', 0)
@@ -116,8 +128,7 @@ class Storage():
     def set_data(
             self,
             data: Union[np.ndarray, int, None],
-            id: int,
-            start_time: float = 0
+            id: int
     ):
         data_index = id % self._DATA_AMOUNT # type: ignore
         if data is not None and type(data) == np.ndarray:
@@ -125,10 +136,10 @@ class Storage():
         else:
             self._storage[data_index][:] = data
         if RK3588_CFG["debug"] and "inf" in self.storage_name:
-            logger.debug(
-                "{}\t{:.3f}\n".format(
+            set_logger.debug(
+                "set:\t{}\t{}".format(
                     data_index,
-                    time.time() - start_time
+                    time.time() - self._start_time
                 )
             )
         self._index_counter.value += 1 # type: ignore
@@ -139,6 +150,13 @@ class Storage():
     def get_last_data(self):
         data_index =\
             (self._index_counter.value - (self._DELAY + 1)) % self._DATA_AMOUNT # type: ignore
+        if RK3588_CFG["debug"] and "inf" in self.storage_name:
+            get_logger.debug(
+                "get:\t{}\t{}".format(
+                    data_index,
+                    time.time() - self._start_time
+                )
+            )
         return self._storage[data_index][:]
     
     async def get_last_data_async(self):
@@ -167,7 +185,8 @@ class ImageStorage(Storage):
     def __init__(
             self,
             storage_name: str,
-            size: Union[tuple[int, int], None] = None
+            size: Union[tuple[int, int], None] = None,
+            start_time: float = time.time()
     ):
         if size is None:
             height, width = RK3588_CFG["camera"]["height"], RK3588_CFG["camera"]["width"]
@@ -177,7 +196,8 @@ class ImageStorage(Storage):
             storage_name = storage_name,
             data_size = (height, width, 3),
             data_amount = RK3588_CFG["storages"]["stored_data_amount"],
-            data_type = np.uint8
+            data_type = np.uint8,
+            start_time=start_time
         )
 
 

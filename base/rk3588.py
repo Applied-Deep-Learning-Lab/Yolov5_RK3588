@@ -2,6 +2,7 @@ import logging
 import os
 from multiprocessing import Process, Queue
 from typing import Union
+import time
 
 from rknnlite.api import RKNNLite
 
@@ -75,8 +76,10 @@ class Rk3588():
             first_net_cfg: Config,
             first_net_core: int = RKNNLite.NPU_CORE_0_1,
             second_net_cfg: Union[Config, None] = None,
-            second_net_core: int = RKNNLite.NPU_CORE_2
+            second_net_core: int = RKNNLite.NPU_CORE_2,
+            start_time: float = time.time()
     ):
+        self._start_time = start_time
         # Values for single neural network mode
         self._inf_proc = RK3588_CFG["inference"]["inf_proc"]
         self._post_proc = RK3588_CFG["inference"]["post_proc"]
@@ -169,7 +172,10 @@ class Rk3588():
         ]
         # Create recording process
         self._rec = Process(
-            target = self._cam.record,
+            target=self._cam.record,
+            kwargs={
+                "start_time": self._start_time
+            },
             daemon=True
         )
         # Create inference process for a neural network
@@ -203,11 +209,11 @@ class Rk3588():
             self._second_net_inf.start()
             self._second_net_post.start()
 
-    def show(self, start_time):
+    def show(self):
         """
         Create cv2 window with inferenced frames (frames with bboxes on them)
         """
-        self._cam.show(start_time)
+        self._cam.show(self._start_time)
 
     def get_data(self):
         """

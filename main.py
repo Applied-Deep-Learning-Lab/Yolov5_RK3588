@@ -52,16 +52,17 @@ def signal_handler(signal, frame):
 def main():
     first_net_cfg = YOLOV5_CFG
     # second_net_cfg = PIDNET_CFG
+    start_time = time.time()
     rk3588 = Rk3588(
         first_net_cfg=first_net_cfg,
-        # second_net_cfg=second_net_cfg
+        # second_net_cfg=second_net_cfg,
+        start_time=start_time
     )
-    start_time = time.time()
     rk3588.start()
     if rk3588.dual_mode:
         try:
             while True:
-                rk3588.show(start_time)
+                rk3588.show()
         except Exception as e:
             logger.error(f"Main exception: {e}")
             exit()
@@ -69,7 +70,7 @@ def main():
         if not RK3588_CFG["storages"]["state"]:
             try:
                 while True:
-                    rk3588.show(start_time)
+                    rk3588.show()
             except Exception as e:
                 logger.error(f"Main exception: {e}")
                 exit()
@@ -77,7 +78,8 @@ def main():
             "raw frames"
         )
         inferenced_frames_storage = strgs.ImageStorage(
-            "inferenced frames"
+            storage_name="inferenced frames",
+            start_time=start_time
         )
         detections_storage = strgs.DetectionsStorage()
         counters_storage = strgs.Storage(

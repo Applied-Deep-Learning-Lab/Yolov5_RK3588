@@ -11,24 +11,24 @@ from addons.pulse_counter import Monitor
 from base import Rk3588
 from config import RK3588_CFG
 
-# Create logger
-logger = logging.getLogger("camera")
-logger.setLevel(logging.DEBUG)
-# Create handler
-handler = logging.FileHandler(
-    os.path.join(
-        os.path.dirname(__file__),
-        "log/camera.log"
-    )
-)
-# Create formatter
-formatter = logging.Formatter(
-    fmt="%(levelname)s - %(asctime)s: %(message)s.",
-    datefmt="%d-%m-%Y %H:%M:%S"
-)
-# Add handler and formatter to the logger
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+# # Create logger
+# logger = logging.getLogger("camera")
+# logger.setLevel(logging.DEBUG)
+# # Create handler
+# handler = logging.FileHandler(
+#     os.path.join(
+#         os.path.dirname(__file__),
+#         "log/camera.log"
+#     )
+# )
+# # Create formatter
+# formatter = logging.Formatter(
+#     fmt="%(levelname)s - %(asctime)s: %(message)s.",
+#     datefmt="%d-%m-%Y %H:%M:%S"
+# )
+# # Add handler and formatter to the logger
+# handler.setFormatter(formatter)
+# logger.addHandler(handler)
 
 
 def fill_storages(
@@ -76,8 +76,7 @@ def fill_storages(
                     )
             raw_img_strg.set_data(
                 data=raw_frame,
-                id=frame_id,
-                start_time=start_time
+                id=frame_id
             )
             cv2.rectangle(
                 img=inferenced_frame,
@@ -88,13 +87,11 @@ def fill_storages(
             )
             inf_img_strg.set_data(
                 data=inferenced_frame,
-                id=frame_id,
-                start_time=start_time
+                id=frame_id
             )
             dets_strg.set_data(
                 data=detections, # type: ignore
-                id=frame_id,
-                start_time=start_time
+                id=frame_id
             )
 
 
@@ -147,13 +144,13 @@ def show_frames_localy(
     stored_data_amount = RK3588_CFG["storages"]["stored_data_amount"]
     while True:
         last_index = inf_img_strg.get_last_index()
-        if RK3588_CFG["debug"] and cur_index != last_index:
-            logger.debug(
-                "{}\t{:.3f}\n".format(
-                    cur_index,
-                    time.time() - start_time
-                )
-            )
+        # if RK3588_CFG["debug"] and cur_index != last_index:
+        #     logger.debug(
+        #         "show_local_{}\t{:.3f}".format(
+        #             cur_index,
+        #             time.time() - start_time
+        #         )
+        #     )
         print(
             "cur - {} last - {}".format(
                 cur_index,

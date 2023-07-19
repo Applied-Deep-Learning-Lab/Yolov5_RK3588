@@ -20,7 +20,7 @@ camera_handler = logging.FileHandler(
     )
 )
 camera_formatter = logging.Formatter(
-    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    fmt="%(levelname)s - %(asctime)s: %(message)s",
     datefmt="%d-%m-%Y %H:%M:%S"
 )
 camera_handler.setFormatter(camera_formatter)
@@ -98,7 +98,7 @@ class Cam():
         )
         return frame
 
-    def record(self):
+    def record(self, start_time):
         cap = cv2.VideoCapture(self._source)
         cap.set(
             cv2.CAP_PROP_FOURCC,
@@ -125,6 +125,12 @@ class Cam():
                 if not ret:
                     camera_logger.error("Camera stopped!")
                     raise SystemExit
+                if RK3588_CFG["debug"]:
+                    camera_logger.debug(
+                        "record:\t{}\t{}".format(
+                            self._frame_id, time.time() - start_time
+                        )
+                    )
                 raw_frame = frame.copy()
                 # Pre process for each nn
                 for q, size in zip(self._q_out, self._nn_size):
@@ -175,7 +181,7 @@ class Cam():
             cv2.waitKey(1)
             if RK3588_CFG["debug"]:
                 camera_logger.debug(
-                    "{}:\t{}\t{}".format(
+                    "show_{}:\t{}\t{}".format(
                         i, frame_id, time.time() - start_time
                     )
                 )
