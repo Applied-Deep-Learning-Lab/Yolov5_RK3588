@@ -1,5 +1,6 @@
 {
     "debug": false,
+    "count_fps": false,
     "verbose": false,
     "verbose_file": "verbose.txt",
     "camera": {

@@ -19,7 +19,7 @@ COUNTERS = os.path.join(
 )
 
 # Create the server's logger
-server_logger = logging.getLogger("server")
+server_logger = logging.Logger("server")
 server_logger.setLevel(logging.DEBUG)
 server_handler = logging.FileHandler(
     os.path.join(

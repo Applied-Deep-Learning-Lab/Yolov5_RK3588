@@ -11,7 +11,7 @@ from base.inference import NeuralNetwork
 from config import RK3588_CFG, Config
 
 # Create the base's logger
-logger = logging.getLogger("base")
+logger = logging.Logger("base")
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
     os.path.join(

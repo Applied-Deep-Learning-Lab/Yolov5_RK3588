@@ -15,7 +15,7 @@ import addons.storages as strgs
 from config import RK3588_CFG, YOLOV5_CFG
 
 # Create the tg_bot's logger
-tg_bot_logger = logging.getLogger("tg_bot")
+tg_bot_logger = logging.Logger("tg_bot")
 tg_bot_logger.setLevel(logging.DEBUG)
 # Create handler that output all info to the console
 tg_bot_console_handler = logging.StreamHandler()

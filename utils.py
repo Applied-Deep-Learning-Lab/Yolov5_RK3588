@@ -12,7 +12,7 @@ from base import Rk3588
 from config import RK3588_CFG
 
 # # Create logger
-# logger = logging.getLogger("camera")
+# logger = logging.Logger("camera")
 # logger.setLevel(logging.DEBUG)
 # # Create handler
 # handler = logging.FileHandler(
@@ -36,8 +36,7 @@ def fill_storages(
         tracker: Union[BYTETracker, None],
         raw_img_strg: strgs.ImageStorage,
         inf_img_strg: strgs.ImageStorage,
-        dets_strg: strgs.DetectionsStorage,
-        start_time: float,
+        dets_strg: strgs.DetectionsStorage
 ):
     """Fill storages with raw frames, frames with bboxes, numpy arrays with
     detctions

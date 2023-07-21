@@ -17,7 +17,8 @@ from config import RK3588_CFG
 ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 )
-server_logger = logging.getLogger("server")
+
+server_logger = logging.Logger("server")
 server_logger.setLevel(logging.DEBUG)
 server_handler = logging.FileHandler(
     os.path.join(

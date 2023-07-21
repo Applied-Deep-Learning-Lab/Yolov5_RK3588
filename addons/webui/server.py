@@ -22,7 +22,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 MODELS = os.path.join(ROOT, "models")
 
 # Create the server's logger
-server_logger = logging.getLogger("server")
+server_logger = logging.Logger("server")
 server_logger.setLevel(logging.DEBUG)
 # Create handler that output all info to the console
 server_console_handler = logging.StreamHandler()

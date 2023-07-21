@@ -9,7 +9,7 @@ import av
 from typing import Dict, Optional, Set
 from aiortc.mediastreams import AUDIO_PTIME, MediaStreamError, MediaStreamTrack
 
-logger = logging.getLogger(__name__)
+logger = logging.Logger(__name__)
 
 
 REAL_TIME_FORMATS = [

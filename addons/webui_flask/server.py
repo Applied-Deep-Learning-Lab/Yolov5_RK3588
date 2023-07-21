@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+import time
 
 import psutil
 from flask import Flask, Response, jsonify, render_template, request, send_file
@@ -11,7 +12,7 @@ from addons.storages import DetectionsStorage, ImageStorage, Storage
 from addons.webui_flask.utils import gen_frame, request_inference
 from config import RK3588_CFG, Config
 
-logger = logging.getLogger("server")
+logger = logging.Logger("server")
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
     os.path.join(
@@ -48,7 +49,10 @@ class webUI_flask():
         self._net_cfg = net_cfg
         self._classes = net_cfg["classes"]
         self.app = Flask(__name__)
-        # self.app.json.sort_keys = False
+        # For fps
+        if RK3588_CFG["count_fps"]:
+            self._last_frame_time = time.time()
+            self._frames_count = 0
 
         @self.app.route('/')
         def home_page() -> str:
@@ -94,6 +98,13 @@ class webUI_flask():
 
         @self.app.route('/video_feed')
         def video_feed() -> Response:
+            if RK3588_CFG["count_fps"]:
+                self._frames_count += 1
+                if self._frames_count % 30 == 0:
+                    logger.debug(
+                        f"{30/(time.time() - self._last_frame_time):.2f}"
+                    )
+                    self._last_frame_time = time.time()
             return Response(
                 response=gen_frame(
                     self._inf_img_strg

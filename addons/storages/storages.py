@@ -10,8 +10,8 @@ import numpy as np
 from config import RK3588_CFG
 
 # Create loggers
-set_logger = logging.getLogger("set_storages")
-get_logger = logging.getLogger("get_storages")
+set_logger = logging.Logger("set_storages")
+get_logger = logging.Logger("get_storages")
 set_logger.setLevel(logging.DEBUG)
 get_logger.setLevel(logging.DEBUG)
 # Create handlers
@@ -95,6 +95,12 @@ class Storage():
         self._DATA_AMOUNT=data_amount
         self._DELAY = RK3588_CFG["storages"]["frames_delay"]
         self._index_counter = Value('i', 0)
+        # for fps
+        if RK3588_CFG["count_fps"]:
+            self._set_last_frame_time = time.time()
+            self._set_frames_count = 0
+            self._get_last_frame_time = time.time()
+            self._get_frames_count = 0
         def _create_buffer(size, name):
             try:
                 return shared_memory.SharedMemory(
@@ -142,6 +148,13 @@ class Storage():
                     time.time() - self._start_time
                 )
             )
+        if RK3588_CFG["count_fps"]:
+            self._set_frames_count += 1
+            if self._set_frames_count % 30 == 0:
+                set_logger.debug(
+                    f"{30/(time.time() - self._set_last_frame_time):.2f}"
+                )
+                self._set_last_frame_time = time.time()
         self._index_counter.value += 1 # type: ignore
 
     def get_data_by_index(self, index: int):
@@ -150,6 +163,13 @@ class Storage():
     def get_last_data(self):
         data_index =\
             (self._index_counter.value - (self._DELAY + 1)) % self._DATA_AMOUNT # type: ignore
+        if RK3588_CFG["count_fps"]:
+            self._get_frames_count += 1
+            if self._get_frames_count % 30 == 0:
+                get_logger.debug(
+                    f"{30/(time.time() - self._get_last_frame_time):.2f}"
+                )
+                self._get_last_frame_time = time.time()
         if RK3588_CFG["debug"] and "inf" in self.storage_name:
             get_logger.debug(
                 "get:\t{}\t{}".format(

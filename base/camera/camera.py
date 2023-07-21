@@ -11,7 +11,7 @@ from config import RK3588_CFG
 Mat = np.ndarray[int, np.dtype[np.generic]]
 
 # Create the camera's logger
-camera_logger = logging.getLogger("camera")
+camera_logger = logging.Logger("camera")
 camera_logger.setLevel(logging.DEBUG)
 camera_handler = logging.FileHandler(
     os.path.join(

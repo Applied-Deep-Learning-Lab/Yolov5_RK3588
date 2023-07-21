@@ -10,7 +10,7 @@ proj_dir = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, proj_dir)
 
 # Create logger
-logger = logging.getLogger("config")
+logger = logging.Logger("config")
 logger.setLevel(logging.DEBUG)
 # Create handler that output all info to the console
 console_handler = logging.StreamHandler()

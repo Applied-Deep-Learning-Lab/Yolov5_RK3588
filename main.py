@@ -23,7 +23,7 @@ from config import PIDNET_CFG, RK3588_CFG, YOLACT_CFG, YOLOV5_CFG
 from utils import do_counting, fill_storages, show_frames_localy
 
 # Create the main's logger
-logger = logging.getLogger("main")
+logger = logging.Logger("main")
 logger.setLevel(logging.DEBUG)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
@@ -102,8 +102,7 @@ def main():
                 "tracker": tracker,
                 "raw_img_strg": raw_frames_storage,
                 "inf_img_strg": inferenced_frames_storage,
-                "dets_strg": detections_storage,
-                "start_time": start_time
+                "dets_strg": detections_storage
             },
             daemon=True
         )

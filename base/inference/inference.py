@@ -11,7 +11,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 MODELS = os.path.join(ROOT, "models")
 
 # Create the inference's logger
-inference_logger = logging.getLogger("inference")
+inference_logger = logging.Logger("inference")
 inference_logger.setLevel(logging.DEBUG)
 # Create handler that output all info to the console
 inference_console_handler = logging.StreamHandler()
@@ -83,41 +83,43 @@ class NeuralNetwork():
         self._q_in = q_in
         self._q_out = q_out
         self._core = core
-        self._name = net_cfg["default_model"].split('.')[0]
         self._default_model = os.path.join(MODELS, net_cfg["default_model"])
         self._new_model = os.path.join(MODELS, net_cfg["new_model"])
         #Check new model loaded
         try:
             if os.path.isfile(self._new_model):
+                inference_logger.info("Load new model")
                 self._ret = self._load_model(self._new_model)
             else:
+                inference_logger.info("Load default model")
                 self._ret = self._load_model(self._default_model)
         except Exception as e:
             inference_logger.error(f"Cannot load model. Exception {e}")
             raise SystemExit
 
     def _load_model(self, path_to_model: str):
-        inference_logger.info(f"{self._name}")
+        model_name = path_to_model.split('/')[-1].split('.')[0]
+        inference_logger.info(f"{model_name}")
         self._rknnlite = RKNNLite(
             verbose=RK3588_CFG["verbose"],
             verbose_file=os.path.join(ROOT, RK3588_CFG["verbose_file"])
         )
-        inference_logger.info(f"{self._name}: Export rknn model")
+        inference_logger.info(f"{model_name}: Export rknn model")
         ret = self._rknnlite.load_rknn(path_to_model)
         if ret != 0:
-            inference_logger.error(f"{self._name}: Export rknn model failed!")
+            inference_logger.error(f"{model_name}: Export rknn model failed!")
             return ret
-        inference_logger.info(f"{self._name}: Init runtime environment")
+        inference_logger.info(f"{model_name}: Init runtime environment")
         ret = self._rknnlite.init_runtime(
             async_mode=RK3588_CFG["inference"]["async_mode"],
             core_mask = self._core
         )
         if ret != 0:
             inference_logger.error(
-                f"{self._name}: Init runtime environment failed!"
+                f"{model_name}: Init runtime environment failed!"
             )
             return ret
-        inference_logger.info(f"{self._name}: Model loaded")
+        inference_logger.info(f"{model_name}: Model loaded")
         return ret
 
     def inference(self):
