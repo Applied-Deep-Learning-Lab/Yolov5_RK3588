@@ -5,22 +5,23 @@ import time
 from multiprocessing import Process
 from threading import Thread
 
+from matplotlib import pyplot as plt
 from werkzeug.serving import make_server
 
 import addons.storages as strgs
 from addons.byte_tracker import BTArgs, BYTETracker
 from addons.pulse_counter import Monitor
 from addons.telegram_notifier import TelegramNotifier
+from addons.webui_flask import webUI_flask
+from addons.webui_flask.utils import obj_imgs_to_str
+from base import Rk3588
+from config import PIDNET_CFG, RK3588_CFG, YOLACT_CFG, YOLOV5_CFG
+from utils import do_counting, fill_storages, show_frames_localy
 
 # from addons.webui import WebUI
 # from addons.webui.utils import obj_imgs_to_str
 
-from addons.webui_flask import webUI_flask
-from addons.webui_flask.utils import obj_imgs_to_str
 
-from base import Rk3588
-from config import PIDNET_CFG, RK3588_CFG, YOLACT_CFG, YOLOV5_CFG
-from utils import do_counting, fill_storages, show_frames_localy
 
 # Create the main's logger
 logger = logging.Logger("main")
@@ -134,7 +135,6 @@ def main():
             except Exception as e:
                 logger.error(f"Bot exception: {e}")
         if RK3588_CFG["webui"]["state"]:
-
             webUI = webUI_flask(
                 net_cfg=first_net_cfg,
                 raw_img_strg=raw_frames_storage,
@@ -151,9 +151,11 @@ def main():
             except Exception as e:
                 logger.error(f"WebUI exception: {e}")
             finally:
+                if RK3588_CFG["pulse_counter"]["log"]:
+                    pulse_monitor.save_plot_as_image() # type: ignore
                 fill_thread.join()
                 if RK3588_CFG["pulse_counter"]["state"]:
-                    counting_thread.join() # type: ignore
+                        counting_thread.join() # type: ignore
                 if RK3588_CFG["telegram_notifier"]["state"]:
                     notifier_process.join() # type: ignore
                     notifier_process.close() # type: ignore
@@ -162,8 +164,8 @@ def main():
                 raw_frames_storage.clear_buffer()
                 inferenced_frames_storage.clear_buffer()
                 detections_storage.clear_buffer()
+                signal.signal(signal.SIGINT, signal_handler)
                 exit()
-
             # ui = WebUI(
             #     raw_img_strg=raw_frames_storage,
             #     inf_img_strg=inferenced_frames_storage,
@@ -178,6 +180,8 @@ def main():
             # except Exception as e:
             #     logger.error(f"WebUI exception: {e}")
             # finally:
+            #     if RK3588_CFG["pulse_counter"]["log"]:
+            #         pulse_monitor.save_plot_as_image()
             #     fill_thread.join()
             #     if RK3588_CFG["pulse_counter"]["state"]:
             #         counting_thread.join() # type: ignore
@@ -190,7 +194,6 @@ def main():
             #     inferenced_frames_storage.clear_buffer()
             #     detections_storage.clear_buffer()
             #     exit()
-
         try:
             show_frames_localy(
                 inf_img_strg=inferenced_frames_storage,
@@ -199,6 +202,8 @@ def main():
         except Exception as e:
             logger.error(f"Main exception: {e}")
         finally:
+            if RK3588_CFG["pulse_counter"]["log"]:
+                pulse_monitor.save_plot_as_image() # type: ignore
             fill_thread.join()
             if RK3588_CFG["pulse_counter"]["state"]:
                 counting_thread.join() # type: ignore

@@ -50,9 +50,10 @@ class webUI_flask():
         self._classes = net_cfg["classes"]
         self.app = Flask(__name__)
         # For fps
-        if RK3588_CFG["count_fps"]:
-            self._last_frame_time = time.time()
-            self._frames_count = 0
+        # if RK3588_CFG["count_fps"]:
+        #     self._last_frame_time = time.time()
+        #     self._counter = 0
+        #     self._calculated = False
 
         @self.app.route('/')
         def home_page() -> str:
@@ -98,13 +99,17 @@ class webUI_flask():
 
         @self.app.route('/video_feed')
         def video_feed() -> Response:
-            if RK3588_CFG["count_fps"]:
-                self._frames_count += 1
-                if self._frames_count % 30 == 0:
-                    logger.debug(
-                        f"{30/(time.time() - self._last_frame_time):.2f}"
-                    )
-                    self._last_frame_time = time.time()
+            # if RK3588_CFG["count_fps"]:
+            #     if last_index > cur_index:
+            #         self._counter += 1
+            #         cur_index = last_index
+            #     if self._counter % RK3588_CFG["camera"]["fps"] == 0 and not self._calculated:
+            #         calculated = True
+            #         fps = RK3588_CFG["camera"]["fps"]/(time.time() - begin_time)
+            #         begin_time = time.time()
+            #         logger.debug(f"{fps:.2f}")
+            #     if counter % RK3588_CFG["camera"]["fps"] != 0:
+            #         calculated = False
             return Response(
                 response=gen_frame(
                     self._inf_img_strg

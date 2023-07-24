@@ -1,6 +1,10 @@
 import logging
 import os
 
+import matplotlib.pyplot as plt
+
+from config import RK3588_CFG
+
 from .utils import dets2cum_prob
 
 logger = logging.Logger("pulse_monitor")
@@ -30,12 +34,25 @@ class Monitor(object):
         self.switch_th = switch_th
         self.pos = pos
         self.size = size
+        self._cum_prob_values = []
+        # Create a figure and axis for the real-time plot
+        self._fig, self._ax = plt.subplots()
+        self._ax.set_xlabel('Time')
+        self._ax.set_ylabel('cum_prob')
+        self._ax.set_title('cum_prob over Time')
+        self._line, = self._ax.plot([], [], '-o')
+        self._ax.grid(True)
 
     def update(self, dets):
         self.dets = dets
         cum_prob = dets2cum_prob(dets, self.pos, self.size)
-        if cum_prob > 0.00001:
-            logger.debug(cum_prob)
+        if RK3588_CFG["pulse_counter"]["log"] and cum_prob > 0.1:
+            self._cum_prob_values.append(cum_prob)
+            self._cum_prob_values = self._cum_prob_values[-500:]
+            # Update the real-time plot
+            self._line.set_data(range(len(self._cum_prob_values)), self._cum_prob_values)
+            self._ax.relim()
+            self._ax.autoscale_view()
         if self.signal == 1 and cum_prob < self.switch_th:
             self.signal = 0
             self.down_counter += 1
@@ -43,4 +60,14 @@ class Monitor(object):
             self.signal = 1
             self.up_counter += 1
 
-        
+    def save_plot_as_image(self):
+        # Finalize the plot before saving
+        plt.ioff()
+        plt.figure(self._fig.number) # type: ignore
+        # Save the plot as an image
+        plt.savefig(
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                "log", "final_plot.png"
+            )
+        )

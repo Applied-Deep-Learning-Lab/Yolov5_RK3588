@@ -115,8 +115,8 @@ def do_counting(
         if pulse_monitor.signal:
             cv2.rectangle(
                 img=img,
-                pt1=(img.shape[0] // 2 - 4, 50), # type: ignore
-                pt2=(img.shape[0] // 2 + 4, 50), # type: ignore
+                pt1=(img.shape[1] // 2 - 4, 50), # type: ignore
+                pt2=(img.shape[1] // 2 + 4, 58), # type: ignore
                 color=(0, 0, 128),
                 thickness=8
             )
