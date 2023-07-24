@@ -163,7 +163,7 @@ class Storage():
     def get_last_data(self):
         data_index =\
             (self._index_counter.value - (self._DELAY + 1)) % self._DATA_AMOUNT # type: ignore
-        if RK3588_CFG["count_fps"]:
+        if RK3588_CFG["count_fps"] and "inf" in self.storage_name:
             self._get_frames_count += 1
             if self._get_frames_count % 30 == 0:
                 get_logger.debug(
@@ -182,6 +182,13 @@ class Storage():
     async def get_last_data_async(self):
         data_index =\
             (self._index_counter.value - (self._DELAY + 1)) % self._DATA_AMOUNT # type: ignore
+        if RK3588_CFG["count_fps"] and "inf" in self.storage_name:
+            self._get_frames_count += 1
+            if self._get_frames_count % 30 == 0:
+                get_logger.debug(
+                    f"{30/(time.time() - self._get_last_frame_time):.2f}"
+                )
+                self._get_last_frame_time = time.time()
         return self._storage[data_index][:]
 
     def get_last_index(self):

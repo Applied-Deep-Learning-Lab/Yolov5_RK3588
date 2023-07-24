@@ -11,24 +11,24 @@ from addons.pulse_counter import Monitor
 from base import Rk3588
 from config import RK3588_CFG
 
-# # Create logger
-# logger = logging.Logger("camera")
-# logger.setLevel(logging.DEBUG)
-# # Create handler
-# handler = logging.FileHandler(
-#     os.path.join(
-#         os.path.dirname(__file__),
-#         "log/camera.log"
-#     )
-# )
-# # Create formatter
-# formatter = logging.Formatter(
-#     fmt="%(levelname)s - %(asctime)s: %(message)s.",
-#     datefmt="%d-%m-%Y %H:%M:%S"
-# )
-# # Add handler and formatter to the logger
-# handler.setFormatter(formatter)
-# logger.addHandler(handler)
+# Create logger
+logger = logging.Logger("camera")
+logger.setLevel(logging.DEBUG)
+# Create handler
+handler = logging.FileHandler(
+    os.path.join(
+        os.path.dirname(__file__),
+        "log/camera.log"
+    )
+)
+# Create formatter
+formatter = logging.Formatter(
+    fmt="%(levelname)s - %(asctime)s: %(message)s.",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+# Add handler and formatter to the logger
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def fill_storages(
@@ -101,6 +101,11 @@ def do_counting(
         pulse_monitor: Monitor
 ):
     stored_data_amount = RK3588_CFG["storages"]["stored_data_amount"]
+    # for fps
+    begin_time = time.time()
+    counter = 0
+    calculated = False
+    cur_index = -1
     while True:
         last_index = dets_strg.get_last_index()
         dets = dets_strg.get_data_by_index(last_index % stored_data_amount)
@@ -110,8 +115,8 @@ def do_counting(
         if pulse_monitor.signal:
             cv2.rectangle(
                 img=img,
-                pt1=(316, 50), # type: ignore
-                pt2=(324, 58), # type: ignore
+                pt1=(img.shape[0] // 2 - 4, 50), # type: ignore
+                pt2=(img.shape[0] // 2 + 4, 50), # type: ignore
                 color=(0, 0, 128),
                 thickness=8
             )
@@ -119,6 +124,17 @@ def do_counting(
                 data=pulse_monitor.up_counter,
                 id=0
             )
+        if RK3588_CFG["count_fps"]:
+            if last_index > cur_index:
+                counter += 1
+                cur_index = last_index
+            if counter % RK3588_CFG["camera"]["fps"] == 0 and not calculated:
+                calculated = True
+                fps = RK3588_CFG["camera"]["fps"]/(time.time() - begin_time)
+                begin_time = time.time()
+                logger.debug(f"{fps:.2f}")
+            if counter % RK3588_CFG["camera"]["fps"] != 0:
+                calculated = False
 
 
 def show_frames_localy(
@@ -143,20 +159,13 @@ def show_frames_localy(
     stored_data_amount = RK3588_CFG["storages"]["stored_data_amount"]
     while True:
         last_index = inf_img_strg.get_last_index()
-        # if RK3588_CFG["debug"] and cur_index != last_index:
-        #     logger.debug(
-        #         "show_local_{}\t{:.3f}".format(
-        #             cur_index,
-        #             time.time() - start_time
-        #         )
-        #     )
-        print(
-            "cur - {} last - {}".format(
-                cur_index,
-                last_index
-            ),
-            end='\r'
-        )
+        if RK3588_CFG["debug"] and cur_index != last_index:
+            logger.debug(
+                "show_local_{}\t{:.3f}".format(
+                    cur_index,
+                    time.time() - start_time
+                )
+            )
         frame = inf_img_strg.get_data_by_index(last_index % stored_data_amount)
         if RK3588_CFG["camera"]["show"]:
             cv2.putText(
