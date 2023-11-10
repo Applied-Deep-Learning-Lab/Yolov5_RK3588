@@ -10,8 +10,8 @@
         <img src="https://www.svgrepo.com/show/288488/motherboard.svg" width=38 height=38 alt="Prerequisites" />
       </p>
     </h2>
-  </summary>   
-  
+  </summary>
+
   * ### Ubuntu
 
     Install Ubuntu on your RK3588 device. *(tested on Ubuntu 20.04 and OrangePi5/Firefly ROC RK3588S devices)*
@@ -35,7 +35,7 @@
     ```
 
     And dependencies for WebUI:
-    
+
     ```
     sudo apt-get update
     # General dependencies
@@ -64,7 +64,7 @@
 
     For installing docker on RK3588 device you can use [official docker docs](https://docs.docker.com/desktop/install/linux-install/) or check our [README_DOCKER.md](README_DOCKER.md)
 
-</details>  
+</details>
 
 <details>
   <summary>
@@ -93,7 +93,7 @@
   * ### Build docker image by yourself
 
     You can build docker image by yourself usning **Dockerfile**:
-    
+
     ```
     docker build -t [name-docker-image:tag] .
     ```
@@ -134,7 +134,7 @@
   ```
   conda create -n <env-name> python=3.9
   ```
-  
+
   And then activate conda env
 
   ```
@@ -146,7 +146,7 @@
   ```
   git clone https://github.com/Applied-Deep-Learning-Lab/Yolov5_RK3588
   ```
-  
+
   And got into repo-dir:
 
   ```
@@ -186,7 +186,7 @@
   </summary>
 
   ``main.py`` runs inference  with WebUI. You can turn on/off some options in config file or using **Settings** page at webUI.
-  
+
   ```
   python3 main.py
   ```
@@ -197,11 +197,17 @@
   source run.sh
   ```
 
+  The frame rate dropped by about 20 fps due to recording. When running without it, you can expect around 60 frames per second.
+
+  ![Inference](resources/HostPC/images/inference.gif)
+
   For see WebUI write to browser address bar next (localhost - device's ip):
 
   ```
   localhost:8080
   ```
+
+  ![WebUI](resources/HostPC/images/WebUI.gif)
 
   You also can set autostart for running this.
 
@@ -210,7 +216,7 @@
   ```
   conda deactivate
   ```
-    
+
   * For Orange Pi
 
     ```
@@ -229,7 +235,7 @@
   <summary>
     <h2>
       <p>
-        5. Convert onnx model to rknn 
+        5. Convert onnx model to rknn
         <img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fds2converter.com%2Fwp-content%2Fuploads%2F2015%2F07%2Fconvert-icon.png&f=1&nofb=1&ipt=d6dbe833ced7274d7335d067ba819d63567e853dc093822f5cda0d18df3bfbdf&ipo=images" width=38 height=38 alt="Converter" />
       </p>
     </h2>
@@ -250,7 +256,7 @@
       sudo apt-get update
       sudo apt-get install libxslt1-dev zlib1g zlib1g-dev libglib2.0-0 libsm6 libgl1-mesa-glx libprotobuf-dev gcc git
       ```
-      
+
       Install RKNN-Toolkit2，such as rknn_toolkit2-1.4.0_22dcfef4-cp38-cp38-linux_x86_64.whl
 
       ```
