@@ -39,7 +39,7 @@
     ```
     sudo apt-get update
     # General dependencies
-    sudo apt-get install -y python-dev pkg-config
+    sudo apt-get install -y python3 pkg-config
 
     # Library components
     sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev \
