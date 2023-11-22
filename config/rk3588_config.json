@@ -5,38 +5,40 @@
     "verbose_file": "verbose.txt",
     "camera": {
         "show": true,
+        "write_video": false,
         "source": 0,
         "pixel_format": "MJPG",
+        "auto_exposure": 1,
+        "exposure_value": 50,
         "width": 640,
         "height": 480,
         "fps": 60
     },
     "inference": {
         "buf_size": 3,
-        "inf_proc": 3,
-        "post_proc": 3,
         "async_mode": true
     },
     "storages": {
-        "state": true,
+        "state": false,
         "stored_data_amount": 300,
         "dets_amount": 100,
         "frames_delay": 10
     },
     "webui": {
-        "state": true,
+        "state": false,
+        "server": "flask",
         "send_data_amount": 10
     },
     "bytetrack": {
         "state": false,
         "fps": 60,
         "tracking_classes": [
-            62
         ]
     },
     "pulse_counter": {
-        "state": true,
-        "log": true
+        "state": false,
+        "log": false,
+        "plot": false
     },
     "telegram_notifier": {
         "state": false,

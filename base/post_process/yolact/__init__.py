@@ -1,0 +1,1 @@
+from .yolact import yolact_post_process

@@ -1,6 +1,6 @@
 {
     "net_size": 768,
-    "default_model": "pidnet_drone_int8-s.rknn",
-    "new_model": "pidnet_drone_int8-s.rknn",
+    "default_model": "pidnet.rknn",
+    "new_model": "pidnet.rknn",
     "classes": [""]
 }

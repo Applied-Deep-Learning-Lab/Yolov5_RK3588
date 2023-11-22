@@ -1,6 +1,5 @@
 import logging
 import math
-import os
 import time
 from multiprocessing import Value, shared_memory
 from typing import Union
@@ -8,35 +7,11 @@ from typing import Union
 import numpy as np
 
 from config import RK3588_CFG
+from log import DefaultLogger
 
 # Create loggers
-set_logger = logging.Logger("set_storages")
-get_logger = logging.Logger("get_storages")
-set_logger.setLevel(logging.DEBUG)
-get_logger.setLevel(logging.DEBUG)
-# Create handlers
-set_handler = logging.FileHandler(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "log/set_storages.log"
-    )
-)
-get_handler = logging.FileHandler(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "log/get_storages.log"
-    )
-)
-# Create formatter
-formatter = logging.Formatter(
-    fmt="%(levelname)s - %(asctime)s: %(message)s",
-    datefmt="%d-%m-%Y %H:%M:%S"
-)
-# Add handlers and formatter to the loggers
-set_handler.setFormatter(formatter)
-set_logger.addHandler(set_handler)
-get_handler.setFormatter(formatter)
-get_logger.addHandler(get_handler)
+set_logger = DefaultLogger(name="set_storages", file_handler_level=logging.DEBUG)
+get_logger = DefaultLogger(name="get_storages", file_handler_level=logging.DEBUG)
 
 
 class Storage():
@@ -216,7 +191,8 @@ class ImageStorage(Storage):
             start_time: float = time.time()
     ):
         if size is None:
-            height, width = RK3588_CFG["camera"]["height"], RK3588_CFG["camera"]["width"]
+            height = RK3588_CFG["camera"]["height"]
+            width = RK3588_CFG["camera"]["width"]
         else:
             height, width = size
         super().__init__(

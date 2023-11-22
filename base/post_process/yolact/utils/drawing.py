@@ -174,7 +174,15 @@ def crop_numpy(masks, boxes, padding=1):
     return masks * crop_mask
 
 
-def after_nms_numpy(ids_p, class_p, box_p, coef_p, proto_p, img_h, img_w):
+def after_nms_numpy(
+        ids_p,
+        class_p,
+        box_p,
+        coef_p,
+        proto_p,
+        img_h = YOLACT_CFG["net_size"],
+        img_w = YOLACT_CFG["net_size"]
+):
     def np_sigmoid(x):
         return 1 / (1 + np.exp(-x))
 
@@ -195,7 +203,7 @@ def after_nms_numpy(ids_p, class_p, box_p, coef_p, proto_p, img_h, img_w):
     masks = crop_numpy(masks, box_p)
 
     ori_size = max(img_h, img_w)
-    masks = cv2.resize(masks, (ori_size, ori_size), interpolation=cv2.INTER_LINEAR)
+    masks = cv2.resize(masks, (ori_size, ori_size), interpolation=cv2.INTER_LINEAR) # type: ignore
 
     if masks.ndim == 2:
         masks = masks[:, :, None]
@@ -210,39 +218,64 @@ def after_nms_numpy(ids_p, class_p, box_p, coef_p, proto_p, img_h, img_w):
     return ids_p, class_p, box_p, masks
 
 
-def rknn_draw(img_origin, ids_p, class_p, box_p, mask_p):
-        real_time = False
-        hide_score = False
-        if ids_p is None:
-            return img_origin
-
-        num_detected = ids_p.shape[0]
-
-        img_fused = img_origin
+def rknn_draw(img_origin, ids_p, class_p, box_p, mask_p, img_name=None, fps=None):
+    img_origin = cv2.resize(
+        img_origin,
+        (YOLACT_CFG["net_size"], YOLACT_CFG["net_size"])
+    )
+    if ids_p is None:
+        return img_origin
+    num_detected = ids_p.shape[0]
+    img_fused = img_origin
+    if not YOLACT_CFG["hide_mask"]:
         masks_semantic = mask_p * (ids_p[:, None, None] + 1)  # expand ids_p' shape for broadcasting
         # The color of the overlap area is different because of the '%' operation.
-        masks_semantic = masks_semantic.astype('int').sum(axis=0) % (len(COCO_CLASSES) - 1)
+        masks_semantic = masks_semantic.astype('int').sum(axis=0) % (len(YOLACT_CFG["classes"]) + 1)
         color_masks = COLORS[masks_semantic].astype('uint8')
         img_fused = cv2.addWeighted(color_masks, 0.4, img_origin, 0.6, gamma=0)
 
-        scale = 0.6
-        thickness = 1
-        font = cv2.FONT_HERSHEY_DUPLEX
+        if YOLACT_CFG["cutout"]:
+            total_obj = (masks_semantic != 0)[:, :, None].repeat(3, 2)
+            total_obj = total_obj * img_origin
+            new_mask = ((masks_semantic == 0) * 255)[:, :, None].repeat(3, 2)
+            img_matting = (total_obj + new_mask).astype('uint8')
+            cv2.imwrite(f'results/images/{img_name}_total_obj.jpg', img_matting)
 
+            for i in range(num_detected):
+                one_obj = (mask_p[i])[:, :, None].repeat(3, 2)
+                one_obj = one_obj * img_origin
+                new_mask = ((mask_p[i] == 0) * 255)[:, :, None].repeat(3, 2)
+                x1, y1, x2, y2 = box_p[i, :]
+                img_matting = (one_obj + new_mask)[y1:y2, x1:x2, :]
+                cv2.imwrite(f'results/images/{img_name}_{i}.jpg', img_matting)
+    scale = 0.6
+    thickness = 1
+    font = cv2.FONT_HERSHEY_DUPLEX
+
+    if not YOLACT_CFG["hide_bbox"]:
         for i in reversed(range(num_detected)):
             x1, y1, x2, y2 = box_p[i, :]
 
             color = COLORS[ids_p[i] + 1].tolist()
-            cv2.rectangle(img_fused, (x1, y1), (x2, y2), color, thickness) # type: ignore
+            cv2.rectangle(img_fused, (x1, y1), (x2, y2), color, thickness)
 
-            class_name = COCO_CLASSES[ids_p[i]]
-            text_str = f'{class_name}: {class_p[i]:.2f}' if not hide_score else class_name
+            class_name = YOLACT_CFG["classes"][ids_p[i]]
+            text_str = f'{class_name}: {class_p[i]:.2f}' if not YOLACT_CFG["hide_score"] else class_name
 
             text_w, text_h = cv2.getTextSize(text_str, font, scale, thickness)[0]
-            cv2.rectangle(img_fused, (x1, y1), (x1 + text_w, y1 + text_h + 5), color, -1) # type: ignore
+            cv2.rectangle(img_fused, (x1, y1), (x1 + text_w, y1 + text_h + 5), color, -1)
             cv2.putText(img_fused, text_str, (x1, y1 + 15), font, scale, (255, 255, 255), thickness, cv2.LINE_AA)
 
-        return img_fused
+    if YOLACT_CFG["real_time"]:
+        fps_str = f'fps: {fps:.2f}'
+        text_w, text_h = cv2.getTextSize(fps_str, font, scale, thickness)[0]
+        # Create a shadow to show the fps more clearly
+        img_fused = img_fused.astype(np.float32)
+        img_fused[0:text_h + 8, 0:text_w + 8] *= 0.6
+        img_fused = img_fused.astype(np.uint8)
+        cv2.putText(img_fused, fps_str, (0, text_h + 2), font, scale, (255, 255, 255), thickness, cv2.LINE_AA)
+
+    return img_fused, color_masks # type: ignore
 
 
 def permute(net_outputs):

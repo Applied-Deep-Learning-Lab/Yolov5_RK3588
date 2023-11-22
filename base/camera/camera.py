@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 from multiprocessing import Value
@@ -7,24 +6,14 @@ import cv2
 import numpy as np
 
 from config import RK3588_CFG
+from log import DefaultLogger, TimestampLogger
 
 Mat = np.ndarray[int, np.dtype[np.generic]]
 
 # Create the camera's logger
-camera_logger = logging.Logger("camera")
-camera_logger.setLevel(logging.DEBUG)
-camera_handler = logging.FileHandler(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "log/camera.log"
-    )
-)
-camera_formatter = logging.Formatter(
-    fmt="%(levelname)s - %(asctime)s: %(message)s",
-    datefmt="%d-%m-%Y %H:%M:%S"
-)
-camera_handler.setFormatter(camera_formatter)
-camera_logger.addHandler(camera_handler)
+logger = DefaultLogger("camera")
+if RK3588_CFG["camera"]["write_video"]:
+    video_logger = TimestampLogger("video")
 
 
 class Cam():
@@ -74,15 +63,16 @@ class Cam():
     def __init__(
             self,
             source: int,
-            nn_size: tuple,
-            q_in: tuple,
-            q_out: tuple
+            nn_size: list,
+            q_in: list,
+            q_out: list
     ):
         self._nn_size = nn_size
         self._q_out = q_out
         self._q_in = q_in
         self._stop_record = Value('i', 0)
         self._source = source
+        # for count fps
         self._last_frame_id = [0]*len(self._nn_size)
         self._frame_id = 0
         self._fps = 0
@@ -105,6 +95,14 @@ class Cam():
             cv2.VideoWriter.fourcc(*RK3588_CFG["camera"]["pixel_format"])
         )
         cap.set(
+            cv2.CAP_PROP_AUTO_EXPOSURE,
+            RK3588_CFG["camera"]["auto_exposure"]
+        )
+        cap.set(
+            cv2.CAP_PROP_EXPOSURE,
+            RK3588_CFG["camera"]["exposure_value"]
+        )
+        cap.set(
             cv2.CAP_PROP_FRAME_WIDTH,
             RK3588_CFG["camera"]["width"]
         )
@@ -117,74 +115,128 @@ class Cam():
             RK3588_CFG["camera"]["fps"]
         )
         if(not cap.isOpened()):
-            camera_logger.error("Bad source")
+            logger.error("Bad source")
             raise SystemExit
+        
+        # Create video writer
+        if RK3588_CFG["camera"]["write_video"]:
+            video_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                "resources", "roofs", "videos"
+            )
+            video_writer = cv2.VideoWriter(
+                filename=os.path.join(
+                    video_dir, f"{time.time_ns()}.avi"
+                ),
+                fourcc=cv2.VideoWriter.fourcc(*RK3588_CFG["camera"]["pixel_format"]),
+                fps=cap.get(cv2.CAP_PROP_FPS),
+                frameSize=(
+                    RK3588_CFG["camera"]["width"], RK3588_CFG["camera"]["height"]
+                )
+            )
+
         try:
+            if RK3588_CFG["camera"]["write_video"]:
+                start = time.time()
+                video_logger.info("Start recording")
             while not bool(self._stop_record.value): # type: ignore
+                # Sync video file if suddenly power failure every 10 seconds
+                if RK3588_CFG["camera"]["write_video"]:
+                    if time.time() - start >= 10:  # type: ignore
+                        os.system("sync")
+                        start = time.time()
+
+                # Get frame from video/camera
                 ret, frame = cap.read()
+                if RK3588_CFG["camera"]["write_video"]:
+                    video_logger.info("Frame getted")
                 if not ret:
-                    camera_logger.error("Camera stopped!")
-                    raise SystemExit
+                    logger.error("Camera stopped!")
+
+                # Write video
+                if RK3588_CFG["camera"]["write_video"]:
+                    video_writer.write(frame)  # type: ignore
+                    video_logger.info("Frame writted")
                 if RK3588_CFG["debug"]:
-                    camera_logger.debug(
+                    logger.debug(
                         "record:\t{}\t{}".format(
                             self._frame_id, time.time() - start_time
                         )
                     )
+
                 raw_frame = frame.copy()
                 # Pre process for each nn
                 for q, size in zip(self._q_out, self._nn_size):
                     frame = self._pre_process(frame, size)
                     q.put((frame, raw_frame, self._frame_id))
                 self._frame_id+=1
+            logger.warning("Stop recording loop by stop event")
             cap.release()
+            if RK3588_CFG["camera"]["write_video"]:
+                video_writer.release()  # type: ignore
+            raise SystemExit
+        except KeyboardInterrupt:
+            logger.warning("Stop recording loop by keyboard interrupt")
+            cap.release()
+            if RK3588_CFG["camera"]["write_video"]:
+                video_writer.release()  # type: ignore
+            raise KeyboardInterrupt
         except Exception as e:
-            camera_logger.error(f"Stop recording loop. Exception {e}")
-        finally:
-            camera_logger.error("Camera released.")
+            logger.error(f"Stop recording loop. Exception {e}")
             cap.release()
+            if RK3588_CFG["camera"]["write_video"]:
+                video_writer.release()  # type: ignore
             raise SystemExit
 
     def show(self, start_time):
-        for q, i in zip(self._q_in, range(len(self._last_frame_id))):
-            frame, raw_frame, dets, frame_id = q.get()
-            self._count+=1
-            if frame_id < self._last_frame_id[i]:
-                return
-            if self._count % 30 == 0:
-                self._fps = 30/(time.time() - self._begin)
-                if self._fps > self._max_fps:
-                    self._max_fps = self._fps
-                self._begin = time.time()
-            frame = cv2.putText(
-                img = frame,
-                text = "fps: {:.2f}".format(self._fps),
-                org = (5, 30),
-                fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-                fontScale = 1,
-                color = (0,255,0),
-                thickness = 1,
-                lineType = cv2.LINE_AA
-            )
-            frame = cv2.putText(
-                img = frame,
-                text = "max_fps: {:.2f}".format(self._max_fps),
-                org = (5, 60),
-                fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-                fontScale = 1,
-                color = (0,255,0),
-                thickness = 1,
-                lineType = cv2.LINE_AA
-            )
-            cv2.imshow(f'frame_{i}', frame)
-            self._last_frame_id[i] = frame_id
-            cv2.waitKey(1)
-            if RK3588_CFG["debug"]:
-                camera_logger.debug(
-                    "show_{}:\t{}\t{}".format(
-                        i, frame_id, time.time() - start_time
-                    )
+        try:
+            for q, i in zip(self._q_in, range(len(self._last_frame_id))):
+                frame, raw_frame, dets, frame_id = q.get()
+                self._count+=1
+                if frame_id < self._last_frame_id[i]:
+                    return
+                if self._count % 30 == 0:
+                    self._fps = 30/(time.time() - self._begin)
+                    if self._fps > self._max_fps:
+                        self._max_fps = self._fps
+                    self._begin = time.time()
+                frame = cv2.putText(
+                    img = frame,
+                    text = "fps: {:.2f}".format(self._fps),
+                    org = (5, 30),
+                    fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale = 1,
+                    color = (0,255,0),
+                    thickness = 1,
+                    lineType = cv2.LINE_AA
                 )
+                frame = cv2.putText(
+                    img = frame,
+                    text = "max_fps: {:.2f}".format(self._max_fps),
+                    org = (5, 60),
+                    fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale = 1,
+                    color = (0,255,0),
+                    thickness = 1,
+                    lineType = cv2.LINE_AA
+                )
+                cv2.imshow(f'frame_{i}', frame)
+                self._last_frame_id[i] = frame_id
+                cv2.waitKey(1)
+                if RK3588_CFG["debug"]:
+                    logger.debug(
+                        "show_{}:\t{}\t{}".format(
+                            i, frame_id, time.time() - start_time
+                        )
+                    )
+        except KeyboardInterrupt:
+            cv2.destroyAllWindows()
+            logger.warning("Stop showing by keyboard interrupt")
+            raise KeyboardInterrupt
+        except Exception as e:
+            cv2.destroyAllWindows()
+            logger.warning(f"Stop showing by {e}")
+            raise SystemExit
 
     def release(self):
         self._stop_record.value = 1 # type: ignore

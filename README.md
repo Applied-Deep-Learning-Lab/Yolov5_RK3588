@@ -1,5 +1,5 @@
 <h1>
-    Yolov5_RK3588
+    rk3588-neural-networks
 </h1>
 
 <details open>
@@ -60,68 +60,14 @@
 
     Save and close nano with sortcuts ctrl-o, Enter, ctrl-x
 
-  * ### Docker *(Optional)*
-
-    For installing docker on RK3588 device you can use [official docker docs](https://docs.docker.com/desktop/install/linux-install/) or check our [README_DOCKER.md](README_DOCKER.md)
-
-  * ### Camera that supports 120 fps *(Optional)*
-
-    We tested a camera that supports 120 frames per second and it crashed when trying to read frames. As a solution to this problem, we removed the automatic exposure and set it to an absolute value. 
-
-    ```
-    v4l2-ctl -d /dev/videoX -c exposure_auto=1 -c exposure_absolute=<value>
-    ```
-
-    This command sets the exposure_auto control to manual mode (value 1) and adjusts the exposure_absolute control to the specified value. You can replace <value> with an appropriate exposure value (in units of 1/10,000th of a second). Replace /dev/videoX with the device ID of your camera.
-
 </details>  
-
-<details>
-  <summary>
-    <h2>
-      <p>
-        2. Install docker images <i>(Optional)</i>
-        <img src="https://opennebula.io/wp-content/uploads/2020/05/DockerHub.png" height=38 alt="Docker Hub" />
-      </p>
-    </h2>
-  </summary>
-
-  * ### From Docker hub <a href="https://hub.docker.com/r/deathk9t/yolov5_rk3588"><img src="https://img.shields.io/badge/yolov5_rk3588--blue?logo=docker"></a>
-
-    At first you need download docker image:
-
-    ```
-    docker pull deathk9t/yolov5_rk3588:latest
-    ```
-
-    Then you can run container with:
-
-    ```
-    docker run --privileged --name [container-name] -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/:/dev --network host -it deathk9t/yolov5_rk3588:latest
-    ```
-
-  * ### Build docker image by yourself
-
-    You can build docker image by yourself usning **Dockerfile**:
-    
-    ```
-    docker build -t [name-docker-image:tag] .
-    ```
-
-    Then you can run container with:
-
-    ```
-    docker run --privileged --name [container-name] -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/:/dev --network host -it [name-docker-image:tag]
-    ```
-
-</details>
 
 <details open>
   <summary>
     <h2>
       <p>
-        3. Installing and configurating
-        <img src="https://cdn1.iconfinder.com/data/icons/user-interface-cute-vol-2/52/configuration__settings__options__config-512.png" width=38 height=38 alt="Yolov5" />
+        2. Installing and configurating
+        <img src="resources/HostPC/images/installing.jpg" width=38 height=38 alt="Neural Networks" />
       </p>
     </h2>
   </summary>
@@ -154,19 +100,19 @@
   Clone repository:
 
   ```
-  git clone https://github.com/Applied-Deep-Learning-Lab/Yolov5_RK3588
+  git clone https://github.com/Applied-Deep-Learning-Lab/rk3588-neural-networks
   ```
 
   And got into repo-dir:
 
   ```
-  cd Yolov5_RK3588
+  cd rk3588-neural-networks
   ```
 
-  Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
+  Install RKNN-Toolkit2-Lite，such as rknn_toolkit_lite2-1.5.0-cp39-cp39-linux_aarch64.whl
 
   ```
-  pip install install/rknn_toolkit_lite2-1.4.0-cp39-cp39-linux_aarch64.whl
+  pip install install/rknn_toolkit_lite2-1.5.0-cp39-cp39-linux_aarch64.whl
   ```
 
   In created conda enviroment also install requirements from the same directory
@@ -189,28 +135,32 @@
   <summary>
     <h2>
       <p>
-        4. Running Yolov5
-        <img src="https://storage.googleapis.com/wandb-production.appspot.com/wandb-public-images/3hql0qh3b7.png" width=38 height=38 alt="Yolov5" />
+        3. Running
+        <img src="resources/HostPC/images/running.png" width=38 height=38 alt="Neural Networks" />
       </p>
     </h2>
   </summary>
 
-  ``main.py`` runs inference  with WebUI. You can turn on/off some options in config file or using **Settings** page at webUI.
+  Before running, you can configure all options for the neural network(s) and enable/disable some options (modules) for the main program.
+
+  In ``main.py`` file you can choose which neural network(s) you want to run. Simply type in single (or multiple) words from the following choices: **PIDNET_CFG, YOLACT_CFG, YOLOV5_CFG**
+
+  Weights for neural networks you could take from: [[our another repo]](https://github.com/Applied-Deep-Learning-Lab/Yolov5_RK3588/tree/main/models) \[earlier commits of this repo\] [[rknn-toolkit2]](https://github.com/rockchip-linux/rknn-toolkit2/tree/master/examples) [[rknpu2]](https://github.com/rockchip-linux/rknpu2/tree/master/examples).
+
+  After configurating run inference.
   
   ```
   python3 main.py
   ```
 
-  Or run it using bash script:
+  For see WebUI *(if it was enabled)* write to browser address bar next *(localhost - device's ip)*:
 
   ```
-  source run.sh
-  ```
-
-  For see WebUI write to browser address bar next (localhost - device's ip):
-
-  ```
+  # aiortc
   localhost:8080
+
+  # flask
+  localhost:5000
   ```
 
   You also can set autostart for running this.
@@ -239,7 +189,7 @@
   <summary>
     <h2>
       <p>
-        5. Convert onnx model to rknn 
+        4. Convert onnx model to rknn 
         <img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fds2converter.com%2Fwp-content%2Fuploads%2F2015%2F07%2Fconvert-icon.png&f=1&nofb=1&ipt=d6dbe833ced7274d7335d067ba819d63567e853dc093822f5cda0d18df3bfbdf&ipo=images" width=38 height=38 alt="Converter" />
       </p>
     </h2>

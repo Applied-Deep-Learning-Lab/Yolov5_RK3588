@@ -1,44 +1,19 @@
 import asyncio
 import json
-import logging
 import os
 import time
 import traceback
 from datetime import datetime
 
 import cv2
-import httpx
-from telegram import Bot
-from telegram.error import BadRequest
+import telegram
 
 import addons.storages as strgs
 from config import RK3588_CFG, YOLOV5_CFG
+from log import DefaultLogger
 
 # Create the tg_bot's logger
-tg_bot_logger = logging.Logger("tg_bot")
-tg_bot_logger.setLevel(logging.DEBUG)
-# Create handler that output all info to the console
-tg_bot_console_handler = logging.StreamHandler()
-tg_bot_console_handler.setLevel(logging.DEBUG)
-# Create handler that output errors, warnings to the file
-tg_bot_file_handler = logging.FileHandler(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "log/tg_bot.log"
-    )
-)
-tg_bot_file_handler.setLevel(logging.ERROR)
-# Create formatter for handlers
-tg_bot_formatter = logging.Formatter(
-    fmt="%(levelname)s - %(asctime)s: %(message)s.",
-    datefmt="%d-%m-%Y %H:%M:%S"
-)
-tg_bot_console_handler.setFormatter(tg_bot_formatter)
-tg_bot_file_handler.setFormatter(tg_bot_formatter)
-# Add handlers to the logger
-tg_bot_logger.addHandler(tg_bot_console_handler)
-tg_bot_logger.addHandler(tg_bot_file_handler)
-
+logger = DefaultLogger("tg_bot")
 
 
 class TelegramNotifier():
@@ -87,11 +62,11 @@ class TelegramNotifier():
         self._TOKEN = RK3588_CFG["telegram_notifier"]["token"]
         self._CHAT_ID = RK3588_CFG["telegram_notifier"]["chat_id"]
         try:
-            self._bot = Bot(token=self._TOKEN)
+            self._bot = telegram.Bot(token=self._TOKEN)
             self._start = datetime.now().strftime('%H:%M:%S %d.%m.%Y')
-        except Exception as e:
-            tg_bot_logger.error(f"Can't start bot: {e}")
-            return
+        except telegram.error.InvalidToken:
+            logger.error(f"Cannot start bot with token {self._TOKEN}")
+            raise SystemExit
         self._counters_strg = counters_strg
         self._hostname = os.uname()[1]
         self._classes = YOLOV5_CFG["classes"]
@@ -108,7 +83,7 @@ class TelegramNotifier():
         self._inf_img_strg = inf_img_strg
         self._time_period = RK3588_CFG["telegram_notifier"]["time_period"]
         self._last_counters = [0] * len(self._classes)
-        tg_bot_logger.info("Bot is ready")
+        logger.info("Bot is ready")
 
     def start(self):
         notificate_loop = asyncio.get_event_loop()
@@ -133,7 +108,7 @@ class TelegramNotifier():
                     self._last_counters[i] =\
                         int(self._counters_strg.get_data_by_index(i))
             except:
-                tg_bot_logger.warning("Counting troubles.")
+                logger.warning("Counting troubles.")
                 self._caption["count"] = "counting troubles"
             caption = json.dumps(
                 obj=self._caption,
@@ -151,7 +126,7 @@ class TelegramNotifier():
                         caption=caption
                     ) # type: ignore
                     sent = True
-                except BadRequest:
+                except telegram.error.BadRequest:
                     await self._bot.send_photo(
                         chat_id=self._CHAT_ID,
                         photo=img.tobytes()
@@ -161,11 +136,11 @@ class TelegramNotifier():
                         text=caption
                     ) # type: ignore
                     sent = True
-                except httpx.ReadTimeout:
+                except telegram.error.TimedOut:
                     retries_left -= 1
                     time.sleep(1)
                     print("Connection pool timeout. Retrying...")
                 except:
                     retries_left -= 1
                     time.sleep(1)
-                    tg_bot_logger.warning(traceback.format_exc())
+                    logger.warning(traceback.format_exc())

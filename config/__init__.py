@@ -1,39 +1,17 @@
 import json
-import logging
 import os
 import sys
 from multiprocessing import Queue
-from typing import Callable, NoReturn
+from typing import Callable, NoReturn, Union
+
+from log import DefaultLogger
 
 # Add the proj dir to the PYTHONPATH
 proj_dir = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, proj_dir)
 
 # Create logger
-logger = logging.Logger("config")
-logger.setLevel(logging.DEBUG)
-# Create handler that output all info to the console
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-# Create handler that output errors, warnings to the file
-file_handler = logging.FileHandler(
-    os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "log/config.log"
-    )
-)
-file_handler.setLevel(logging.ERROR)
-# Create formatter
-formatter = logging.Formatter(
-    fmt="%(levelname)s - %(asctime)s: %(message)s.",
-    datefmt="%d-%m-%Y %H:%M:%S"
-)
-# Add formtter to the handlers
-console_handler.setFormatter(formatter)
-file_handler.setFormatter(formatter)
-# Add handlers to the logger
-logger.addHandler(console_handler)
-logger.addHandler(file_handler)
+logger = DefaultLogger("config")
 
 RK3588_CFG_FILE = os.path.join(os.path.dirname(__file__), "rk3588_config.json")
 YOLACT_CFG_FILE = os.path.join(os.path.dirname(__file__), "yolact_config.json")
@@ -79,7 +57,7 @@ class Config(dict):
 
     def add_post_proc_func(
             self,
-            post_proc_func: Callable[[Queue, Queue], NoReturn]
+            post_proc_func: Callable[[Queue, Queue], Union[NoReturn, None]]
     ):
         self.post_proc_func = post_proc_func
 
@@ -89,8 +67,9 @@ YOLACT_CFG = Config(YOLACT_CFG_FILE)
 PIDNET_CFG = Config(PIDNET_CFG_FILE)
 YOLOV5_CFG = Config(YOLOV5_CFG_FILE)
 
-from base.post_process import (pidnet_post_process, yolact_post_process,
-                               yolov5_post_process)
+from base.post_process.yolact import yolact_post_process
+from base.post_process.pidnet import pidnet_post_process
+from base.post_process.yolov5 import yolov5_post_process
 
 YOLACT_CFG.add_post_proc_func(yolact_post_process)
 PIDNET_CFG.add_post_proc_func(pidnet_post_process)

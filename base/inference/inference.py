@@ -1,39 +1,16 @@
-from genericpath import isfile
-import logging
 import os
 from multiprocessing import Queue
 
 from rknnlite.api import RKNNLite
 
 from config import RK3588_CFG, Config
+from log import DefaultLogger
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 MODELS = os.path.join(ROOT, "models")
 
 # Create the inference's logger
-inference_logger = logging.Logger("inference")
-inference_logger.setLevel(logging.DEBUG)
-# Create handler that output all info to the console
-inference_console_handler = logging.StreamHandler()
-inference_console_handler.setLevel(logging.DEBUG)
-# Create handler that output errors, warnings to the file
-inference_file_handler = logging.FileHandler(
-    os.path.join(
-        ROOT,
-        "log/inference.log"
-    )
-)
-inference_file_handler.setLevel(logging.ERROR)
-# Create formatter for handlers
-inference_formatter = logging.Formatter(
-    fmt="%(levelname)s - %(asctime)s: %(message)s.",
-    datefmt="%d-%m-%Y %H:%M:%S"
-)
-inference_console_handler.setFormatter(inference_formatter)
-inference_file_handler.setFormatter(inference_formatter)
-# Add handlers to the logger
-inference_logger.addHandler(inference_console_handler)
-inference_logger.addHandler(inference_file_handler)
+logger = DefaultLogger("inference")
 
 
 class NeuralNetwork():
@@ -88,42 +65,51 @@ class NeuralNetwork():
         #Check new model loaded
         try:
             if os.path.isfile(self._new_model):
-                inference_logger.info("Load new model")
+                logger.info("Load new model")
                 self._ret = self._load_model(self._new_model)
             else:
-                inference_logger.info("Load default model")
+                logger.info("Load default model")
                 self._ret = self._load_model(self._default_model)
+            if self._ret == -1:
+                raise SystemExit
+        except KeyboardInterrupt:
+            logger.warning("Model loading stopped by keyboard interrupt")
         except Exception as e:
-            inference_logger.error(f"Cannot load model. Exception {e}")
+            logger.error(f"Cannot load model. Exception {e}")
             raise SystemExit
 
     def _load_model(self, path_to_model: str):
         model_name = path_to_model.split('/')[-1].split('.')[0]
-        inference_logger.info(f"{model_name}")
+        logger.info(f"{model_name}")
         self._rknnlite = RKNNLite(
             verbose=RK3588_CFG["verbose"],
             verbose_file=os.path.join(ROOT, RK3588_CFG["verbose_file"])
         )
-        inference_logger.info(f"{model_name}: Export rknn model")
+        logger.info(f"{model_name}: Export rknn model")
         ret = self._rknnlite.load_rknn(path_to_model)
         if ret != 0:
-            inference_logger.error(f"{model_name}: Export rknn model failed!")
+            logger.error(f"{model_name}: Export rknn model failed!")
             return ret
-        inference_logger.info(f"{model_name}: Init runtime environment")
+        logger.info(f"{model_name}: Init runtime environment")
         ret = self._rknnlite.init_runtime(
             async_mode=RK3588_CFG["inference"]["async_mode"],
             core_mask = self._core
         )
         if ret != 0:
-            inference_logger.error(
+            logger.error(
                 f"{model_name}: Init runtime environment failed!"
             )
             return ret
-        inference_logger.info(f"{model_name}: Model loaded")
+        logger.info(f"{model_name}: Model loaded")
         return ret
 
     def inference(self):
-        while True:
-            frame, raw_frame, frame_id = self._q_in.get()
-            outputs = self._rknnlite.inference(inputs=[frame])
-            self._q_out.put((outputs, raw_frame, frame_id))
+        try:
+            while True:
+                frame, raw_frame, frame_id = self._q_in.get()
+                outputs = self._rknnlite.inference(inputs=[frame])
+                if outputs is None:
+                    raise KeyboardInterrupt
+                self._q_out.put((outputs, raw_frame, frame_id))
+        except KeyboardInterrupt:
+            logger.warning("Inference stopped by keyboard interrupt")
